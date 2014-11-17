@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox spacing="10.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2"
+      fx:controller="sample.Controller">
+    <children>
+        <VBox spacing="10.0">
+            <children>
+                <Button onAction="#onCalculateClick" text="Calculate"/>
+                <Button onAction="#onShowBinImageClick" text="Show bin image"/>
+                <Button onAction="#onVideoStreamClick" text="Video Sream"/>
+                <Button onAction="#onScreenClick" text="Screenshot"/>
+
+            </children>
+            <padding>
+                <Insets left="10.0" top="10.0"/>
+            </padding>
+        </VBox>
+        <Canvas fx:id="canvas" height="720" width="1280"/>
+    </children>
+</HBox>

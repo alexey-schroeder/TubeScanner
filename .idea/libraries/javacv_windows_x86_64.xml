@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="javacv-windows-x86_64">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/javacv-windows-x86_64.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/opencv-2.4.6.0-windows-x86_64.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
