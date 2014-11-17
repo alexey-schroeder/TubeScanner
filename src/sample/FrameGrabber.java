@@ -27,17 +27,13 @@ public class FrameGrabber {
     private OpenCVFrameGrabber grabber;
     private boolean running = true;
     private int frameRate = 15;
-    private Marker marker;
     private BufferedImage lastFrame;
     private int waitTime;
     private opencv_highgui.CvCapture capture;
 
-    public FrameGrabber(Canvas canvas, OpenCVFrameGrabber grabber, Marker marker) {
+    public FrameGrabber(Canvas canvas, OpenCVFrameGrabber grabber) {
         this.canvas = canvas;
         this.grabber = grabber;
-        this.marker = marker;
-
-
     }
 
     public void initGrabber() {

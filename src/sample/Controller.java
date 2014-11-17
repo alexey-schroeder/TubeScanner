@@ -4,17 +4,16 @@ import com.googlecode.javacv.OpenCVFrameGrabber;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseEvent;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
+import sample.utils.CircleFinder;
 import sample.utils.ImageUtils;
+import sample.utils.LineFinder;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -35,46 +34,10 @@ public class Controller {
     private OpenCVFrameGrabber grabber;
     private FrameGrabber frameGrabber;
     public Canvas canvas;
-    private Marker marker;
 
     public void initialize() {
-        marker = new Marker();
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
-                new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent t) {
-                        if (aX.isFocused() || aY.isFocused()) {
-                            aX.setText(String.valueOf(t.getX()));
-                            aY.setText(String.valueOf(t.getY()));
-                            marker.setA(new Point2D(t.getX(), t.getY()));
-                            bX.requestFocus();
-                        } else if (bX.isFocused() || bY.isFocused()) {
-                            bX.setText(String.valueOf(t.getX()));
-                            bY.setText(String.valueOf(t.getY()));
-                            marker.setB(new Point2D(t.getX(), t.getY()));
-                            cX.requestFocus();
-                        } else if (cX.isFocused() || cY.isFocused()) {
-                            cX.setText(String.valueOf(t.getX()));
-                            cY.setText(String.valueOf(t.getY()));
-                            marker.setC(new Point2D(t.getX(), t.getY()));
-                            dX.requestFocus();
-                        } else if (dX.isFocused() || dY.isFocused()) {
-                            dX.setText(String.valueOf(t.getX()));
-                            dY.setText(String.valueOf(t.getY()));
-                            marker.setD(new Point2D(t.getX(), t.getY()));
-                            dX.getParent().requestFocus();
-                        }
-                    }
-                });
-//        try {
-////            String[] deviceDescriptions = OpenCVFrameGrabber.getDeviceDescriptions();
-//            System.out.println(OpenCVFrameGrabber.getDeviceDescriptions());
-//        } catch (com.googlecode.javacv.FrameGrabber.Exception e) {
-//            e.printStackTrace();
-//        }
-
         grabber = new OpenCVFrameGrabber(0);
-        frameGrabber = new FrameGrabber(canvas, grabber, marker);
+        frameGrabber = new FrameGrabber(canvas, grabber);
     }
 
     public void initGrabber() {
@@ -118,23 +81,30 @@ public class Controller {
             Highgui.imwrite("binImage.bmp", binImage);
 
             List<Circle> circles = CircleFinder.extractCircles(binImage);
-            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
-            drawCircles(coloredSource, circles);
-            Highgui.imwrite("circles.bmp", coloredSource);
-            writeDataMatrixImages(ImageIO.read(new File("tube.bmp")), circles);
-            try {
-                BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));
-                final WritableImage fxImage = SwingFXUtils.toFXImage(imageWithCircles, null);
-                Platform.runLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        canvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
-                    }
-                });
+            for (Circle circle : circles) {
+                double x = circle.x - circle.radius;
+                double y = circle.y - circle.radius;
+                Mat circleImage = binImage.submat(new Rect((int)x, (int)y, (int)(circle.radius * 2), (int)(circle.radius * 2)));
+               List<Line> lines =  LineFinder.extractLines(circleImage);
 
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+//            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
+//            drawCircles(coloredSource, circles);
+//            Highgui.imwrite("circles.bmp", coloredSource);
+//            writeDataMatrixImages(ImageIO.read(new File("tube.bmp")), circles);
+//            try {
+//                BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));
+//                final WritableImage fxImage = SwingFXUtils.toFXImage(imageWithCircles, null);
+//                Platform.runLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        canvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
+//                    }
+//                });
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
         } else {
             try {
                 BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));
@@ -170,6 +140,12 @@ public class Controller {
     public static void drawCircles(Mat image, List<Circle> circles) {
         for (Circle ball : circles) {
             Core.circle(image, new Point(ball.x, ball.y), (int) ball.radius, new Scalar(0, 255, 0), 2);
+        }
+    }
+
+    public static void drawLines(Mat image, List<Line> lines) {
+        for (Line line : lines) {
+            Core.line(image, line.getPoint_1(), line.getPoint_2(), new Scalar(0, 255, 0), 2);
         }
     }
 

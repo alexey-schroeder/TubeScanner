@@ -1,7 +1,8 @@
-package sample;
+package sample.utils;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+import sample.Circle;
 
 import java.util.ArrayList;
 import java.util.List;
