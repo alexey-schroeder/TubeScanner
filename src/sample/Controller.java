@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Controller {
@@ -75,19 +76,59 @@ public class Controller {
             frameGrabber.pauseGrabber();
             File file = new File("tube.bmp");
             Mat source = Highgui.imread(file.getAbsolutePath(), CvType.CV_8UC4);
-            Mat binImage = new Mat(source.rows(), source.cols(), source.type());
-            Imgproc.adaptiveThreshold(source, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 5, 2);
 
-            Highgui.imwrite("binImage.bmp", binImage);
 
-            List<Circle> circles = CircleFinder.extractCircles(binImage);
+            List<Circle> circles = CircleFinder.extractCircles(source);
+            List<Line> allLines = new ArrayList<Line>();
+            int counter = 1;
             for (Circle circle : circles) {
-                double x = circle.x - circle.radius;
-                double y = circle.y - circle.radius;
-                Mat circleImage = binImage.submat(new Rect((int)x, (int)y, (int)(circle.radius * 2), (int)(circle.radius * 2)));
-               List<Line> lines =  LineFinder.extractLines(circleImage);
+                int x = (int) (circle.x - circle.radius);
+                if (x < 0) {
+                    x = 0;
+                }
 
+                int y = (int) (circle.y - circle.radius);
+                if (y < 0) {
+                    y = 0;
+                }
+
+                int width = (int) (circle.radius * 2);
+                if (width + x > source.cols()) {
+                    width = source.cols() - x;
+                }
+                int height = (int) (circle.radius * 2);
+                if (height + y > source.rows()) {
+                    height = source.rows() - y;
+                }
+                Mat circleImage = source.submat(new Rect(x, y, width, height));
+                Highgui.imwrite("circles/circle_" + counter + ".bmp", circleImage);
+
+                List<Line> lines = LineFinder.extractLines(circleImage);
+
+                drawLines(circleImage, lines);
+//                Highgui.imwrite("lines/lines_" + counter + ".bmp", circleImage);
+                System.out.println("Lines in " + counter + ": " +lines.size());
+                for (Line line : lines) {
+
+                    Point point_1 = line.getPoint_1();
+                    Point point_2 = line.getPoint_2();
+
+                    point_1.x = point_1.x + circle.x - circle.radius;
+                    point_2.x = point_2.x + circle.x - circle.radius;
+
+                    point_1.y = point_1.y + circle.y - circle.radius;
+                    point_2.y = point_2.y + circle.y - circle.radius;
+
+                }
+                allLines.addAll(lines);
+                counter++;
             }
+
+            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
+            drawCircles(coloredSource, circles);
+            Highgui.imwrite("circles.bmp", coloredSource);
+            drawLines(coloredSource, allLines);
+            Highgui.imwrite("lines.bmp", coloredSource);
 //            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
 //            drawCircles(coloredSource, circles);
 //            Highgui.imwrite("circles.bmp", coloredSource);
@@ -145,7 +186,7 @@ public class Controller {
 
     public static void drawLines(Mat image, List<Line> lines) {
         for (Line line : lines) {
-            Core.line(image, line.getPoint_1(), line.getPoint_2(), new Scalar(0, 255, 0), 2);
+            Core.line(image, line.getPoint_1(), line.getPoint_2(), new Scalar(0, 0, 255), 2);
         }
     }
 
