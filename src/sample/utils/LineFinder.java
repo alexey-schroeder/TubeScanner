@@ -49,19 +49,26 @@ public class LineFinder {
 
         Mat binImage = new Mat(image.rows(), image.cols(), image.type());
         Imgproc.GaussianBlur(image, binImage, new Size(5, 5), 5, 5);
-        double iCannyLowerThreshold = 35;
+//        Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 5, 0);
+//        Highgui.imwrite("lines/binImage_" + counter + ".bmp", binImage);
+//        Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 3);
+//        Highgui.imwrite("dilateImage.bmp", binImage);
+//        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 1);
+//        Highgui.imwrite("lines/erodeImage_" + counter + ".bmp", binImage);
+//        Highgui.imwrite("erodeImage.bmp", binImage);
+        double iCannyLowerThreshold = 25;
         double iCannyUpperThreshold = 70;
         Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-        Highgui.imwrite("lines/binImage_" + counter + ".bmp", binImage);
+        Highgui.imwrite("lines/cannyImage_" + counter + ".bmp", binImage);
 
         List<Line> result = new ArrayList<Line>();
         Mat lines = new Mat();
-        int iHoughLinesThreshold = 3;
-        int iHoughLinesMinLineSize = 25;
-        int iHoughLinesGap = 2;
-        Imgproc.HoughLinesP(binImage, lines, 1, Math.PI / 180, iHoughLinesThreshold, iHoughLinesMinLineSize, iHoughLinesGap);
+        int linesThreshold = 20;
+        int linesMinLineSize = 35;
+        int linesGap = 7;
+        Imgproc.HoughLinesP(binImage, lines, 1, Math.PI / 180, linesThreshold, linesMinLineSize, linesGap);
 
-        for (int x = 0; x < Math.min(lines.cols(), 40); x++) {
+        for (int x = 0; x < lines.cols(); x++) {
             double[] vecHoughLines = lines.get(0, x);
 
             if (vecHoughLines.length == 0)

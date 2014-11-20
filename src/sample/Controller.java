@@ -81,22 +81,23 @@ public class Controller {
             List<Circle> circles = CircleFinder.extractCircles(source);
             List<Line> allLines = new ArrayList<Line>();
             int counter = 1;
+            int puffer = 15;
             for (Circle circle : circles) {
-                int x = (int) (circle.x - circle.radius);
+                int x = (int) (circle.x - circle.radius - puffer);
                 if (x < 0) {
                     x = 0;
                 }
 
-                int y = (int) (circle.y - circle.radius);
+                int y = (int) (circle.y - circle.radius - puffer);
                 if (y < 0) {
                     y = 0;
                 }
 
-                int width = (int) (circle.radius * 2);
+                int width = (int) (circle.radius * 2 + puffer * 2);
                 if (width + x > source.cols()) {
                     width = source.cols() - x;
                 }
-                int height = (int) (circle.radius * 2);
+                int height = (int) (circle.radius * 2 + puffer * 2);
                 if (height + y > source.rows()) {
                     height = source.rows() - y;
                 }
@@ -107,7 +108,7 @@ public class Controller {
 
                 drawLines(circleImage, lines);
 //                Highgui.imwrite("lines/lines_" + counter + ".bmp", circleImage);
-                System.out.println("Lines in " + counter + ": " +lines.size());
+                System.out.println("Lines in " + counter + ": " + lines.size());
                 for (Line line : lines) {
 
                     Point point_1 = line.getPoint_1();
