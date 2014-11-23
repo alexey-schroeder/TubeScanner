@@ -9,7 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import org.opencv.core.*;
 import org.opencv.core.Point;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import sample.utils.CircleFinder;
 import sample.utils.ImageUtils;
@@ -75,8 +75,13 @@ public class Controller {
             doScreen();
             frameGrabber.pauseGrabber();
             File file = new File("tube.bmp");
-            Mat source = Highgui.imread(file.getAbsolutePath(), CvType.CV_8UC4);
-
+            Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+            Mat coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
+            double iCannyLowerThreshold = 25;
+            double iCannyUpperThreshold = 70;
+            Mat binImage = new Mat(source.rows(), source.cols(), source.type());
+            Imgproc.Canny(source, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
+            Imgcodecs.imwrite("cannyImage.bmp", binImage);
 
             List<Circle> circles = CircleFinder.extractCircles(source);
             List<Line> allLines = new ArrayList<Line>();
@@ -102,9 +107,10 @@ public class Controller {
                     height = source.rows() - y;
                 }
                 Mat circleImage = source.submat(new Rect(x, y, width, height));
-                Highgui.imwrite("circles/circle_" + counter + ".bmp", circleImage);
+                Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
+                Imgcodecs.imwrite("circles/circle_" + counter + ".bmp", circleImage);
 
-                List<Line> lines = LineFinder.extractLines(circleImage);
+                List<Line> lines = LineFinder.extractLines(circleImage, coloredCircleImage);
 
                 drawLines(circleImage, lines);
 //                Highgui.imwrite("lines/lines_" + counter + ".bmp", circleImage);
@@ -125,11 +131,11 @@ public class Controller {
                 counter++;
             }
 
-            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
+             coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
             drawCircles(coloredSource, circles);
-            Highgui.imwrite("circles.bmp", coloredSource);
+            Imgcodecs.imwrite("circles.bmp", coloredSource);
             drawLines(coloredSource, allLines);
-            Highgui.imwrite("lines.bmp", coloredSource);
+            Imgcodecs.imwrite("lines.bmp", coloredSource);
 //            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
 //            drawCircles(coloredSource, circles);
 //            Highgui.imwrite("circles.bmp", coloredSource);
@@ -181,13 +187,13 @@ public class Controller {
 
     public static void drawCircles(Mat image, List<Circle> circles) {
         for (Circle ball : circles) {
-            Core.circle(image, new Point(ball.x, ball.y), (int) ball.radius, new Scalar(0, 255, 0), 2);
+            Imgproc.circle(image, new Point(ball.x, ball.y), (int) ball.radius, new Scalar(0, 255, 0), 2);
         }
     }
 
     public static void drawLines(Mat image, List<Line> lines) {
         for (Line line : lines) {
-            Core.line(image, line.getPoint_1(), line.getPoint_2(), new Scalar(0, 0, 255), 2);
+            Imgproc.line(image, line.getPoint_1(), line.getPoint_2(), new Scalar(0, 0, 255), 2);
         }
     }
 

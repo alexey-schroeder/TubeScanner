@@ -10,6 +10,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.image.WritableImage;
 import org.opencv.core.*;
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -127,7 +128,7 @@ public class FrameGrabber {
 
     public static void drawCircles(Mat image, List<Circle> circles) {
         for (Circle ball : circles) {
-            Core.circle(image, new Point(ball.x, ball.y), (int) ball.radius, new Scalar(0, 255, 0), 2);
+            Imgproc.circle(image, new Point(ball.x, ball.y), (int) ball.radius, new Scalar(0, 255, 0), 2);
         }
     }
 
