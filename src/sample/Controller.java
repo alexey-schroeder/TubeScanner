@@ -87,6 +87,7 @@ public class Controller {
             List<Line> allLines = new ArrayList<Line>();
             int counter = 1;
             int puffer = 15;
+            LineFinder lineFinder = new LineFinder();
             for (Circle circle : circles) {
                 int x = (int) (circle.x - circle.radius - puffer);
                 if (x < 0) {
@@ -110,7 +111,7 @@ public class Controller {
                 Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
                 Imgcodecs.imwrite("circles/circle_" + counter + ".bmp", circleImage);
 
-                List<Line> lines = LineFinder.extractLines(circleImage, coloredCircleImage);
+                List<Line> lines = lineFinder.extractLines(circleImage, coloredCircleImage);
 
                 drawLines(circleImage, lines);
 //                Highgui.imwrite("lines/lines_" + counter + ".bmp", circleImage);
