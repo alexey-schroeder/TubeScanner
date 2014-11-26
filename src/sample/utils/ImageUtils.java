@@ -1,6 +1,7 @@
 package sample.utils;
 
-import org.opencv.core.Mat;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,15 +12,15 @@ import java.awt.image.DataBufferByte;
  */
 public class ImageUtils {
 
-    public static Image toBufferedImage(Mat m){
+    public static Image toBufferedImage(Mat m) {
         int type = BufferedImage.TYPE_BYTE_GRAY;
-        if ( m.channels() > 1 ) {
+        if (m.channels() > 1) {
             type = BufferedImage.TYPE_3BYTE_BGR;
         }
-        int bufferSize = m.channels()*m.cols()*m.rows();
-        byte [] b = new byte[bufferSize];
-        m.get(0,0,b); // get all the pixels
-        BufferedImage image = new BufferedImage(m.cols(),m.rows(), type);
+        int bufferSize = m.channels() * m.cols() * m.rows();
+        byte[] b = new byte[bufferSize];
+        m.get(0, 0, b); // get all the pixels
+        BufferedImage image = new BufferedImage(m.cols(), m.rows(), type);
         final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         System.arraycopy(b, 0, targetPixels, 0, b.length);
         return image;
@@ -110,5 +111,20 @@ public class ImageUtils {
         }
 
         return image;
+    }
+
+    public static Mat rotate(Mat src, double angle) {
+        int len = Math.max(src.cols(), src.rows());
+        org.opencv.core.Point pt = new org.opencv.core.Point(len / 2.0, len / 2.0);
+        return rotate(src, pt, angle);
+    }
+
+    public static Mat rotate(Mat src, org.opencv.core.Point center, double angle) {
+        Mat r = Imgproc.getRotationMatrix2D(center, angle, 1.0);
+//        int maxLen = (int) Math.sqrt(src.rows() * src.rows() + src.cols() * src.cols());
+        int maxLen = src.rows();
+        Mat dst = new Mat(maxLen, maxLen, src.type());
+        Imgproc.warpAffine(src, dst, r, new Size(maxLen, maxLen));
+        return dst;
     }
 }

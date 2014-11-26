@@ -218,7 +218,7 @@ public class LineFinder {
                 connectedComponents.get(r, c, label);
                 int labelNum = label[0];
                 Set<Point> set = componentPoints[labelNum];
-                if(set == null){
+                if (set == null) {
                     set = new HashSet<Point>();
                     componentPoints[labelNum] = set;
                 }
@@ -228,7 +228,7 @@ public class LineFinder {
 
 //        Imgcodecs.imwrite("lines/connectedImage_" + counter + ".bmp", connectedComponents);
 //        Imgproc.findContours(binImage, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
-
+        RotatedRect rotatedRect = null;
         for (Set<Point> points : componentPoints) {
 //            MatOfPoint contour = contours.get(i);
             Point[] contourPoints = points.toArray(new Point[0]);
@@ -249,8 +249,8 @@ public class LineFinder {
 //                }
 //            }
 
-            RotatedRect rotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contourPoints));
-            Size rectSize = rotatedRect.size;
+            RotatedRect tempRotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contourPoints));
+            Size rectSize = tempRotatedRect.size;
             double minSize = Math.min(rectSize.width, rectSize.height);
             double maxSize = Math.max(rectSize.width, rectSize.height);
             double minSizeDiff = 75;//unterschied zwischen width und height in prozent
@@ -260,10 +260,12 @@ public class LineFinder {
             double area = rectSize.area();
             if (sizeDiff > minSizeDiff && area > minArea && area < maxArea) {
                 Point[] rect_points = new Point[4];
-                rotatedRect.points(rect_points);
-                Scalar color = new Scalar(0, 0, 255);
-                for (int j = 0; j < 4; j++)
-                    Imgproc.line(coloredImage, rect_points[j], rect_points[(j + 1) % 4], color, 1);
+                tempRotatedRect.points(rect_points);
+//                Scalar color = new Scalar(0, 0, 255);
+//                for (int j = 0; j < 4; j++) {
+//                    Imgproc.line(coloredImage, rect_points[j], rect_points[(j + 1) % 4], color, 1);
+//                }
+                rotatedRect = tempRotatedRect;
             }
         }
 
@@ -285,7 +287,15 @@ public class LineFinder {
 //            Imgproc.drawContours(coloredImage, Arrays.asList(maxCounturs), i, color, 1);
 //        }
         hierarchy.release();
-        Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", coloredImage);
+        if (rotatedRect != null) {
+            Mat rotatedImage = ImageUtils.rotate(grayImage, rotatedRect.center, rotatedRect.angle);
+            int puffer = 2;
+            int x = (int) (rotatedRect.center.x - puffer - rotatedRect.size.width / 2);
+            int y = (int) (rotatedRect.center.y - puffer - rotatedRect.size.height / 2);
+            Mat code = rotatedImage.submat(new Rect(x, y, (int) rotatedRect.size.width + puffer * 2, (int) rotatedRect.size.height + puffer * 2));
+            Imgproc.adaptiveThreshold(code, code, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 0);
+            Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", code);
+        }
         List<Line> result = new ArrayList<Line>();
         counter++;
         return result;
