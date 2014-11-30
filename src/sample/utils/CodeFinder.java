@@ -12,7 +12,7 @@ import static org.opencv.core.CvType.CV_32FC2;
 /**
  * Created by Alex on 17.11.2014.
  */
-public class LineFinder {
+public class CodeFinder {
     int counter = 0;
 //    public static List<Line> extractLines(Mat image) {
 //        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
@@ -201,7 +201,7 @@ public class LineFinder {
 //        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
 //        Imgcodecs.imwrite("lines/cannyImage_" + counter + ".bmp", binImage);
         Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 51, 0);
-        Imgcodecs.imwrite("lines/thresholdImage_" + counter + ".bmp", binImage);
+//        Imgcodecs.imwrite("lines/thresholdImage_" + counter + ".bmp", binImage);
 //        Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 1);
 //        Imgcodecs.imwrite("lines/dilateImage_" + counter + ".bmp", binImage);
 //        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 1);
@@ -293,7 +293,7 @@ public class LineFinder {
             int x = (int) (rotatedRect.center.x - puffer - rotatedRect.size.width / 2);
             int y = (int) (rotatedRect.center.y - puffer - rotatedRect.size.height / 2);
             Mat code = rotatedImage.submat(new Rect(x, y, (int) rotatedRect.size.width + puffer * 2, (int) rotatedRect.size.height + puffer * 2));
-            Imgproc.adaptiveThreshold(code, code, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 0);
+            Imgproc.adaptiveThreshold(code, code, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 51, 0);
             Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", code);
         }
         List<Line> result = new ArrayList<Line>();

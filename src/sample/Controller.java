@@ -1,37 +1,38 @@
 package sample;
 
+import com.google.zxing.*;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.googlecode.javacv.OpenCVFrameGrabber;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import sample.utils.CircleFinder;
+import sample.utils.CodeFinder;
+import sample.utils.DataMatrixInterpreter;
 import sample.utils.ImageUtils;
-import sample.utils.LineFinder;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Controller {
-    public TextField aX;
-    public TextField aY;
-    public TextField bX;
-    public TextField bY;
-    public TextField cX;
-    public TextField cY;
-    public TextField dX;
-    public TextField dY;
     private OpenCVFrameGrabber grabber;
     private FrameGrabber frameGrabber;
     public Canvas canvas;
@@ -62,9 +63,13 @@ public class Controller {
     }
 
     private void doScreen() {
+        doScreen("screen.bmp");
+    }
+
+    private void doScreen(String fileName) {
         BufferedImage frame = frameGrabber.getLastFrame();
         try {
-            ImageIO.write(frame, "bmp", new File("tube.bmp"));
+            ImageIO.write(frame, "bmp", new File(fileName));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -72,9 +77,10 @@ public class Controller {
 
     public void onCalculateClick(ActionEvent actionEvent) throws IOException {
         if (frameGrabber.isRunning()) {
-            doScreen();
+            String fileName = "tube.bmp";
+            doScreen(fileName);
             frameGrabber.pauseGrabber();
-            File file = new File("tube.bmp");
+            File file = new File(fileName);
             Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
             Mat coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
             double iCannyLowerThreshold = 25;
@@ -87,7 +93,7 @@ public class Controller {
             List<Line> allLines = new ArrayList<Line>();
             int counter = 1;
             int puffer = 15;
-            LineFinder lineFinder = new LineFinder();
+            CodeFinder codeFinder = new CodeFinder();
             for (Circle circle : circles) {
                 int x = (int) (circle.x - circle.radius - puffer);
                 if (x < 0) {
@@ -111,7 +117,7 @@ public class Controller {
                 Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
                 Imgcodecs.imwrite("circles/circle_" + counter + ".bmp", circleImage);
 
-                List<Line> lines = lineFinder.extractLines(circleImage, coloredCircleImage);
+                List<Line> lines = codeFinder.extractLines(circleImage, coloredCircleImage);
 
                 drawLines(circleImage, lines);
 //                Highgui.imwrite("lines/lines_" + counter + ".bmp", circleImage);
@@ -132,7 +138,7 @@ public class Controller {
                 counter++;
             }
 
-             coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
+            coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
             drawCircles(coloredSource, circles);
             Imgcodecs.imwrite("circles.bmp", coloredSource);
             drawLines(coloredSource, allLines);
@@ -154,6 +160,7 @@ public class Controller {
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
+            decode();
         } else {
             try {
                 BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));
@@ -170,6 +177,50 @@ public class Controller {
             }
         }
     }
+
+    public void decode() throws IOException {
+        File file = new File("lines");
+        File[] codes = file.listFiles();
+        Map<EncodeHintType, ErrorCorrectionLevel> hintMap = new HashMap<EncodeHintType, ErrorCorrectionLevel>();
+        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+        for (File code : codes) {
+            String text = dataMatrixInterpreter.decode(code);
+            System.out.println(text);
+        }
+    }
+
+    public String decode(File file) throws IOException {
+        int angle = 0;
+        BinaryBitmap binaryBitmap = null;
+        BufferedImage image = ImageIO.read(new FileInputStream(file));
+        while (true) {
+            try {
+                System.out.println(angle);
+//                AffineTransform transform = new AffineTransform();
+//                transform.rotate(Math.toRadians(angle), image.getWidth() / 2, image.getHeight() / 2);
+//                AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+                BufferedImage rotatedImage = ImageUtils.rotate(image, Math.toRadians(angle));
+                File imageFile = new File("code_" + angle+ ".bmp");
+               boolean written =  ImageIO.write(rotatedImage, "bmp", imageFile);
+
+                System.out.println(imageFile.getAbsolutePath() + " written: " + written);
+                binaryBitmap = new BinaryBitmap(new HybridBinarizer(
+                        new BufferedImageLuminanceSource(rotatedImage)));
+
+                Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
+                String text = qrCodeResult.getText();
+                return text;
+            } catch (NotFoundException e) {
+                if (angle == 270) {
+                    return null;
+                } else {
+                    angle = angle + 90;
+                }
+            }
+        }
+    }
+
 
     public static void writeDataMatrixImages(BufferedImage image, List<Circle> circles) {
         int counter = 1;

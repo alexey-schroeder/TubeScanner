@@ -4,6 +4,8 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
@@ -126,5 +128,13 @@ public class ImageUtils {
         Mat dst = new Mat(maxLen, maxLen, src.type());
         Imgproc.warpAffine(src, dst, r, new Size(maxLen, maxLen));
         return dst;
+    }
+
+    public static BufferedImage rotate(BufferedImage image, double angle) {
+        AffineTransform transform = new AffineTransform();
+        transform.rotate(angle, image.getWidth() / 2, image.getHeight() / 2);
+        AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+        BufferedImage rotatedImage = op.filter(image, null);
+        return rotatedImage;
     }
 }
