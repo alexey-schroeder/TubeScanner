@@ -14,7 +14,7 @@ import static org.opencv.core.CvType.CV_32FC2;
  */
 public class CodeFinder {
     int counter = 0;
-//    public static List<Line> extractLines(Mat image) {
+//    public static List<Line> extractCode(Mat image) {
 //        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
 //        Imgproc.GaussianBlur(image, binImage, new Size(5, 5), 5, 5);
 //        double iCannyLowerThreshold = 35;
@@ -46,7 +46,7 @@ public class CodeFinder {
 //        return result;
 //    }
 
-//    public static List<Line> extractLines(Mat image) {
+//    public static List<Line> extractCode(Mat image) {
 //        Highgui.imwrite("lines/rowImage_" + counter + ".bmp", image);
 //        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
 //        Imgproc.GaussianBlur(image, binImage, new Size(5, 5), 5, 5);
@@ -95,7 +95,7 @@ public class CodeFinder {
 //        return result;
 //    }
 
-//    public static List<Line> extractLines(Mat grayImage, Mat coloredImage) {
+//    public static List<Line> extractCode(Mat grayImage, Mat coloredImage) {
 //        double imageArea = grayImage.cols() * grayImage.rows();
 //        Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), grayImage.type());
 //        Imgproc.GaussianBlur(grayImage, binImage, new Size(5, 5), 5, 5);
@@ -144,7 +144,7 @@ public class CodeFinder {
 //        return result;
 //    }
 
-//    public static List<Line> extractLines(Mat grayImage, Mat coloredImage) {
+//    public static List<Line> extractCode(Mat grayImage, Mat coloredImage) {
 //        double imageArea = grayImage.cols() * grayImage.rows();
 //        Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), grayImage.type());
 //        Imgproc.GaussianBlur(grayImage, binImage, new Size(5, 5), 5, 5);
@@ -190,7 +190,8 @@ public class CodeFinder {
 //    }
 
 
-    public List<Line> extractLines(Mat grayImage, Mat coloredImage) {
+    public Mat extractCode(Mat grayImage, Mat coloredImage) {
+        Mat code = null;
         double imageArea = grayImage.cols() * grayImage.rows();
         Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), grayImage.type());
         Imgproc.GaussianBlur(grayImage, binImage, new Size(3, 3), 3, 3);
@@ -291,14 +292,107 @@ public class CodeFinder {
             Mat rotatedImage = ImageUtils.rotate(grayImage, rotatedRect.center, rotatedRect.angle);
             int puffer = 2;
             int x = (int) (rotatedRect.center.x - puffer - rotatedRect.size.width / 2);
+            if (x < 0) {
+                x = 0;
+            }
             int y = (int) (rotatedRect.center.y - puffer - rotatedRect.size.height / 2);
-            Mat code = rotatedImage.submat(new Rect(x, y, (int) rotatedRect.size.width + puffer * 2, (int) rotatedRect.size.height + puffer * 2));
-            Imgproc.adaptiveThreshold(code, code, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 51, 0);
-            Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", code);
+            if (y < 0) {
+                y = 0;
+            }
+            int width = (int) rotatedRect.size.width + puffer * 2;
+            if (x + width > rotatedImage.cols()) {
+                width = rotatedImage.cols() - x;
+            }
+            int height = (int) rotatedRect.size.height + puffer * 2;
+            if (y + height > rotatedImage.rows()) {
+                height = rotatedImage.rows() - y;
+            }
+            code = rotatedImage.submat(new Rect(x, y, width, height));
+//            Imgproc.adaptiveThreshold(code, code, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 51, 0);
+            Imgproc.threshold(code, code, 50, 255, Imgproc.THRESH_BINARY_INV);
+//            Imgproc.erode(code, code, new Mat(), new Point(-1, -1), 1);
+//            Imgproc.dilate(code, code, new Mat(), new Point(-1, -1), 1);
+            int leftBound = findLeftBound(code, (int) (code.cols() * 0.6));
+            int rightBound = findRightBound(code, (int) (code.cols() * 0.6));
+            int topBound = findTopBound(code, (int) (code.rows() * 0.6));
+            int bottomBound = findBottomBound(code, (int) (code.rows() * 0.6));
+            code = code.submat(new Rect(leftBound, topBound, rightBound - leftBound, bottomBound - topBound));
+//            Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", code);
         }
-        List<Line> result = new ArrayList<Line>();
         counter++;
-        return result;
+        return code;
+    }
+
+    public int findLeftBound(Mat mat, int threshold) {
+        for (int col = 0; col < mat.cols(); col++) {
+            int counter = 0;
+            boolean isEmpty = false;
+            for (int row = 0; row < mat.rows() && !isEmpty; row++) {
+                double[] data = mat.get(row, col);
+                if (data[0] > 254) {
+                    counter++;
+                    isEmpty = counter > threshold;
+                }
+            }
+            if (!isEmpty) {
+                return col;
+            }
+        }
+        return mat.cols();
+    }
+
+    public int findRightBound(Mat mat, int threshold) {
+        for (int col = mat.cols() - 1; col >= 0; col--) {
+            int counter = 0;
+            boolean isEmpty = false;
+            for (int row = 0; row < mat.rows() && !isEmpty; row++) {
+                double[] data = mat.get(row, col);
+                if (data[0] > 254) {
+                    counter++;
+                    isEmpty = counter > threshold;
+                }
+            }
+            if (!isEmpty) {
+                return col;
+            }
+        }
+        return 0;
+    }
+
+    public int findTopBound(Mat mat, int threshold) {
+        for (int row = 0; row < mat.rows(); row++) {
+            int counter = 0;
+            boolean isEmpty = false;
+            for (int col = 0; col < mat.cols() && !isEmpty; col++) {
+                double[] data = mat.get(row, col);
+                if (data[0] > 254) {
+                    counter++;
+                    isEmpty = counter > threshold;
+                }
+            }
+            if (!isEmpty) {
+                return row;
+            }
+        }
+        return mat.rows();
+    }
+
+    public int findBottomBound(Mat mat, int threshold) {
+        for (int row = mat.rows() - 1; row >= 0; row--) {
+            int counter = 0;
+            boolean isEmpty = false;
+            for (int col = 0; col < mat.cols() && !isEmpty; col++) {
+                double[] data = mat.get(row, col);
+                if (data[0] > 254) {
+                    counter++;
+                    isEmpty = counter > threshold;
+                }
+            }
+            if (!isEmpty) {
+                return row;
+            }
+        }
+        return 0;
     }
 
     private Point[] findPointsByMaxDistance(Point[] contourPoints) {

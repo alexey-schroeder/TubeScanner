@@ -14,15 +14,10 @@ import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import sample.utils.CircleFinder;
-import sample.utils.CodeFinder;
-import sample.utils.DataMatrixInterpreter;
-import sample.utils.ImageUtils;
+import sample.utils.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -94,6 +89,7 @@ public class Controller {
             int counter = 1;
             int puffer = 15;
             CodeFinder codeFinder = new CodeFinder();
+            CodeCleaner codeCleaner = new CodeCleaner();
             for (Circle circle : circles) {
                 int x = (int) (circle.x - circle.radius - puffer);
                 if (x < 0) {
@@ -115,26 +111,13 @@ public class Controller {
                 }
                 Mat circleImage = source.submat(new Rect(x, y, width, height));
                 Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
-                Imgcodecs.imwrite("circles/circle_" + counter + ".bmp", circleImage);
+                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
 
-                List<Line> lines = codeFinder.extractLines(circleImage, coloredCircleImage);
+                Mat code = codeFinder.extractCode(circleImage, coloredCircleImage);
+                Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
 
-                drawLines(circleImage, lines);
-//                Highgui.imwrite("lines/lines_" + counter + ".bmp", circleImage);
-                System.out.println("Lines in " + counter + ": " + lines.size());
-                for (Line line : lines) {
-
-                    Point point_1 = line.getPoint_1();
-                    Point point_2 = line.getPoint_2();
-
-                    point_1.x = point_1.x + circle.x - circle.radius;
-                    point_2.x = point_2.x + circle.x - circle.radius;
-
-                    point_1.y = point_1.y + circle.y - circle.radius;
-                    point_2.y = point_2.y + circle.y - circle.radius;
-
-                }
-                allLines.addAll(lines);
+                Mat cleanedCode = codeCleaner.cleanCode(code);
+                Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", cleanedCode);
                 counter++;
             }
 
@@ -201,8 +184,8 @@ public class Controller {
 //                transform.rotate(Math.toRadians(angle), image.getWidth() / 2, image.getHeight() / 2);
 //                AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
                 BufferedImage rotatedImage = ImageUtils.rotate(image, Math.toRadians(angle));
-                File imageFile = new File("code_" + angle+ ".bmp");
-               boolean written =  ImageIO.write(rotatedImage, "bmp", imageFile);
+                File imageFile = new File("code_" + angle + ".bmp");
+                boolean written = ImageIO.write(rotatedImage, "bmp", imageFile);
 
                 System.out.println(imageFile.getAbsolutePath() + " written: " + written);
                 binaryBitmap = new BinaryBitmap(new HybridBinarizer(
