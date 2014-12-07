@@ -114,10 +114,14 @@ public class Controller {
                 Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
 
                 Mat code = codeFinder.extractCode(circleImage, coloredCircleImage);
-                Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
+                if (code != null) {
+                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
 
-                Mat cleanedCode = codeCleaner.cleanCode(code);
-                Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", cleanedCode);
+                    Mat boundedCode = codeCleaner.getBoundedCode(code);
+                    Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
+                    Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+                    Imgcodecs.imwrite("lines/code_" + counter + "_3.bmp", cleanedCode);
+                }
                 counter++;
             }
 
@@ -169,7 +173,7 @@ public class Controller {
         DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
         for (File code : codes) {
             String text = dataMatrixInterpreter.decode(code);
-            System.out.println(text);
+            System.out.println(code.getName() + ": " + text);
         }
     }
 
