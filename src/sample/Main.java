@@ -46,28 +46,28 @@ public class Main extends Application {
     }
 
 
-    //        public static void main(String[] args) {
-//        launch(args);
-//    }
-    public static void main(String[] args) throws IOException {
-        loadLibrary();
-        File file = new File("lines/code_1_2.bmp");
-        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
-//        CodeCleaner codeCleaner = new CodeCleaner();
-//        Mat rec =codeCleaner.calculateLeftBottomCase(source, 4);
-
-        Mat rec = calculateLeftBottomCase(source, 4);
-        Imgcodecs.imwrite("lines/code_temp.bmp", rec);
-        Imgproc.dilate(rec, rec, new Mat(), new Point(-1, -1), 1);
-        Imgcodecs.imwrite("lines/code_dilate.bmp", rec);
-        Imgproc.erode(rec, rec, new Mat(), new Point(-1, -1), 2);
-        Imgcodecs.imwrite("lines/code_erode.bmp", rec);
-        Core.bitwise_not(rec, rec);
-        Imgcodecs.imwrite("lines/code_negative.bmp", rec);
-        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
-        String text = dataMatrixInterpreter.decode(new File("lines/code_negative.bmp"));
-        System.out.println(text);
+    public static void main(String[] args) {
+        launch(args);
     }
+//    public static void main(String[] args) throws IOException {
+//        loadLibrary();
+//        File file = new File("lines/code_1_2.bmp");
+//        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+//        CodeCleaner codeCleaner = new CodeCleaner();
+//        Mat rec = codeCleaner.cleanCode(source);
+////        Imgcodecs.imwrite("lines/code_temp.bmp", rec);
+////        Imgproc.dilate(rec, rec, new Mat(), new Point(-1, -1), 1);
+////        Imgcodecs.imwrite("lines/code_dilate.bmp", rec);
+////        Imgproc.erode(rec, rec, new Mat(), new Point(-1, -1), 2);
+////        Imgcodecs.imwrite("lines/code_erode.bmp", rec);
+////        rec = normalize(rec);
+////        Imgcodecs.imwrite("lines/code_normilezed.bmp", rec);
+//        Core.bitwise_not(rec, rec);
+//        Imgcodecs.imwrite("lines/code_negative.bmp", rec);
+//        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+//        String text = dataMatrixInterpreter.decode(new File("lines/code_negative.bmp"));
+//        System.out.println(text);
+//    }
 
 
     private static Mat calculateLeftBottomCase(Mat mat, int size) {
@@ -78,34 +78,34 @@ public class Main extends Application {
         Mat result = Mat.zeros(rows, cols, mat.type());
         int rowCounter = 1;
 
-        int counter = 0;
         for (int row = mat.rows() - size; row >= 0; row = row - size) {
-            int colCounter = 0;
             if (row < 0) {
                 rowSize = rowSize + row;
                 row = 0;
             }
-            int resultRow = rows - rowCounter * size;
             int colSize = size;
-//            System.out.println("row: " + row);
             for (int col = 0; col < mat.cols(); col = col + size) {
                 if (col + size > mat.cols()) {
                     colSize = mat.cols() - col;
                 }
-                Imgproc.rectangle(mat, new Point(col, row), new Point(col + colSize, row + rowSize), new Scalar(255, 0, 0), 1);
-//                Mat point = mat.submat(new Rect(col, row, colSize, rowSize));
-//                int pointValue = calculatePointValue(point);
-//                Mat calculatedPoint = new Mat(size, size, mat.type(), new Scalar(pointValue));
-//
-//                int resultCol = colCounter * size;
-//                calculatedPoint.copyTo(result.submat(new Rect(resultCol, resultRow, size, size)));
-//                Imgcodecs.imwrite("lines/code_temp_" + counter + ".bmp", result);
-                counter++;
-                colCounter++;
+                Imgproc.rectangle(result, new Point(col, row), new Point(col + colSize, row + rowSize), new Scalar(255, 0, 0), 1);
             }
             rowCounter++;
         }
-        return mat;
+        return result;
+    }
+
+    public static Mat normalize(Mat code) {
+        Mat result = Mat.zeros(code.rows(), code.cols(), code.type());
+        int size = code.rows() / 12;
+        for (int x = 0; x < code.cols(); x = x + size) {
+            for (int y = 0; y < code.rows(); y = y + size) {
+                double[] data = code.get(y + size / 2, x + size / 2);
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
+                calculatedPoint.copyTo(result.submat(new Rect(x, y, size, size)));
+            }
+        }
+        return result;
     }
 
     public static void loadLibrary() {

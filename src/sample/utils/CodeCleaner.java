@@ -23,15 +23,19 @@ public class CodeCleaner {
         switch (startPoint) {
             case LEFT_TOP:
                 result = calculateLeftTopCase(code, size);
+                result = normalizeInLeftTopCase(result, size);
                 break;
             case RIGHT_TOP:
                 result = calculateRightTopCase(code, size);
+                result = normalizeInRightTopCase(result, size);
                 break;
             case RIGHT_BOTTOM:
                 result = calculateRightBottomCase(code, size);
+                result = normalizeInRightBottomCase(result, size);
                 break;
             case LEFT_BOTTOM:
                 result = calculateLeftBottomCase(code, size);
+                result = normalizeInLeftBottomCase(result, size);
         }
         return result;
     }
@@ -46,39 +50,72 @@ public class CodeCleaner {
     }
 
     public Mat calculateLeftTopCase(Mat mat, int size) {
-        Mat result = new Mat(size * 12, size * 12, mat.type());
-        for (int row = 0; row < mat.rows() - size; row = row + size) {
-            for (int col = 0; col < mat.cols() - size; col = col + size) {
-                Mat point = mat.submat(new Rect(col, row, size, size));
-                int pointValue = calculatePointValue(point);
-                Mat calculatedPoint = new Mat(size, size, mat.type(), new Scalar(pointValue));
-                calculatedPoint.copyTo(result.submat(new Rect(col, row, size, size)));
+        int rows = size * 12;
+        int cols = size * 12;
+        int rowSize = size;
+
+        Mat result = mat.clone();
+
+        for (int row = 0; row < mat.rows(); row = row + size) {
+            if (row > mat.rows()) {
+                rowSize = mat.rows() - row;
+                row = mat.rows();
+            }
+            int colSize = size;
+            for (int col = 0; col < mat.cols(); col = col + size) {
+                if (col > mat.cols()) {
+                    colSize = mat.cols() - col;
+                    col = mat.rows();
+                }
+                Imgproc.rectangle(result, new Point(col, row), new Point(col + colSize, row + rowSize), new Scalar(255, 0, 0), 1);
             }
         }
         return result;
     }
 
     public Mat calculateRightTopCase(Mat mat, int size) {
-        Mat result = new Mat(size * 12, size * 12, mat.type());
-        for (int row = 0; row < mat.rows() - size; row = row + size) {
-            for (int col = mat.cols() - size; col > size; col = col - size) {
-                Mat point = mat.submat(new Rect(col, row, size, size));
-                int pointValue = calculatePointValue(point);
-                Mat calculatedPoint = new Mat(size, size, mat.type(), new Scalar(pointValue));
-                calculatedPoint.copyTo(result.submat(new Rect(col, row, size, size)));
+        int rows = size * 12;
+        int cols = size * 12;
+        int rowSize = size;
+
+        Mat result = mat.clone();
+
+        for (int row = 0; row < mat.rows(); row = row + size) {
+            if (row > mat.rows()) {
+                rowSize = mat.rows() - row;
+                row = mat.rows();
+            }
+            int colSize = size;
+            for (int col = mat.cols() - size; col >= 0; col = col - size) {
+                if (col < 0) {
+                    colSize = colSize + col;
+                    col = 0;
+                }
+                Imgproc.rectangle(result, new Point(col, row), new Point(col + colSize, row + rowSize), new Scalar(255, 0, 0), 1);
             }
         }
         return result;
     }
 
     public Mat calculateRightBottomCase(Mat mat, int size) {
-        Mat result = new Mat(size * 12, size * 12, mat.type());
-        for (int row = mat.rows() - size; row > size; row = row - size) {
-            for (int col = mat.cols() - size; col > size; col = col - size) {
-                Mat point = mat.submat(new Rect(col, row, size, size));
-                int pointValue = calculatePointValue(point);
-                Mat calculatedPoint = new Mat(size, size, mat.type(), new Scalar(pointValue));
-                calculatedPoint.copyTo(result.submat(new Rect(col, row, size, size)));
+        int rows = size * 12;
+        int cols = size * 12;
+        int rowSize = size;
+
+        Mat result = mat.clone();
+
+        for (int row = mat.rows() - size; row >= 0; row = row - size) {
+            if (row < 0) {
+                rowSize = rowSize + row;
+                row = 0;
+            }
+            int colSize = size;
+            for (int col = mat.cols() - size; col >= 0; col = col - size) {
+                if (col < 0) {
+                    colSize = colSize + col;
+                    col = 0;
+                }
+                Imgproc.rectangle(result, new Point(col, row), new Point(col + colSize, row + rowSize), new Scalar(255, 0, 0), 1);
             }
         }
         return result;
@@ -89,34 +126,19 @@ public class CodeCleaner {
         int cols = size * 12;
         int rowSize = size;
 
-        Mat result = Mat.zeros(rows, cols, mat.type());
-        int rowCounter = 1;
-
-        int counter = 0;
+        Mat result = mat.clone();
         for (int row = mat.rows() - size; row >= 0; row = row - size) {
-            System.out.println(row);
-            int colCounter = 0;
             if (row < 0) {
                 rowSize = rowSize + row;
                 row = 0;
             }
-            int resultRow = rows - rowCounter * size;
             int colSize = size;
             for (int col = 0; col < mat.cols(); col = col + size) {
                 if (col + size > mat.cols()) {
                     colSize = mat.cols() - col;
                 }
-                Mat point = mat.submat(new Rect(col, row, colSize, rowSize));
-                int pointValue = calculatePointValue(point);
-                Mat calculatedPoint = new Mat(size, size, mat.type(), new Scalar(pointValue));
-
-                int resultCol = colCounter * size;
-                calculatedPoint.copyTo(result.submat(new Rect(resultCol, resultRow, size, size)));
-                Imgcodecs.imwrite("lines/code_temp_" + counter + ".bmp", result);
-                counter++;
-                colCounter++;
+                Imgproc.rectangle(result, new Point(col, row), new Point(col + colSize, row + rowSize), new Scalar(255, 0, 0), 1);
             }
-            rowCounter++;
         }
         return result;
     }
@@ -163,6 +185,63 @@ public class CodeCleaner {
             }
         }
         return 0;
+    }
+
+    public  Mat normalizeInLeftTopCase(Mat code, int size) {
+        Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        for (int x = 0; x < size * 12; x = x + size) {
+            for (int y = 0; y < size * 12; y = y + size) {
+                double[] data = code.get(y + size / 2, x + size / 2);
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
+                calculatedPoint.copyTo(result.submat(new Rect(x, y, size, size)));
+            }
+        }
+        return result;
+    }
+
+    public  Mat normalizeInRightTopCase(Mat code, int size) {
+        Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        for (int x = size * 12; x > 0; x = x - size) {
+            for (int y = 0; y < size * 12; y = y + size) {
+                double[] data = code.get(y + size / 2, x - size / 2);
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
+                calculatedPoint.copyTo(result.submat(new Rect(x - size, y, size, size)));
+            }
+        }
+        return result;
+    }
+
+    public  Mat normalizeInRightBottomCase(Mat code, int size) {
+        Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        for (int x = size * 12; x > 0; x = x - size) {
+            for (int y = size * 12; y > 0; y = y - size) {
+                int xPoint = x -size / 2;
+                if(xPoint < 0){
+                    xPoint = 0;
+                }
+
+                int yPoint = y -size / 2;
+                if(yPoint < 0){
+                    yPoint = 0;
+                }
+                double[] data = code.get(yPoint, xPoint);
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
+                calculatedPoint.copyTo(result.submat(new Rect(x - size, y - size, size, size)));
+            }
+        }
+        return result;
+    }
+
+    public  Mat normalizeInLeftBottomCase(Mat code, int size) {
+        Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        for (int x = 0; x < size * 12; x = x + size) {
+            for (int y = size * 12; y > 0; y = y - size) {
+                double[] data = code.get(y - size / 2, x + size / 2);
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
+                calculatedPoint.copyTo(result.submat(new Rect(x, y - size, size, size)));
+            }
+        }
+        return result;
     }
 
     private int calculateSize(Mat code) {

@@ -111,15 +111,17 @@ public class Controller {
                 }
                 Mat circleImage = source.submat(new Rect(x, y, width, height));
                 Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
-                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
+//                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
 
                 Mat code = codeFinder.extractCode(circleImage, coloredCircleImage);
                 if (code != null) {
-                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
+                    Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
+//                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
 
                     Mat boundedCode = codeCleaner.getBoundedCode(code);
-                    Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
+//                    Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
                     Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+                    Core.bitwise_not(cleanedCode, cleanedCode);
                     Imgcodecs.imwrite("lines/code_" + counter + "_3.bmp", cleanedCode);
                 }
                 counter++;
@@ -168,8 +170,7 @@ public class Controller {
     public void decode() throws IOException {
         File file = new File("lines");
         File[] codes = file.listFiles();
-        Map<EncodeHintType, ErrorCorrectionLevel> hintMap = new HashMap<EncodeHintType, ErrorCorrectionLevel>();
-        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+
         DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
         for (File code : codes) {
             String text = dataMatrixInterpreter.decode(code);
