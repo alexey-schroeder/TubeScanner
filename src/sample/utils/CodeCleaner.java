@@ -1,10 +1,6 @@
 package sample.utils;
 
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 /**
@@ -20,22 +16,22 @@ public class CodeCleaner {
         int size = calculateSize(code);
         StartPoint startPoint = findStartPoint(code, size);
         Mat result = null;
+        Mat checked = checkBounds(code);
+        Mat recized  = new Mat(size * 12, size * 12, checked.type());
+        Imgproc.resize(checked, recized, new Size(size * 12, size * 12));
         switch (startPoint) {
             case LEFT_TOP:
-                result = calculateLeftTopCase(code, size);
-                result = normalizeInLeftTopCase(result, size);
+                result = normalizeInLeftTopCase(recized, size);
                 break;
             case RIGHT_TOP:
-                result = calculateRightTopCase(code, size);
-                result = normalizeInRightTopCase(result, size);
+                result = normalizeInRightTopCase(recized, size);
                 break;
             case RIGHT_BOTTOM:
-                result = calculateRightBottomCase(code, size);
-                result = normalizeInRightBottomCase(result, size);
+                result = normalizeInRightBottomCase(recized, size);
                 break;
             case LEFT_BOTTOM:
-                result = calculateLeftBottomCase(code, size);
-                result = normalizeInLeftBottomCase(result, size);
+                result = normalizeInLeftBottomCase(recized, size);
+                break;
         }
         return result;
     }
@@ -46,6 +42,68 @@ public class CodeCleaner {
         int topBound = findTopBound(code, 0.85);
         int bottomBound = findBottomBound(code, 0.85);
         Mat boundedCode = code.submat(new Rect(leftBound, topBound, rightBound - leftBound, bottomBound - topBound)).clone();
+        return boundedCode;
+    }
+
+    public Mat checkBounds(Mat code) {
+        int size = calculateSize(code);
+        StartPoint startPoint = findStartPoint(code, size);
+        int leftBound = 0;
+        int rightBound = code.cols() - 1;
+        int topBound = 0;
+        int bottomBound = code.rows() - 1;
+        boolean isOk;
+        switch (startPoint) {
+            case LEFT_TOP:
+                isOk = checkColumn(code, leftBound, 0.15);
+                while (!isOk) {
+                    leftBound++;
+                    isOk = checkColumn(code, leftBound, 0.15);
+                }
+                isOk = checkRow(code, topBound, 0.15);
+                while (!isOk) {
+                    topBound++;
+                    isOk = checkRow(code, topBound, 0.15);
+                }
+                break;
+            case RIGHT_TOP:
+                isOk = checkColumn(code, rightBound, 0.15);
+                while (!isOk) {
+                    rightBound--;
+                    isOk = checkColumn(code, rightBound, 0.15);
+                }
+                isOk = checkRow(code, topBound, 0.15);
+                while (!isOk) {
+                    topBound++;
+                    isOk = checkRow(code, topBound, 0.15);
+                }
+                break;
+            case RIGHT_BOTTOM:
+                isOk = checkColumn(code, rightBound, 0.15);
+                while (!isOk) {
+                    rightBound--;
+                    isOk = checkColumn(code, rightBound, 0.15);
+                }
+                isOk = checkRow(code, bottomBound, 0.15);
+                while (!isOk) {
+                    bottomBound--;
+                    isOk = checkRow(code, bottomBound, 0.15);
+                }
+                break;
+            case LEFT_BOTTOM:
+                isOk = checkColumn(code, leftBound, 0.15);
+                while (!isOk) {
+                    leftBound++;
+                    isOk = checkColumn(code, leftBound, 0.15);
+                }
+                isOk = checkRow(code, bottomBound, 0.15);
+                while (!isOk) {
+                    bottomBound--;
+                    isOk = checkRow(code, bottomBound, 0.15);
+                }
+                break;
+        }
+        Mat boundedCode = code.submat(new Rect(leftBound, topBound, rightBound - leftBound + 1, bottomBound - topBound + 1)).clone();
         return boundedCode;
     }
 
@@ -144,24 +202,110 @@ public class CodeCleaner {
     }
 
     private StartPoint findStartPoint(Mat mat, int size) {
-        Mat point = mat.submat(new Rect(0, 0, size, size));
-        int pointValue = calculatePointValue(point);
-        if (pointValue < 254) {
-            return StartPoint.RIGHT_BOTTOM;
+        Mat corner = mat.submat(new Rect(0, 0, size, size));
+        double maxProbability = 0;
+        double lastMaxProbability = 0;
+        StartPoint bestPoint;
+        StartPoint lastBestPoint = null;
+
+        double blackProbability = getBlackProbability(corner);
+        maxProbability = blackProbability;
+        bestPoint = StartPoint.RIGHT_BOTTOM;
+
+        corner = mat.submat(new Rect(mat.cols() - size, 0, size, size));
+        blackProbability = getBlackProbability(corner);
+        if (blackProbability > maxProbability) {
+            lastMaxProbability = maxProbability;
+            maxProbability = blackProbability;
+            lastBestPoint = bestPoint;
+            bestPoint = StartPoint.LEFT_BOTTOM;
+        } else if (blackProbability > lastMaxProbability) {
+            lastMaxProbability = blackProbability;
+            lastBestPoint = StartPoint.LEFT_BOTTOM;
         }
 
-        point = mat.submat(new Rect(mat.cols() - size, 0, size, size));
-        pointValue = calculatePointValue(point);
-        if (pointValue < 254) {
-            return StartPoint.LEFT_BOTTOM;
+        corner = mat.submat(new Rect(mat.cols() - size, mat.rows() - size, size, size));
+        blackProbability = getBlackProbability(corner);
+        if (blackProbability > maxProbability) {
+            lastMaxProbability = maxProbability;
+            maxProbability = blackProbability;
+            lastBestPoint = bestPoint;
+            bestPoint = StartPoint.LEFT_TOP;
+        } else if (blackProbability > lastMaxProbability) {
+            lastMaxProbability = blackProbability;
+            lastBestPoint = StartPoint.LEFT_TOP;
         }
 
-        point = mat.submat(new Rect(mat.cols() - size, mat.rows() - size, size, size));
-        pointValue = calculatePointValue(point);
-        if (pointValue < 254) {
-            return StartPoint.LEFT_TOP;
+        corner = mat.submat(new Rect(0, mat.rows() - size, size, size));
+        blackProbability = getBlackProbability(corner);
+        if (blackProbability > maxProbability) {
+            lastMaxProbability = maxProbability;
+            maxProbability = blackProbability;
+            lastBestPoint = bestPoint;
+            bestPoint = StartPoint.RIGHT_TOP;
+        } else if (blackProbability > lastMaxProbability) {
+            lastMaxProbability = blackProbability;
+            lastBestPoint = StartPoint.RIGHT_TOP;
         }
-        return StartPoint.RIGHT_TOP;
+
+        if (maxProbability > 0.5 && maxProbability / lastMaxProbability > 2) {
+            return bestPoint;
+        } else {
+            return getStartPointByMask(mat, size, bestPoint, lastBestPoint);
+        }
+    }
+
+    public StartPoint getStartPointByMask(Mat mat, int size, StartPoint bestPoint, StartPoint lastBestPoint) {
+       double lastBestPointProbability = getProbabilityByMask(mat, size, lastBestPoint);
+       double bestPointProbability = getProbabilityByMask(mat, size, bestPoint);
+        if(lastBestPointProbability > bestPointProbability){
+            return lastBestPoint;
+        } else {
+            return bestPoint;
+        }
+    }
+
+    public double getProbabilityByMask(Mat mat, int size, StartPoint point) {
+        double probabilitySumme = 0;
+        switch (point) {
+            case LEFT_TOP:
+                for (int row = 0; row < size; row++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInRow(mat, row, 254);
+                }
+                for (int col = 0; col < size; col++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInColumn(mat, col, 254);
+                }
+                break;
+            case RIGHT_TOP:
+                for (int row = 0; row < size; row++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInRow(mat, row, 254);
+                }
+                for (int col = mat.cols() - size; col < mat.cols(); col++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInColumn(mat, col, 254);
+                }
+                break;
+            case LEFT_BOTTOM:
+                for (int row = mat.rows() - size; row < mat.rows(); row++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInRow(mat, row, 254);
+                }
+                for (int col = 0; col < size; col++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInColumn(mat, col, 254);
+                }
+                break;
+            case RIGHT_BOTTOM:
+                for (int row = mat.rows() - size; row < mat.rows(); row++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInRow(mat, row, 254);
+                }
+                for (int col = mat.cols() - size; col < mat.cols(); col++) {
+                    probabilitySumme = probabilitySumme + getProbabilityInColumn(mat, col, 254);
+                }
+                break;
+        }
+        return probabilitySumme;
+    }
+
+    private boolean checkStartPoint(Mat mat, int size, StartPoint startPoint) {
+        return false;
     }
 
     private int calculatePointValue(Mat point) {
@@ -187,11 +331,36 @@ public class CodeCleaner {
         return 0;
     }
 
-    public  Mat normalizeInLeftTopCase(Mat code, int size) {
+    public double getBlackProbability(Mat point) {
+        double counter_black = 0;
+        for (int row = 0; row < point.rows(); row++) {
+            for (int col = 0; col < point.cols(); col++) {
+                double[] data = point.get(row, col);
+                if (data[0] < 254) {
+                    counter_black++;
+                }
+            }
+        }
+        return counter_black / (point.cols() * point.rows());
+    }
+
+    public Mat normalizeInLeftTopCase(Mat code, int size) {
         Mat result = Mat.zeros(size * 12, size * 12, code.type());
         for (int x = 0; x < size * 12; x = x + size) {
             for (int y = 0; y < size * 12; y = y + size) {
-                double[] data = code.get(y + size / 2, x + size / 2);
+                int xPoint = x + size / 2;
+                if (xPoint > code.cols()) {
+                    xPoint = code.cols() - 1;
+                }
+
+                int yPoint = y + size / 2;
+                if (yPoint > code.rows()) {
+                    yPoint = code.rows() - 1;
+                }
+                double[] data = code.get(yPoint, xPoint);
+                if (data == null) {
+                    System.out.println("x = " + x + ", y = " + y + ", xPoint = " + xPoint + ", yPoint = " + yPoint + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+                }
                 Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
                 calculatedPoint.copyTo(result.submat(new Rect(x, y, size, size)));
             }
@@ -199,11 +368,25 @@ public class CodeCleaner {
         return result;
     }
 
-    public  Mat normalizeInRightTopCase(Mat code, int size) {
+    public Mat normalizeInRightTopCase(Mat code, int size) {
         Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        int xDiff = code.cols() - size * 12;
+        int yDiff = code.rows() - size * 12;
         for (int x = size * 12; x > 0; x = x - size) {
             for (int y = 0; y < size * 12; y = y + size) {
-                double[] data = code.get(y + size / 2, x - size / 2);
+                int xPoint = x - size / 2 + xDiff;
+                if (xPoint < 0) {
+                    xPoint = 0;
+                }
+
+                int yPoint = y + size / 2;
+                if (yPoint > code.rows()) {
+                    yPoint = code.rows() - 1;
+                }
+                double[] data = code.get(yPoint, xPoint);
+                if (data == null) {
+                    System.out.println("x = " + x + ", y = " + y + ", xPoint = " + xPoint + ", yPoint = " + yPoint + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+                }
                 Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
                 calculatedPoint.copyTo(result.submat(new Rect(x - size, y, size, size)));
             }
@@ -211,20 +394,27 @@ public class CodeCleaner {
         return result;
     }
 
-    public  Mat normalizeInRightBottomCase(Mat code, int size) {
+    public Mat normalizeInRightBottomCase(Mat code, int size) {
         Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        int xDiff = code.cols() - size * 12;
+        int yDiff = code.rows() - size * 12;
         for (int x = size * 12; x > 0; x = x - size) {
             for (int y = size * 12; y > 0; y = y - size) {
-                int xPoint = x -size / 2;
-                if(xPoint < 0){
+                int xPoint = x - size / 2 + xDiff;
+                if (xPoint < 0) {
                     xPoint = 0;
                 }
 
-                int yPoint = y -size / 2;
-                if(yPoint < 0){
+                int yPoint = y - size / 2 + yDiff;
+                if (yPoint < 0) {
                     yPoint = 0;
+                } else if (yPoint > code.rows()) {
+                    yPoint = code.rows() - 1;
                 }
                 double[] data = code.get(yPoint, xPoint);
+                if (data == null) {
+                    System.out.println("x = " + x + ", y = " + y + ", xPoint = " + xPoint + ", yPoint = " + yPoint + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+                }
                 Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
                 calculatedPoint.copyTo(result.submat(new Rect(x - size, y - size, size, size)));
             }
@@ -232,11 +422,25 @@ public class CodeCleaner {
         return result;
     }
 
-    public  Mat normalizeInLeftBottomCase(Mat code, int size) {
+    public Mat normalizeInLeftBottomCase(Mat code, int size) {
         Mat result = Mat.zeros(size * 12, size * 12, code.type());
+        int xDiff = code.cols() - size * 12;
+        int yDiff = code.rows() - size * 12;
         for (int x = 0; x < size * 12; x = x + size) {
             for (int y = size * 12; y > 0; y = y - size) {
-                double[] data = code.get(y - size / 2, x + size / 2);
+                int xPoint = x + size / 2;
+                if (xPoint >= code.cols()) {
+                    xPoint = code.cols() - 1;
+                }
+
+                int yPoint = y - size / 2 + yDiff;
+                if (yPoint < 0) {
+                    yPoint = 0;
+                }
+                double[] data = code.get(yPoint, xPoint);
+                if (data == null) {
+                    System.out.println("x = " + x + ", y = " + y + ", xPoint = " + xPoint + ", yPoint = " + yPoint + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+                }
                 Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(data[0]));
                 calculatedPoint.copyTo(result.submat(new Rect(x, y - size, size, size)));
             }
@@ -260,12 +464,10 @@ public class CodeCleaner {
         return size - 1;
     }
 
-
     public int findLeftBound(Mat mat, double thresholdInPercent) {
         int threshold = (int) (mat.cols() * thresholdInPercent);
         for (int col = 0; col < mat.cols(); col++) {
             double counter = 0;
-            boolean isEmpty = true;
             for (int row = 0; row < mat.rows(); row++) {
                 double[] data = mat.get(row, col);
                 if (data[0] < 254) {
@@ -273,38 +475,75 @@ public class CodeCleaner {
                 }
             }
             if (counter < threshold) {
-//                if ((mat.cols() - counter) / mat.cols() < 0.85) {
-//                    col = col - 2;
-//                    if (col < 0) {
-//                        col = 0;
-//                    }
-//                }
                 return col;
             }
         }
         return mat.cols();
     }
 
+    public boolean checkColumn(Mat mat, int col, double thresholdInPercent) {
+        int threshold = (int) (mat.rows() * thresholdInPercent);
+        double counter = 0;
+        for (int row = 0; row < mat.rows(); row++) {
+            double[] data = mat.get(row, col);
+            if (data[0] < 254) {
+                counter++;
+            }
+        }
+        if (counter > threshold) {
+            return false;
+        }
+        return true;
+    }
+
+    public double getProbabilityInColumn(Mat mat, int col, int minValue) {
+        double counter = 0;
+        for (int row = 0; row < mat.rows(); row++) {
+            double[] data = mat.get(row, col);
+            if (data[0] > minValue) {
+                counter++;
+            }
+        }
+        return counter /mat.rows();
+    }
+
+    public double getProbabilityInRow(Mat mat, int row, int minValue) {
+        double counter = 0;
+        for (int col = 0; col < mat.cols(); col++) {
+            double[] data = mat.get(row, col);
+            if (data[0] > minValue) {
+                counter++;
+            }
+        }
+        return counter / mat.cols();
+    }
+
+    public boolean checkRow(Mat mat, int row, double thresholdInPercent) {
+        int threshold = (int) (mat.cols() * thresholdInPercent);
+        double counter = 0;
+        for (int col = 0; col < mat.cols(); col++) {
+            double[] data = mat.get(row, col);
+            if (data[0] < 254) {
+                counter++;
+            }
+        }
+        if (counter > threshold) {
+            return false;
+        }
+        return true;
+    }
+
     public int findRightBound(Mat mat, double thresholdInPercent) {
         int threshold = (int) (mat.cols() * thresholdInPercent);
         for (int col = mat.cols() - 1; col >= 0; col--) {
             double counter = 0;
-            boolean isEmpty = false;
             for (int row = 0; row < mat.rows(); row++) {
                 double[] data = mat.get(row, col);
                 if (data[0] < 254) {
                     counter++;
-//                    isEmpty = counter > threshold;
                 }
             }
             if (counter < threshold) {
-//                if ((mat.cols() - counter) / mat.cols() < 0.85) {
-//                    col = col + 2;
-//                    if (col > mat.cols()) {
-//                        col = mat.cols();
-//                    }
-//
-//                }
                 return col;
             }
         }
@@ -315,21 +554,13 @@ public class CodeCleaner {
         int threshold = (int) (mat.rows() * thresholdInPercent);
         for (int row = 0; row < mat.rows(); row++) {
             double counter = 0;
-            boolean isEmpty = false;
             for (int col = 0; col < mat.cols(); col++) {
                 double[] data = mat.get(row, col);
                 if (data[0] < 254) {
                     counter++;
-
                 }
             }
             if (counter < threshold) {
-//                if ((mat.rows() - counter) / mat.rows() < 0.85) {
-//                    row = row - 2;
-//                    if (row < 0) {
-//                        row = 0;
-//                    }
-//                }
                 return row;
             }
         }
@@ -340,21 +571,13 @@ public class CodeCleaner {
         int threshold = (int) (mat.rows() * thresholdInPercent);
         for (int row = mat.rows() - 1; row >= 0; row--) {
             double counter = 0;
-            boolean isEmpty = false;
-            for (int col = 0; col < mat.cols() && !isEmpty; col++) {
+            for (int col = 0; col < mat.cols(); col++) {
                 double[] data = mat.get(row, col);
                 if (data[0] < 254) {
                     counter++;
-//                    isEmpty = counter > threshold;
                 }
             }
             if (counter < threshold) {
-//                if ((mat.rows() - counter) / mat.rows() < 0.85) {
-//                    row = row + 2;
-//                    if (row > mat.rows()) {
-//                        row = mat.rows();
-//                    }
-//                }
                 return row;
             }
         }

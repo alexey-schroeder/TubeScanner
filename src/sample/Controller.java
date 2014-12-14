@@ -90,6 +90,7 @@ public class Controller {
             int puffer = 15;
             CodeFinder codeFinder = new CodeFinder();
             CodeCleaner codeCleaner = new CodeCleaner();
+            DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
             for (Circle circle : circles) {
                 int x = (int) (circle.x - circle.radius - puffer);
                 if (x < 0) {
@@ -119,10 +120,13 @@ public class Controller {
 //                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
 
                     Mat boundedCode = codeCleaner.getBoundedCode(code);
-//                    Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
+                    Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
                     Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
                     Core.bitwise_not(cleanedCode, cleanedCode);
                     Imgcodecs.imwrite("lines/code_" + counter + "_3.bmp", cleanedCode);
+                    BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+                    String text = dataMatrixInterpreter.decode(bufferedImage);
+                    System.out.println("lines/code_" + counter + "_3.bmp: " + text);
                 }
                 counter++;
             }
@@ -149,7 +153,7 @@ public class Controller {
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
-            decode();
+//            decode();
         } else {
             try {
                 BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));

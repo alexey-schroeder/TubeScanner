@@ -20,14 +20,18 @@ import java.util.Map;
  */
 public class DataMatrixInterpreter {
     public String decode(File file) throws IOException {
-        int angle = 0;
-        BinaryBitmap binaryBitmap = null;
         BufferedImage image = ImageIO.read(new FileInputStream(file));
+        return decode(image);
+    }
+
+    public String decode(BufferedImage image) throws IOException {
+        int angle = 0;
         HashMap<DecodeHintType, Boolean> hintMap = new HashMap<DecodeHintType, Boolean>();
         hintMap.put(DecodeHintType.PURE_BARCODE, true);
         while (true) {
             try {
                 BufferedImage rotatedImage = ImageUtils.rotate(image, Math.toRadians(angle));
+                BinaryBitmap binaryBitmap = null;
                 binaryBitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(rotatedImage)));
                 DataMatrixReader multiFormatReader = new DataMatrixReader();
                 Result qrCodeResult = multiFormatReader.decode(binaryBitmap, hintMap);

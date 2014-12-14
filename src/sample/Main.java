@@ -14,7 +14,9 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import sample.utils.CodeCleaner;
 import sample.utils.DataMatrixInterpreter;
+import sample.utils.ImageUtils;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -46,15 +48,31 @@ public class Main extends Application {
     }
 
 
-    public static void main(String[] args) {
+            public static void main(String[] args) {
         launch(args);
     }
 //    public static void main(String[] args) throws IOException {
 //        loadLibrary();
-//        File file = new File("lines/code_1_2.bmp");
-//        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
 //        CodeCleaner codeCleaner = new CodeCleaner();
-//        Mat rec = codeCleaner.cleanCode(source);
+//        File file = new File("lines/code_2_2.bmp");
+//        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+//        Mat rec = codeCleaner.checkBounds(source);
+//        Imgcodecs.imwrite("lines/code_checkedBounds.bmp", rec);
+//        int size = 4;
+//        Mat recized = new Mat(48, 48, rec.type());
+//        Imgproc.resize(rec, recized, new Size(48, 48));
+////         rec = codeCleaner.calculateLeftBottomCase(rec, 4);
+////        Imgcodecs.imwrite("lines/code_temp.bmp", rec);
+//
+//        rec = codeCleaner.normalizeInLeftBottomCase(recized, 4);
+//        Imgcodecs.imwrite("lines/code_normilized.bmp", rec);
+//        Core.bitwise_not(rec, rec);
+//        Imgcodecs.imwrite("lines/code_negative.bmp", rec);
+//        BufferedImage bufferedImage = ImageUtils.matToBufferedImage(rec);
+//        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+//        String text = dataMatrixInterpreter.decode(bufferedImage);
+//        System.out.println(text);
+////        Mat rec = codeCleaner.cleanCode(source);
 ////        Imgcodecs.imwrite("lines/code_temp.bmp", rec);
 ////        Imgproc.dilate(rec, rec, new Mat(), new Point(-1, -1), 1);
 ////        Imgcodecs.imwrite("lines/code_dilate.bmp", rec);
@@ -62,13 +80,26 @@ public class Main extends Application {
 ////        Imgcodecs.imwrite("lines/code_erode.bmp", rec);
 ////        rec = normalize(rec);
 ////        Imgcodecs.imwrite("lines/code_normilezed.bmp", rec);
-//        Core.bitwise_not(rec, rec);
-//        Imgcodecs.imwrite("lines/code_negative.bmp", rec);
-//        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
-//        String text = dataMatrixInterpreter.decode(new File("lines/code_negative.bmp"));
-//        System.out.println(text);
+////        Core.bitwise_not(rec, rec);
+////        Imgcodecs.imwrite("lines/code_negative.bmp", rec);
+////        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+////        String text = dataMatrixInterpreter.decode(new File("lines/code_negative.bmp"));
+////        System.out.println(text);
 //    }
 
+//    public static void main(String[] args) throws IOException {
+//        loadLibrary();
+//        CodeCleaner codeCleaner = new CodeCleaner();
+//        File file = new File("lines/code_2_2.bmp");
+//        Mat boundedCode = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+//        Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+//        Core.bitwise_not(cleanedCode, cleanedCode);
+//        Imgcodecs.imwrite("lines/code_negative_from_2.bmp", cleanedCode);
+//        BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+//        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+//        String text = dataMatrixInterpreter.decode(bufferedImage);
+//        System.out.println(text);
+//    }
 
     private static Mat calculateLeftBottomCase(Mat mat, int size) {
         int rows = size * 12;
