@@ -11,6 +11,15 @@
     <orderEntry type="library" name="javacv-windows-x86_64" level="project" />
     <orderEntry type="library" name="opencv-300" level="project" />
     <orderEntry type="library" name="javase-3.1.0" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$APPLICATION_HOME_DIR$/plugins/testng/lib/testng.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
 

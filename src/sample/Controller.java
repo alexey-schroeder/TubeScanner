@@ -117,7 +117,7 @@ public class Controller {
                 Mat code = codeFinder.extractCode(circleImage, coloredCircleImage);
                 if (code != null) {
                     Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
-//                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
+                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
 
                     Mat boundedCode = codeCleaner.getBoundedCode(code);
                     Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);

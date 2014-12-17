@@ -1,15 +1,17 @@
 package sample.utils;
 
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 /**
  * Created by Alex on 02.12.2014.
  */
 public class CodeCleaner {
-    private enum StartPoint {LEFT_TOP, RIGHT_TOP, RIGHT_BOTTOM, LEFT_BOTTOM}
+    public enum StartPoint {LEFT_TOP, RIGHT_TOP, RIGHT_BOTTOM, LEFT_BOTTOM}
 
     ;
+    static int counter = 0;
 
     public Mat cleanCode(Mat code) {
 
@@ -17,8 +19,12 @@ public class CodeCleaner {
         StartPoint startPoint = findStartPoint(code, size);
         Mat result = null;
         Mat checked = checkBounds(code);
-        Mat recized  = new Mat(size * 12, size * 12, checked.type());
-        Imgproc.resize(checked, recized, new Size(size * 12, size * 12));
+        Mat recized = Mat.zeros(size * 12, size * 12, checked.type());
+        Imgproc.resize(checked, recized, new Size(size * 12, size * 12), 0, 0, Imgproc.INTER_CUBIC);
+        Imgproc.adaptiveThreshold(recized, recized, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 2);
+//        Imgcodecs.imwrite("lines/resized_" + counter + ".bmp", recized);
+//        Imgcodecs.imwrite("lines/checked_" + counter + ".bmp", checked);
+//        counter++;
         switch (startPoint) {
             case LEFT_TOP:
                 result = normalizeInLeftTopCase(recized, size);
@@ -201,64 +207,27 @@ public class CodeCleaner {
         return result;
     }
 
-    private StartPoint findStartPoint(Mat mat, int size) {
-        Mat corner = mat.submat(new Rect(0, 0, size, size));
-        double maxProbability = 0;
-        double lastMaxProbability = 0;
-        StartPoint bestPoint;
-        StartPoint lastBestPoint = null;
-
-        double blackProbability = getBlackProbability(corner);
-        maxProbability = blackProbability;
-        bestPoint = StartPoint.RIGHT_BOTTOM;
-
-        corner = mat.submat(new Rect(mat.cols() - size, 0, size, size));
-        blackProbability = getBlackProbability(corner);
-        if (blackProbability > maxProbability) {
-            lastMaxProbability = maxProbability;
-            maxProbability = blackProbability;
-            lastBestPoint = bestPoint;
-            bestPoint = StartPoint.LEFT_BOTTOM;
-        } else if (blackProbability > lastMaxProbability) {
-            lastMaxProbability = blackProbability;
-            lastBestPoint = StartPoint.LEFT_BOTTOM;
-        }
-
-        corner = mat.submat(new Rect(mat.cols() - size, mat.rows() - size, size, size));
-        blackProbability = getBlackProbability(corner);
-        if (blackProbability > maxProbability) {
-            lastMaxProbability = maxProbability;
-            maxProbability = blackProbability;
-            lastBestPoint = bestPoint;
-            bestPoint = StartPoint.LEFT_TOP;
-        } else if (blackProbability > lastMaxProbability) {
-            lastMaxProbability = blackProbability;
-            lastBestPoint = StartPoint.LEFT_TOP;
-        }
-
-        corner = mat.submat(new Rect(0, mat.rows() - size, size, size));
-        blackProbability = getBlackProbability(corner);
-        if (blackProbability > maxProbability) {
-            lastMaxProbability = maxProbability;
-            maxProbability = blackProbability;
-            lastBestPoint = bestPoint;
-            bestPoint = StartPoint.RIGHT_TOP;
-        } else if (blackProbability > lastMaxProbability) {
-            lastMaxProbability = blackProbability;
-            lastBestPoint = StartPoint.RIGHT_TOP;
-        }
-
-        if (maxProbability > 0.5 && maxProbability / lastMaxProbability > 2) {
-            return bestPoint;
+    public StartPoint findStartPoint(Mat mat, int size) {
+        double leftTop = getProbabilityByMask(mat, size, StartPoint.LEFT_TOP);
+        double rightTop = getProbabilityByMask(mat, size, StartPoint.RIGHT_TOP);
+        double leftBottom = getProbabilityByMask(mat, size, StartPoint.LEFT_BOTTOM);
+        double rightBottom = getProbabilityByMask(mat, size, StartPoint.RIGHT_BOTTOM);
+        if (leftTop > Math.max(rightTop, Math.max(leftBottom, rightBottom))) {
+            return StartPoint.LEFT_TOP;
+        } else if (rightTop > Math.max(leftTop, Math.max(leftBottom, rightBottom))) {
+            return StartPoint.RIGHT_TOP;
+        } else if (leftBottom > Math.max(leftTop, Math.max(rightTop, rightBottom))) {
+            return StartPoint.LEFT_BOTTOM;
         } else {
-            return getStartPointByMask(mat, size, bestPoint, lastBestPoint);
+            return StartPoint.RIGHT_BOTTOM;
         }
+
     }
 
     public StartPoint getStartPointByMask(Mat mat, int size, StartPoint bestPoint, StartPoint lastBestPoint) {
-       double lastBestPointProbability = getProbabilityByMask(mat, size, lastBestPoint);
-       double bestPointProbability = getProbabilityByMask(mat, size, bestPoint);
-        if(lastBestPointProbability > bestPointProbability){
+        double lastBestPointProbability = getProbabilityByMask(mat, size, lastBestPoint);
+        double bestPointProbability = getProbabilityByMask(mat, size, bestPoint);
+        if (lastBestPointProbability > bestPointProbability) {
             return lastBestPoint;
         } else {
             return bestPoint;
@@ -448,7 +417,7 @@ public class CodeCleaner {
         return result;
     }
 
-    private int calculateSize(Mat code) {
+    public int calculateSize(Mat code) {
         int size = 1;
         int colDiff = code.cols() - size * 12;
         int rowDiff = code.rows() - size * 12;
@@ -465,7 +434,7 @@ public class CodeCleaner {
     }
 
     public int findLeftBound(Mat mat, double thresholdInPercent) {
-        int threshold = (int) (mat.cols() * thresholdInPercent);
+        int threshold = (int) (mat.rows() * thresholdInPercent);
         for (int col = 0; col < mat.cols(); col++) {
             double counter = 0;
             for (int row = 0; row < mat.rows(); row++) {
@@ -504,7 +473,7 @@ public class CodeCleaner {
                 counter++;
             }
         }
-        return counter /mat.rows();
+        return counter / mat.rows();
     }
 
     public double getProbabilityInRow(Mat mat, int row, int minValue) {
@@ -534,7 +503,7 @@ public class CodeCleaner {
     }
 
     public int findRightBound(Mat mat, double thresholdInPercent) {
-        int threshold = (int) (mat.cols() * thresholdInPercent);
+        int threshold = (int) (mat.rows() * thresholdInPercent);
         for (int col = mat.cols() - 1; col >= 0; col--) {
             double counter = 0;
             for (int row = 0; row < mat.rows(); row++) {
@@ -551,7 +520,7 @@ public class CodeCleaner {
     }
 
     public int findTopBound(Mat mat, double thresholdInPercent) {
-        int threshold = (int) (mat.rows() * thresholdInPercent);
+        int threshold = (int) (mat.cols() * thresholdInPercent);
         for (int row = 0; row < mat.rows(); row++) {
             double counter = 0;
             for (int col = 0; col < mat.cols(); col++) {
@@ -568,7 +537,7 @@ public class CodeCleaner {
     }
 
     public int findBottomBound(Mat mat, double thresholdInPercent) {
-        int threshold = (int) (mat.rows() * thresholdInPercent);
+        int threshold = (int) (mat.cols() * thresholdInPercent);
         for (int row = mat.rows() - 1; row >= 0; row--) {
             double counter = 0;
             for (int col = 0; col < mat.cols(); col++) {
