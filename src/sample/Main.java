@@ -48,8 +48,12 @@ public class Main extends Application {
     }
 
 
-            public static void main(String[] args) {
-        launch(args);
+    //            public static void main(String[] args) {
+//        launch(args);
+//    }
+    public static void main(String[] args) throws IOException {
+        loadLibrary();
+        new Controller().findAllDataMatrixInImage("SC-Thermo-Tubes001.png");
     }
 //    public static void main(String[] args) throws IOException {
 //        loadLibrary();

@@ -75,85 +75,7 @@ public class Controller {
             String fileName = "tube.bmp";
             doScreen(fileName);
             frameGrabber.pauseGrabber();
-            File file = new File(fileName);
-            Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
-            Mat coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
-            double iCannyLowerThreshold = 25;
-            double iCannyUpperThreshold = 70;
-            Mat binImage = new Mat(source.rows(), source.cols(), source.type());
-            Imgproc.Canny(source, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-            Imgcodecs.imwrite("cannyImage.bmp", binImage);
-
-            List<Circle> circles = CircleFinder.extractCircles(source);
-            List<Line> allLines = new ArrayList<Line>();
-            int counter = 1;
-            int puffer = 15;
-            CodeFinder codeFinder = new CodeFinder();
-            CodeCleaner codeCleaner = new CodeCleaner();
-            DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
-            for (Circle circle : circles) {
-                int x = (int) (circle.x - circle.radius - puffer);
-                if (x < 0) {
-                    x = 0;
-                }
-
-                int y = (int) (circle.y - circle.radius - puffer);
-                if (y < 0) {
-                    y = 0;
-                }
-
-                int width = (int) (circle.radius * 2 + puffer * 2);
-                if (width + x > source.cols()) {
-                    width = source.cols() - x;
-                }
-                int height = (int) (circle.radius * 2 + puffer * 2);
-                if (height + y > source.rows()) {
-                    height = source.rows() - y;
-                }
-                Mat circleImage = source.submat(new Rect(x, y, width, height));
-                Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
-//                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
-
-                Mat code = codeFinder.extractCode(circleImage, coloredCircleImage);
-                if (code != null) {
-                    Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
-                    Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
-
-                    Mat boundedCode = codeCleaner.getBoundedCode(code);
-                    Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
-                    Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
-                    Core.bitwise_not(cleanedCode, cleanedCode);
-                    Imgcodecs.imwrite("lines/code_" + counter + "_3.bmp", cleanedCode);
-                    BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
-                    String text = dataMatrixInterpreter.decode(bufferedImage);
-                    System.out.println("lines/code_" + counter + "_3.bmp: " + text);
-                }
-                counter++;
-            }
-
-            coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
-            drawCircles(coloredSource, circles);
-            Imgcodecs.imwrite("circles.bmp", coloredSource);
-            drawLines(coloredSource, allLines);
-            Imgcodecs.imwrite("lines.bmp", coloredSource);
-//            Mat coloredSource = Highgui.imread(file.getAbsolutePath(), Highgui.CV_LOAD_IMAGE_COLOR);
-//            drawCircles(coloredSource, circles);
-//            Highgui.imwrite("circles.bmp", coloredSource);
-//            writeDataMatrixImages(ImageIO.read(new File("tube.bmp")), circles);
-//            try {
-//                BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));
-//                final WritableImage fxImage = SwingFXUtils.toFXImage(imageWithCircles, null);
-//                Platform.runLater(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        canvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
-//                    }
-//                });
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            decode();
+            findAllDataMatrixInImage(fileName);
         } else {
             try {
                 BufferedImage imageWithCircles = ImageIO.read(new File("circles.bmp"));
@@ -169,6 +91,70 @@ public class Controller {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void findAllDataMatrixInImage(String fileName) throws IOException{
+        File file = new File(fileName);
+        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+        double iCannyLowerThreshold = 25;
+        double iCannyUpperThreshold = 70;
+        Mat binImage = new Mat(source.rows(), source.cols(), source.type());
+        Imgproc.Canny(source, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
+        Imgcodecs.imwrite("cannyImage.bmp", binImage);
+
+        List<Circle> circles = CircleFinder.extractCircles(source);
+        Mat coloredSource = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_COLOR);
+        drawCircles(coloredSource, circles);
+        Imgcodecs.imwrite("circles.bmp", coloredSource);
+        List<Line> allLines = new ArrayList<Line>();
+        int counter = 1;
+        int puffer = 15;
+        CodeFinder codeFinder = new CodeFinder();
+        CodeCleaner codeCleaner = new CodeCleaner();
+        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+        for (Circle circle : circles) {
+            int x = (int) (circle.x - circle.radius - puffer);
+            if (x < 0) {
+                x = 0;
+            }
+
+            int y = (int) (circle.y - circle.radius - puffer);
+            if (y < 0) {
+                y = 0;
+            }
+
+            int width = (int) (circle.radius * 2 + puffer * 2);
+            if (width + x > source.cols()) {
+                width = source.cols() - x;
+            }
+            int height = (int) (circle.radius * 2 + puffer * 2);
+            if (height + y > source.rows()) {
+                height = source.rows() - y;
+            }
+            Mat circleImage = source.submat(new Rect(x, y, width, height));
+            Mat coloredCircleImage = coloredSource.submat(new Rect(x, y, width, height));
+//                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
+
+            Mat code = codeFinder.extractCode(circleImage, coloredCircleImage);
+            if (code != null) {
+                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
+                Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
+
+                Mat boundedCode = codeCleaner.getBoundedCode(code);
+                Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
+                Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+                Core.bitwise_not(cleanedCode, cleanedCode);
+                Imgcodecs.imwrite("lines/code_" + counter + "_3.bmp", cleanedCode);
+                BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+                String text = dataMatrixInterpreter.decode(bufferedImage);
+                System.out.println("lines/code_" + counter + "_3.bmp: " + text);
+            }
+            counter++;
+        }
+
+
+        drawLines(coloredSource, allLines);
+        Imgcodecs.imwrite("lines.bmp", coloredSource);
     }
 
     public void decode() throws IOException {

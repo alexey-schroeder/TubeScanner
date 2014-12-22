@@ -1,8 +1,6 @@
 package sample.utils;
 
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import sample.Circle;
@@ -15,13 +13,32 @@ import java.util.List;
  */
 public class CircleFinder {
     public static List<Circle> extractCircles(Mat image) {
-        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
-        Imgproc.GaussianBlur(image, binImage, new Size(15, 15), 15, 15);
+        int resizeFactor = Math.min(image.rows(), image.cols()) / 1000;
+        if(resizeFactor < 1){
+            resizeFactor = 1;
+        }
+        Mat resized = Mat.zeros(image.rows() / resizeFactor, image.cols() / resizeFactor, image.type());
+        Imgproc.resize(image, resized, new Size(image.cols() / resizeFactor, image.rows() / resizeFactor), 0, 0, Imgproc.INTER_CUBIC);
+        Imgcodecs.imwrite("resizedImage.bmp", resized);
+        Mat binImage = new Mat(resized.rows(), resized.cols(), resized.type());
+        Imgproc.GaussianBlur(resized, binImage, new Size(51, 51), 0, 0);
         Imgcodecs.imwrite("gaussianImage.bmp", binImage);
-//        Imgproc.equalizeHist(binImage, binImage);
-//        Highgui.imwrite("equalizeImage.bmp", binImage);
+        Imgproc.equalizeHist(binImage, binImage);
+        Imgcodecs.imwrite("equalizeImage.bmp", binImage);
+//        Mat clone = Mat.zeros(binImage.rows(), binImage.cols() , CvType.CV_32FC1);
+//        binImage.convertTo(clone, CvType.CV_32FC1);
+//        Mat dft = Mat.zeros(binImage.rows(), binImage.cols() , CvType.CV_32FC1);
+//        Core.dft(clone, dft);
+//        Imgcodecs.imwrite("dftImage.bmp", dft);
+
        // adaptiveThreshold(Mat src, Mat dst, double maxValue, int adaptiveMethod, int thresholdType, int blockSize, double C)
-        Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 51, 0);
+        int blokSize = Math.min(binImage.cols(), binImage.rows()) / 14;
+        if(blokSize % 2 == 0){
+            blokSize++;
+        }
+        System.out.println("blockSize = " + blokSize);
+        Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, blokSize, 0);
+//        Imgproc.threshold(binImage, binImage, 100, 255, Imgproc.THRESH_BINARY);
         Imgcodecs.imwrite("binImage.bmp", binImage);
         Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 3);
         Imgcodecs.imwrite("dilateImage.bmp", binImage);
@@ -47,9 +64,9 @@ public class CircleFinder {
             double[] vecCircle = circles.get(0, i);
             if (vecCircle == null)
                 break;
-            int x = (int) vecCircle[0];
-            int y = (int) vecCircle[1];
-            int r = (int) vecCircle[2];
+            int x = (int) vecCircle[0] * resizeFactor;
+            int y = (int) vecCircle[1] * resizeFactor;
+            int r = (int) vecCircle[2] * resizeFactor;
             balls.add(new Circle(x, y, r));
         }
         System.out.println("founded " + balls.size() + " circles");
