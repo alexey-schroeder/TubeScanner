@@ -5,6 +5,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import sample.utils.clustering.Cluster;
+import sample.utils.clustering.DBSCANClusterer;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -73,18 +75,217 @@ public class CircleFinderTest {
         }
 
         LinkedList<RotatedRect> referenceRects = getReferenceRects(allRotatedRects);
-        for(RotatedRect rotatedRect : referenceRects){
+        LinkedList<RotatedRect> circleAreas = calculateCircleAreas(referenceRects, binImage);
+        for (RotatedRect rotatedRect : circleAreas) {
             Point[] rect_points = new Point[4];
             rotatedRect.points(rect_points);
-                Scalar color = new Scalar(0, 0, 255);
-                for (int j = 0; j < 4; j++) {
-                    Imgproc.line(resized, rect_points[j], rect_points[(j + 1) % 4], color, 1);
-                }
+            Scalar color = new Scalar(0, 0, 255);
+            for (int j = 0; j < 4; j++) {
+                Imgproc.line(resized, rect_points[j], rect_points[(j + 1) % 4], color, 1);
+            }
         }
 
 
         Imgcodecs.imwrite("rects.bmp", resized);
 
+    }
+
+    public LinkedList<RotatedRect> calculateCircleAreas(LinkedList<RotatedRect> referenceRects, Mat image) {
+        LinkedList<RotatedRect> tempResult = new LinkedList<>();
+        Point[] cellVectors = calculateCellVectors(referenceRects);
+        Point vectorA = cellVectors[0];
+        Point vectorB = cellVectors[1];
+        RotatedRect startRect = referenceRects.getFirst();
+
+        tempResult.add(startRect);
+        double maxDistance = Math.sqrt(image.cols() * image.cols() + image.rows() * image.rows());
+        double distance = 0;
+        LinkedList<RotatedRect> rectsInColumn = createRotatedRectsInColumn(image, startRect, vectorB, referenceRects);
+        tempResult.addAll(rectsInColumn);
+        double vectorALength = getVectorLength(vectorA);
+        RotatedRect referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = plus(referenceRect.center, vectorA);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, referenceRect.size, referenceRect.angle);
+            }
+            tempResult.add(rect);
+
+            referenceRect = rect;
+            rectsInColumn = createRotatedRectsInColumn(image, referenceRect, vectorB, referenceRects);
+            tempResult.addAll(rectsInColumn);
+            distance = distance + vectorALength;
+        }
+        distance = 0;
+        referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = minus(referenceRect.center, vectorA);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, referenceRect.size, referenceRect.angle);
+            }
+            tempResult.add(rect);
+
+            referenceRect = rect;
+            rectsInColumn = createRotatedRectsInColumn(image, referenceRect, vectorB, referenceRects);
+            tempResult.addAll(rectsInColumn);
+            distance = distance + vectorALength;
+        }
+
+        LinkedList<RotatedRect> result = new LinkedList<>();
+        for(RotatedRect rotatedRect : tempResult){
+            if(isInBounds(image, rotatedRect.center)){
+                result.add(rotatedRect);
+            }
+        }
+        return result;
+    }
+
+    private LinkedList<RotatedRect> createRotatedRectsInColumn(Mat image, RotatedRect startRect, Point vector, LinkedList<RotatedRect> referenceRects) {
+        LinkedList<RotatedRect> result = new LinkedList<>();
+        double maxDistance = Math.sqrt(image.cols() * image.cols() + image.rows() * image.rows());
+        double distance = 0;
+        double vectorLength = getVectorLength(vector);
+        RotatedRect referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = plus(referenceRect.center, vector);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, startRect.size, startRect.angle);
+            }
+            result.add(rect);
+
+            referenceRect = rect;
+            distance = distance + vectorLength;
+        }
+        distance = 0;
+        referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = minus(referenceRect.center, vector);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, startRect.size, startRect.angle);
+            }
+            result.add(rect);
+            referenceRect = rect;
+            distance = distance + vectorLength;
+        }
+        return result;
+    }
+
+    private double getDistance(Point a, Point b) {
+        double xDiff = a.x - b.x;
+        double yDiff = a.y - b.y;
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    }
+
+    private double getVectorLength(Point point) {
+        return Math.sqrt(point.x * point.x + point.y * point.y);
+    }
+
+    public RotatedRect findRotatedRect(LinkedList<RotatedRect> rotatedRects, Point point) {
+        for (RotatedRect rotatedRect : rotatedRects) {
+            double width = rotatedRect.size.width;
+            double height = rotatedRect.size.height;
+            double diagonal = Math.sqrt(width * width + height * height);
+            if (getDistance(rotatedRect.center, point) < diagonal / 2) {
+                return rotatedRect;
+            }
+        }
+        return null;
+    }
+
+    public Point plus(Point a, Point b) {
+        return new Point(a.x + b.x, a.y + b.y);
+    }
+
+    public Point minus(Point a, Point b) {
+        return new Point(a.x - b.x, a.y - b.y);
+    }
+
+    public boolean isInBounds(Mat mat, Point point) {
+        return point.x < mat.cols() && point.x >= 0 && point.y >= 0 && point.y < mat.rows();
+    }
+
+    public Point[] calculateCellVectors(LinkedList<RotatedRect> referenceRects) {
+        Point[] result = new Point[2];
+        ArrayList<Point> points = new ArrayList<>();
+        for (RotatedRect rotatedRect : referenceRects) {
+            points.add(rotatedRect.center);
+        }
+
+        ArrayList<Point> differenceVectoren = calculateDifferenceVectoren(points);
+        double maxDistanceInCluster = referenceRects.getFirst().size.width / 10;
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxDistanceInCluster, 5);
+        List<Cluster<Point>> clusters = dbscanClusterer.cluster(differenceVectoren);
+        Collections.sort(clusters, new Comparator<Cluster<Point>>() {
+            @Override
+            public int compare(Cluster<Point> o1, Cluster<Point> o2) {
+                return o2.getPoints().size() - o1.getPoints().size();
+            }
+        });
+
+        Point point_0 = calculateClusterCenter(clusters.get(0));
+//        Point point_1 = calculateClusterCenter(clusters.get(1));
+//        double angleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, point_1));
+//        double vectorLength = getVectorLength(point_1);
+        ArrayList<Point> candidates = new ArrayList<>();
+        for (int i = 1; i < clusters.size(); i++) {
+            Cluster<Point> tempCluster = clusters.get(i);
+            Point tempPoint = calculateClusterCenter(tempCluster);
+//            double tempVectorLength = getVectorLength(tempPoint);
+            double tempAngleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, tempPoint));
+            double maxAngleDiff = 10;
+            if(tempAngleDiff < maxAngleDiff){
+                candidates.add(tempPoint);
+            }
+        }
+
+        Collections.sort(candidates, new Comparator<Point>() {
+            @Override
+            public int compare(Point o1, Point o2) {
+                return (int) (getVectorLength(o1) - getVectorLength(o2));
+            }
+        });
+        result[0] = point_0;
+        result[1] = candidates.get(0);
+        return result;
+    }
+
+    //in degrees
+    public double getAngleBetweenVectors(Point a, Point b) {
+        double nenner = a.x * b.x + a.y * b.y;
+        double zeller = getVectorLength(a) * getVectorLength(b);
+        double cosA = nenner / zeller;
+        double arccos = Math.acos(cosA);
+        return Math.toDegrees(arccos);
+    }
+
+    public Point calculateClusterCenter(Cluster<Point> cluster) {
+        List<Point> points = cluster.getPoints();
+        double x = 0;
+        double y = 0;
+        for (Point point : points) {
+            x = x + point.x;
+            y = y + point.y;
+        }
+        return new Point(x / points.size(), y / points.size());
+    }
+
+    private ArrayList<Point> calculateDifferenceVectoren(ArrayList<Point> points) {
+        ArrayList<Point> result = new ArrayList<>();
+        for (int i = 0; i < points.size() - 1; i++) {
+            Point referencePoint = points.get(i);
+            for (int j = i + 1; j < points.size(); j++) {
+                Point point = points.get(j);
+                Point vector = minus(referencePoint, point);
+                result.add(vector);
+                Point negativVector = new Point(-vector.x, -vector.y);
+                result.add(negativVector);
+            }
+        }
+        return result;
     }
 
     public boolean isQuadrat(RotatedRect rect) {
