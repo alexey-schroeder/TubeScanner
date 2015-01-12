@@ -51,6 +51,31 @@ public class CodeCleanerTest {
     }
 
     @Test
+    public void testBigCode() throws Exception{
+        File file = new File("./test images/code_2_1.bmp");
+        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+        CodeCleaner codeCleaner = new CodeCleaner();
+        Mat boundedCode = codeCleaner.getBoundedCode(source);
+        Imgcodecs.imwrite("./test images/code_2_1_bounded.bmp", boundedCode);
+        Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+        Imgcodecs.imwrite("./test images/code_2_1_clean.bmp", cleanedCode);
+        Core.bitwise_not(cleanedCode, cleanedCode);
+        Imgcodecs.imwrite("./test images/code_2_1_res.bmp", cleanedCode);
+        BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+        String text = dataMatrixInterpreter.decode(bufferedImage);
+        Assert.assertEquals(text, "0122708333");
+    }
+
+    @Test
+    public void check(){
+        File file = new File("C:\\java projects\\TubeScaner\\lines\\code_4_3.bmp");
+        Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
+        Core.bitwise_not(source, source);
+        Imgcodecs.imwrite("C:\\java projects\\TubeScaner\\lines\\code_4_3_rev.bmp", source);
+    }
+
+    @Test
     public void testGetBoundedCode() throws Exception {
         File file = new File("./test images/code_7_1.bmp");
         Mat source = Imgcodecs.imread(file.getAbsolutePath(), CvType.CV_8UC4);
@@ -86,8 +111,9 @@ public class CodeCleanerTest {
                 {"./test images/code_7_1.bmp", CodeCleaner.StartPoint.LEFT_TOP},
                 {"./test images/code_6_1.bmp", CodeCleaner.StartPoint.LEFT_TOP},
                 {"./test images/code_8_1.bmp", CodeCleaner.StartPoint.RIGHT_TOP},
-                {"./test images/code_24_1.bmp", CodeCleaner.StartPoint.RIGHT_TOP},
-                {"./test images/code_27_1.bmp", CodeCleaner.StartPoint.RIGHT_TOP},
+//                {"./test images/code_24_1.bmp", CodeCleaner.StartPoint.RIGHT_TOP},
+//                {"./test images/code_27_1.bmp", CodeCleaner.StartPoint.RIGHT_TOP},
+                {"./test images/code_0_1.bmp", CodeCleaner.StartPoint.RIGHT_TOP},
                 {"./test images/code_33_1.bmp", CodeCleaner.StartPoint.LEFT_TOP}
         };
     }

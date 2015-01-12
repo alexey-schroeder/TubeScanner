@@ -5,9 +5,13 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import sample.Circle;
+import sample.Controller;
+import sample.utils.*;
 import sample.utils.clustering.Cluster;
 import sample.utils.clustering.DBSCANClusterer;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -41,6 +45,7 @@ public class CircleFinderTest {
         }
         Mat resized = Mat.zeros(source.rows() / resizeFactor, source.cols() / resizeFactor, source.type());
         Imgproc.resize(source, resized, new Size(source.cols() / resizeFactor, source.rows() / resizeFactor), 0, 0, Imgproc.INTER_CUBIC);
+
         Imgcodecs.imwrite("resizedImage.bmp", resized);
         Mat binImage = new Mat(resized.rows(), resized.cols(), resized.type());
         Imgproc.GaussianBlur(resized, binImage, new Size(51, 51), 0, 0);
@@ -85,10 +90,50 @@ public class CircleFinderTest {
             }
         }
 
-
         Imgcodecs.imwrite("rects.bmp", resized);
+//        int size = (int) Math.max(firstRect.size.width, firstRect.size.height);
+//        int minRadius = (int) (size * 0.6 / 2);
+//        int maxRadius = (int) (size * 0.8 / 2);
+//        List<Circle> circles = extractCircles(resized, minRadius, maxRadius);
+//        Controller.drawCircles(resized, circles);
+//        Imgcodecs.imwrite("circles.bmp", resized);
+        CodeFinder codeFinder = new CodeFinder();
+        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+        CodeCleaner codeCleaner = new CodeCleaner();
+        int counter = 0;
+        for (RotatedRect rotatedRect : circleAreas) {
+            Point center = rotatedRect.center;
+            double width = rotatedRect.size.width * resizeFactor;
+            double height = rotatedRect.size.height * resizeFactor;
+            int x = (int)(center.x * resizeFactor - width / 2);
+            if(x < 0){
+                x = 0;
+            }
+            int y = (int) (center.y * resizeFactor - height / 2);
+            if(y < 0){
+                y = 0;
+            }
 
+            Mat circleImage = source.submat(new Rect(x, y, (int) width,(int) height));
+            Mat code = codeFinder.extractCode(circleImage, null);
+            if (code != null) {
+                Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
+                Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);
+
+                Mat boundedCode = codeCleaner.getBoundedCode(code);
+                Imgcodecs.imwrite("lines/code_" + counter + "_2.bmp", boundedCode);
+                Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+                Core.bitwise_not(cleanedCode, cleanedCode);
+                Imgcodecs.imwrite("lines/code_" + counter + "_3.bmp", cleanedCode);
+                BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+                String text = dataMatrixInterpreter.decode(bufferedImage);
+                System.out.println("lines/code_" + counter + "_3.bmp: " + text);
+            }
+            counter++;
+        }
     }
+
+
 
     public LinkedList<RotatedRect> calculateCircleAreas(LinkedList<RotatedRect> referenceRects, Mat image) {
         LinkedList<RotatedRect> tempResult = new LinkedList<>();
@@ -134,8 +179,8 @@ public class CircleFinderTest {
         }
 
         LinkedList<RotatedRect> result = new LinkedList<>();
-        for(RotatedRect rotatedRect : tempResult){
-            if(isInBounds(image, rotatedRect.center)){
+        for (RotatedRect rotatedRect : tempResult) {
+            if (isInBounds(image, rotatedRect.center)) {
                 result.add(rotatedRect);
             }
         }
@@ -237,7 +282,7 @@ public class CircleFinderTest {
 //            double tempVectorLength = getVectorLength(tempPoint);
             double tempAngleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, tempPoint));
             double maxAngleDiff = 10;
-            if(tempAngleDiff < maxAngleDiff){
+            if (tempAngleDiff < maxAngleDiff) {
                 candidates.add(tempPoint);
             }
         }
@@ -331,4 +376,66 @@ public class CircleFinderTest {
         }
         return copyRects;
     }
+
+    public static List<Circle> extractCircles(Mat image, int minRadius, int maxRadius) {
+
+        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
+        int size = minRadius;
+        int blurSize = size / 3;
+        if (blurSize % 2 == 0) {
+            blurSize++;
+        }
+        Imgproc.GaussianBlur(image, binImage, new Size(blurSize, blurSize), 0, 0);
+        Imgcodecs.imwrite("gaussianImage.bmp", binImage);
+//        Imgproc.equalizeHist(binImage, binImage);
+//        Imgcodecs.imwrite("equalizeImage.bmp", binImage);
+//        Mat clone = Mat.zeros(binImage.rows(), binImage.cols() , CvType.CV_32FC1);
+//        binImage.convertTo(clone, CvType.CV_32FC1);
+//        Mat dft = Mat.zeros(binImage.rows(), binImage.cols() , CvType.CV_32FC1);
+//        Core.dft(clone, dft);
+//        Imgcodecs.imwrite("dftImage.bmp", dft);
+
+        // adaptiveThreshold(Mat src, Mat dst, double maxValue, int adaptiveMethod, int thresholdType, int blockSize, double C)
+//        int blokSize = Math.min(binImage.cols(), binImage.rows()) / 14;
+//        if (blokSize % 2 == 0) {
+//            blokSize++;
+//        }
+//        System.out.println("blockSize = " + blokSize);
+//        Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, blokSize, 0);
+////        Imgproc.threshold(binImage, binImage, 100, 255, Imgproc.THRESH_BINARY);
+//        Imgcodecs.imwrite("binImage.bmp", binImage);
+//        Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 3);
+//        Imgcodecs.imwrite("dilateImage.bmp", binImage);
+//        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 1);
+//        Imgcodecs.imwrite("erodeImage.bmp", binImage);
+
+//        Imgproc.threshold(binImage, binImage, 50, 255, Imgproc.THRESH_BINARY);
+
+        double iCannyLowerThreshold = 35;
+        double iCannyUpperThreshold = 70;
+        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
+        Imgcodecs.imwrite("canny.bmp", binImage);
+
+        List<Circle> balls = new ArrayList<Circle>();
+
+        Mat circles = new Mat();
+        //    HoughCircles(Mat image, Mat circles, int method, double dp, double minDist, double param1, double param2, int minRadius, int maxRadius)
+        Imgproc.HoughCircles(binImage, circles, Imgproc.CV_HOUGH_GRADIENT, 2.0, 3 * minRadius, 100, 100, minRadius, maxRadius);
+
+        for (int i = 0; i < circles.cols(); i++) {
+
+            double[] vecCircle = circles.get(0, i);
+            if (vecCircle == null)
+                break;
+            int x = (int) vecCircle[0];
+            int y = (int) vecCircle[1];
+            int r = (int) vecCircle[2];
+            balls.add(new Circle(x, y, r));
+        }
+        System.out.println("founded " + balls.size() + " circles");
+        return balls;
+    }
+
+
+
 }

@@ -125,7 +125,7 @@ public class ImageUtils {
         Mat r = Imgproc.getRotationMatrix2D(center, angle, 1.0);
 //        int maxLen = (int) Math.sqrt(src.rows() * src.rows() + src.cols() * src.cols());
         int maxLen = src.rows();
-        Mat dst = new Mat(maxLen, maxLen, src.type());
+        Mat dst =  Mat.zeros(maxLen, maxLen, src.type());
         Imgproc.warpAffine(src, dst, r, new Size(maxLen, maxLen));
         return dst;
     }

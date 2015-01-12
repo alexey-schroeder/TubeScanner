@@ -19,27 +19,112 @@ public class CodeCleaner {
         StartPoint startPoint = findStartPoint(code, size);
         Mat result = null;
         Mat checked = checkBounds(code);
-        Mat recized = Mat.zeros(size * 12, size * 12, checked.type());
-        Imgproc.resize(checked, recized, new Size(size * 12, size * 12), 0, 0, Imgproc.INTER_CUBIC);
-        Imgproc.adaptiveThreshold(recized, recized, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 2);
+        Mat resized = Mat.zeros(size * 12, size * 12, checked.type());
+        Imgproc.resize(checked, resized, new Size(size * 12, size * 12), 0, 0, Imgproc.INTER_CUBIC);
+        Mat rotatedCode = null;
+
+        switch (startPoint) {
+            case LEFT_TOP:
+                rotatedCode = rotateCode(resized, 90);
+                break;
+            case RIGHT_TOP:
+                rotatedCode = rotateCode(resized, 180);
+                break;
+            case RIGHT_BOTTOM:
+                rotatedCode = rotateCode(resized, 270);
+                break;
+            case LEFT_BOTTOM:
+                rotatedCode = resized;
+                break;
+        }
+//        Imgcodecs.imwrite("./test images/code_2_1_rotated.bmp", rotatedCode);
+        int blockSize = size * 4;
+        if (blockSize % 2 == 0) {
+            blockSize++;
+        }
+        Imgproc.adaptiveThreshold(rotatedCode, rotatedCode, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, blockSize, 2);
 //        Imgcodecs.imwrite("lines/resized_" + counter + ".bmp", recized);
 //        Imgcodecs.imwrite("lines/checked_" + counter + ".bmp", checked);
 //        counter++;
-        switch (startPoint) {
-            case LEFT_TOP:
-                result = normalizeInLeftTopCase(recized, size);
-                break;
-            case RIGHT_TOP:
-                result = normalizeInRightTopCase(recized, size);
-                break;
-            case RIGHT_BOTTOM:
-                result = normalizeInRightBottomCase(recized, size);
-                break;
-            case LEFT_BOTTOM:
-                result = normalizeInLeftBottomCase(recized, size);
-                break;
-        }
+
+
+        result = normalizeInLeftBottomCase(rotatedCode, size);
+        checkCodeMarker(result);
         return result;
+    }
+
+    public void checkCodeMarker(Mat code) {
+        int size = code.cols() / 12;
+
+        //untere leiste muss weiss sein
+        int y = code.rows() - size / 2;
+        for (int x = size / 2; x < code.cols() - size; x = x + size) {
+            double[] data = code.get(y, x);
+            if (data == null) {
+                System.out.println("x = " + x + ", y = " + y + ", xPoint = " + x + ", yPoint = " + y + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+            }
+            if (data[0] < 255) {
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(255));
+                calculatedPoint.copyTo(code.submat(new Rect(x - size / 2, y - size / 2, size, size)));
+            }
+        }
+
+        //obere leiste muss punktir sein
+        y = size / 2;
+        int counter = 0;
+        for (int x = size / 2; x < code.cols() - size; x = x + size) {
+            double[] data = code.get(y, x);
+            if (data == null) {
+                System.out.println("x = " + x + ", y = " + y + ", xPoint = " + x + ", yPoint = " + y + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+            }
+
+            if (counter % 2 == 0 && data[0] < 255) {
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(255));
+                calculatedPoint.copyTo(code.submat(new Rect(x - size / 2, 0, size, size)));
+            } else if (counter % 2 == 1 && data[0] > 0) {
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(0));
+                calculatedPoint.copyTo(code.submat(new Rect(x - size / 2, 0, size, size)));
+            }
+            counter++;
+        }
+
+//linke leiste muss weiss sein
+        int x = size / 2;
+        for (y = size / 2; y < code.rows() - size; y = y + size) {
+            double[] data = code.get(y, x);
+            if (data == null) {
+                System.out.println("x = " + x + ", y = " + y + ", xPoint = " + x + ", yPoint = " + y + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+            }
+            if (data[0] < 255) {
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(255));
+                calculatedPoint.copyTo(code.submat(new Rect(0, y - size / 2, size, size)));
+            }
+        }
+
+        // rechte leiste muss punktir sein
+        counter = 0;
+        x = code.cols() - size / 2;
+        for (y = code.rows() - size / 2; y < size; y = y - size) {
+            double[] data = code.get(y, x);
+            if (data == null) {
+                System.out.println("x = " + x + ", y = " + y + ", xPoint = " + x + ", yPoint = " + y + ", xSize = " + code.cols() + ", ySize = " + code.rows());
+            }
+
+            if (counter % 2 == 0 && data[0] < 255) {
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(255));
+                calculatedPoint.copyTo(code.submat(new Rect(x - size / 2, y - size / 2, size, size)));
+            } else if (counter % 2 == 1 && data[0] > 0) {
+                Mat calculatedPoint = new Mat(size, size, code.type(), new Scalar(0));
+                calculatedPoint.copyTo(code.submat(new Rect(x - size / 2, y - size / 2, size, size)));
+            }
+            counter++;
+        }
+    }
+
+    public Mat rotateCode(Mat code, double angle) {
+        Point center = new Point(code.cols() / 2, code.rows() / 2);
+        Mat rotatedCode = ImageUtils.rotate(code, center, angle);
+        return rotatedCode;
     }
 
     public Mat getBoundedCode(Mat code) {

@@ -9,6 +9,16 @@
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/lib/opencv-2410.jar!/" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/core/src/main/java" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/core/src/test/java" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/glass/src" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/javase/src/main/java" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/android/src" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/zxingorg/src/main/java" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/androidtest/src" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/android-core/src/main/java" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/zxing.appspot.com/src/main/java" />
+      <root url="file://$USER_HOME$/Downloads/zxing-master/zxing-master/android-integration/src/main/java" />
     </SOURCES>
   </library>
 </component>
