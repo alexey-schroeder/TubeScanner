@@ -115,7 +115,7 @@ public class CircleFinderTest {
             }
 
             Mat circleImage = source.submat(new Rect(x, y, (int) width,(int) height));
-            Mat code = codeFinder.extractCode(circleImage, null);
+            Mat code = codeFinder.extractCode(circleImage);
             if (code != null) {
                 Imgcodecs.imwrite("lines/code_" + counter + "_0.bmp", circleImage);
                 Imgcodecs.imwrite("lines/code_" + counter + "_1.bmp", code);

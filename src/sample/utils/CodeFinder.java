@@ -1,214 +1,394 @@
 package sample.utils;
 
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import sample.Line;
+import sample.utils.clustering.Cluster;
+import sample.utils.clustering.DBSCANClusterer;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 
-import static org.opencv.core.CvType.CV_32FC2;
 
 /**
  * Created by Alex on 17.11.2014.
  */
 public class CodeFinder {
-    int counter = 0;
-//    public static List<Line> extractCode(Mat image) {
-//        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
-//        Imgproc.GaussianBlur(image, binImage, new Size(5, 5), 5, 5);
-//        double iCannyLowerThreshold = 35;
-//        double iCannyUpperThreshold = 70;
-//        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-//        List<Line> result = new ArrayList<Line>();
-//        Mat lines = new Mat();
-//        double rho = 1.0;					// distance from (0,0) top left
-//        double theta = Math.PI/180.0;		// angle in radians
-//        int threshold = 40;
-//        //   HoughLines(Mat image, Mat lines, double rho, double theta, int threshold, double srn, double stn)
-//        Imgproc.HoughLines(binImage, lines, rho, theta, threshold, 0.0, 0.0);
-//        int d = 50;
-//        for (int i = 0; i < lines.cols(); i++) {
-//            double[] line = lines.get(0, i);
-//            double r = line[0];
-//            double t = line[1];
-//
-//            double a = Math.cos(t), b = Math.sin(t);
-//            double x0 = a * r, y0 = b * r;
-//            double pt1_x = Math.round(x0 + d * (-b));
-//            double pt1_y = Math.round(y0 + d * (a));
-//            double pt2_x = Math.round(x0 - d * (-b));
-//            double pt2_y = Math.round(y0 - d * (a));
-//            Point pt_1 = new Point(pt1_x, pt1_y);
-//            Point pt_2 = new Point(pt2_x, pt2_y);
-//            result.add(new Line(pt_1, pt_2));
-//        }
-//        return result;
-//    }
+    int resizeFactor;
 
-//    public static List<Line> extractCode(Mat image) {
-//        Highgui.imwrite("lines/rowImage_" + counter + ".bmp", image);
-//        Mat binImage = new Mat(image.rows(), image.cols(), image.type());
-//        Imgproc.GaussianBlur(image, binImage, new Size(5, 5), 5, 5);
-////        Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 5, 0);
-////        Highgui.imwrite("lines/binImage_" + counter + ".bmp", binImage);
-////        Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 3);
-////        Highgui.imwrite("dilateImage.bmp", binImage);
-////        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 1);
-////        Highgui.imwrite("lines/erodeImage_" + counter + ".bmp", binImage);
-////        Highgui.imwrite("erodeImage.bmp", binImage);
-//        double iCannyLowerThreshold = 25;
-//        double iCannyUpperThreshold = 70;
-//        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-//        Highgui.imwrite("lines/cannyImage_" + counter + ".bmp", binImage);
-//
-//        List<Line> result = new ArrayList<Line>();
-//        Mat lines = new Mat();
-//        int linesThreshold = 20;
-//        int linesMinLineSize = 35;
-//        int linesGap = 5;
-//        Imgproc.HoughLinesP(binImage, lines, 1, Math.PI / 180, linesThreshold, linesMinLineSize, linesGap);
-//
-//        for (int x = 0; x < lines.cols(); x++) {
-//            double[] vecHoughLines = lines.get(0, x);
-//
-//            if (vecHoughLines.length == 0)
-//                break;
-//
-//            double x1 = vecHoughLines[0];
-//            double y1 = vecHoughLines[1];
-//            double x2 = vecHoughLines[2];
-//            double y2 = vecHoughLines[3];
-//            Point pt1 = new Point();
-//            Point pt2 = new Point();
-//
-//            pt1.x = x1;
-//            pt1.y = y1;
-//            pt2.x = x2;
-//            pt2.y = y2;
-//            result.add(new Line(pt1, pt2));
-//            Core.line(image, pt1, pt2, new Scalar(255, 0, 0, 255), 2);
-//
-//        }
-//        Highgui.imwrite("lines/lines_" + counter + ".bmp", image);
-//        counter++;
-//        return result;
-//    }
+    public LinkedList<RotatedRect> findCodes(Mat source) throws Exception {
+        resizeFactor = Math.min(source.rows(), source.cols()) / 1000;
+        if (resizeFactor < 1) {
+            resizeFactor = 1;
+        }
+        Mat resized = Mat.zeros(source.rows() / resizeFactor, source.cols() / resizeFactor, source.type());
+        Imgproc.resize(source, resized, new Size(source.cols() / resizeFactor, source.rows() / resizeFactor), 0, 0, Imgproc.INTER_CUBIC);
 
-//    public static List<Line> extractCode(Mat grayImage, Mat coloredImage) {
-//        double imageArea = grayImage.cols() * grayImage.rows();
-//        Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), grayImage.type());
-//        Imgproc.GaussianBlur(grayImage, binImage, new Size(5, 5), 5, 5);
-//        double iCannyLowerThreshold = 25;
-//        double iCannyUpperThreshold = 70;
-//        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-//        Imgcodecs.imwrite("lines/cannyImage_" + counter + ".bmp", binImage);
-//        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-//        MatOfPoint codeContour;
-//        Mat hierarchy = new Mat();
-//        Imgproc.findContours(binImage, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
-//        double shift = grayImage.rows() / 10.0;
-//        for (int i = 0; i < contours.size(); i++) {
-//            MatOfPoint2f tempContour = new MatOfPoint2f();
-//
-//            contours.get(i).convertTo(tempContour, CV_32FC2);
-//            Point[] oldPoints = tempContour.toArray();
-//            Point[] newPoints = new Point[oldPoints.length + 4];
-//            System.arraycopy(oldPoints, 0, newPoints, 0, oldPoints.length);
-//            newPoints[oldPoints.length] = new Point(grayImage.cols() / 2 - shift, grayImage.rows() / 2);
-//            newPoints[oldPoints.length + 1] = new Point(grayImage.cols() / 2, grayImage.rows() / 2 - shift);
-//            newPoints[oldPoints.length + 2] = new Point(grayImage.cols() / 2 + shift, grayImage.rows() / 2);
-//            newPoints[oldPoints.length + 3] = new Point(grayImage.cols() / 2, grayImage.rows() / 2 + shift);
-//            MatOfPoint2f tempContour_2 = new MatOfPoint2f(newPoints);
-//
-//            RotatedRect rotatedRect = Imgproc.minAreaRect(tempContour_2);
-//            Size rectSize = rotatedRect.size;
-//            double minSize = Math.min(rectSize.width, rectSize.height);
-//            double maxSize = Math.max(rectSize.width, rectSize.height);
-//            double minSizeDiff = 66;//unterschied zwischen width und height in prozent
-//            double sizeDiff = minSize / maxSize * 100;
-//            double minArea = imageArea / 7;
-//            double area = rectSize.area();
-//            if (sizeDiff > minSizeDiff && area > minArea) {
-//                Point[] rect_points = new Point[4];
-//                rotatedRect.points(rect_points);
-//                Scalar color = new Scalar(0, 0, 255);
-//                for (int j = 0; j < 4; j++)
-//                    Imgproc.line(coloredImage, rect_points[j], rect_points[(j + 1) % 4], color, 1);
-//            }
-//        }
-//        hierarchy.release();
-//        Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", coloredImage);
-//        List<Line> result = new ArrayList<Line>();
-//        counter++;
-//        return result;
-//    }
+        Mat binImage = new Mat(resized.rows(), resized.cols(), resized.type());
+        Imgproc.GaussianBlur(resized, binImage, new Size(51, 51), 0, 0);
+        Imgproc.equalizeHist(binImage, binImage);
+        int blokSize = Math.min(binImage.cols(), binImage.rows()) / 14;
+        if (blokSize % 2 == 0) {
+            blokSize++;
+        }
+        Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, blokSize, 0);
+        Imgcodecs.imwrite("threshold.bmp", binImage);
+        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 3);
+        Imgcodecs.imwrite("erode.bmp", binImage);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(binImage, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        List<RotatedRect> allRotatedRects = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            RotatedRect tempRotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()));
+            if (isQuadrat(tempRotatedRect)) {
+                allRotatedRects.add(tempRotatedRect);
+            }
+        }
 
-//    public static List<Line> extractCode(Mat grayImage, Mat coloredImage) {
-//        double imageArea = grayImage.cols() * grayImage.rows();
-//        Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), grayImage.type());
-//        Imgproc.GaussianBlur(grayImage, binImage, new Size(5, 5), 5, 5);
-//        double iCannyLowerThreshold = 25;
-//        double iCannyUpperThreshold = 70;
-//        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-//        Imgcodecs.imwrite("lines/cannyImage_" + counter + ".bmp", binImage);
-//        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-//        MatOfPoint codeContour;
-//        Mat hierarchy = new Mat();
-//        Imgproc.findContours(binImage, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
-//
-//        for (int i = 0; i < contours.size(); i++) {
-//            MatOfPoint2f tempContour = new MatOfPoint2f();
-//            contours.get(i).convertTo(tempContour, CV_32FC2);
-//            MatOfPoint triangle = new MatOfPoint();
-//            Imgproc.minEnclosingTriangle(tempContour, triangle);
-//            triangle.get(0, 0);
-//            Point[] points = new Point[]{
-//                    new Point(triangle.get(0, 0)),
-//                    new Point(triangle.get(1, 0)),
-//                    new Point(triangle.get(2, 0))};
-////            Size rectSize = rotatedRect.size;
-////            double minSize = Math.min(rectSize.width, rectSize.height);
-////            double maxSize = Math.max(rectSize.width, rectSize.height);
-////            double minSizeDiff = 50;//unterschied zwischen width und height in prozent
-////            double sizeDiff = minSize / maxSize * 100;
-////            double minArea = imageArea / 7;
-////            double area = rectSize.area();
-////            if (sizeDiff > minSizeDiff && area > minArea) {
-////                Point[] rect_points = new Point[4];
-////                rotatedRect.points(rect_points);
-//            Scalar color = new Scalar(0, 0, 255);
-//            for (int j = 0; j < 3; j++)
-//                Imgproc.line(coloredImage, points[j], points[(j + 1) % 3], color, 1);
-//        }
-////        }
-//        hierarchy.release();
-//        Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", coloredImage);
-//        List<Line> result = new ArrayList<Line>();
-//        counter++;
-//        return result;
-//    }
+        LinkedList<RotatedRect> referenceRects = getReferenceRects(allRotatedRects);
+
+        for (RotatedRect rotatedRect : referenceRects) {
+            Point[] rect_points = new Point[4];
+            rotatedRect.points(rect_points);
+            Scalar color = new Scalar(0, 0, 255);
+            for (int j = 0; j < 4; j++) {
+                Imgproc.line(resized, rect_points[j], rect_points[(j + 1) % 4], color, 1);
+            }
+        }
+        Imgcodecs.imwrite("rects.bmp", resized);
+        LinkedList<RotatedRect> circleAreas = calculateCircleAreas(referenceRects, binImage);
+        CodeFinder codeFinder = new CodeFinder();
+        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
+        CodeCleaner codeCleaner = new CodeCleaner();
+        for (RotatedRect rotatedRect : circleAreas) {
+            Point center = rotatedRect.center;
+            double width = rotatedRect.size.width * resizeFactor;
+            double height = rotatedRect.size.height * resizeFactor;
+            int x = (int) (center.x * resizeFactor - width / 2);
+            if (x < 0) {
+                x = 0;
+            }
+            int y = (int) (center.y * resizeFactor - height / 2);
+            if (y < 0) {
+                y = 0;
+            }
+
+            Mat circleImage = source.submat(new Rect(x, y, (int) width, (int) height));
+            Mat code = codeFinder.extractCode(circleImage);
+            if (code != null) {
+
+                Mat boundedCode = codeCleaner.getBoundedCode(code);
+                Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+                Core.bitwise_not(cleanedCode, cleanedCode);
+                BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+                String text = dataMatrixInterpreter.decode(bufferedImage);
+            }
+        }
+        return circleAreas;
+    }
 
 
-    public Mat extractCode(Mat grayImage, Mat coloredImage) {
+    public LinkedList<RotatedRect> calculateCircleAreas(LinkedList<RotatedRect> referenceRects, Mat image) {
+        LinkedList<RotatedRect> tempResult = new LinkedList<>();
+        Point[] cellVectors = calculateCellVectors(referenceRects);
+        Point vectorA = cellVectors[0];
+        Point vectorB = cellVectors[1];
+        RotatedRect startRect = referenceRects.getFirst();
+
+        tempResult.add(startRect);
+        double maxDistance = Math.sqrt(image.cols() * image.cols() + image.rows() * image.rows());
+        double distance = 0;
+        LinkedList<RotatedRect> rectsInColumn = createRotatedRectsInColumn(image, startRect, vectorB, referenceRects);
+        tempResult.addAll(rectsInColumn);
+        double vectorALength = getVectorLength(vectorA);
+        RotatedRect referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = plus(referenceRect.center, vectorA);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, referenceRect.size, referenceRect.angle);
+            }
+            tempResult.add(rect);
+
+            referenceRect = rect;
+            rectsInColumn = createRotatedRectsInColumn(image, referenceRect, vectorB, referenceRects);
+            tempResult.addAll(rectsInColumn);
+            distance = distance + vectorALength;
+        }
+        distance = 0;
+        referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = minus(referenceRect.center, vectorA);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, referenceRect.size, referenceRect.angle);
+            }
+            tempResult.add(rect);
+
+            referenceRect = rect;
+            rectsInColumn = createRotatedRectsInColumn(image, referenceRect, vectorB, referenceRects);
+            tempResult.addAll(rectsInColumn);
+            distance = distance + vectorALength;
+        }
+
+        LinkedList<RotatedRect> result = new LinkedList<>();
+        for (RotatedRect rotatedRect : tempResult) {
+            if (isInBounds(image, rotatedRect.center)) {
+                result.add(rotatedRect);
+            }
+        }
+        return result;
+    }
+
+    private LinkedList<RotatedRect> createRotatedRectsInColumn(Mat image, RotatedRect startRect, Point vector, LinkedList<RotatedRect> referenceRects) {
+        LinkedList<RotatedRect> result = new LinkedList<>();
+        double maxDistance = Math.sqrt(image.cols() * image.cols() + image.rows() * image.rows());
+        double distance = 0;
+        double vectorLength = getVectorLength(vector);
+        RotatedRect referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = plus(referenceRect.center, vector);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, startRect.size, startRect.angle);
+            }
+            result.add(rect);
+
+            referenceRect = rect;
+            distance = distance + vectorLength;
+        }
+        distance = 0;
+        referenceRect = startRect;
+        while (distance < maxDistance) {
+            Point nextPoint = minus(referenceRect.center, vector);
+            RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
+            if (rect == null) {
+                rect = new RotatedRect(nextPoint, startRect.size, startRect.angle);
+            }
+            result.add(rect);
+            referenceRect = rect;
+            distance = distance + vectorLength;
+        }
+        return result;
+    }
+
+    public double getDistance(Point a, Point b) {
+        double xDiff = a.x - b.x;
+        double yDiff = a.y - b.y;
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    }
+
+    public double getVectorLength(Point point) {
+        return Math.sqrt(point.x * point.x + point.y * point.y);
+    }
+
+    public RotatedRect findRotatedRect(LinkedList<RotatedRect> rotatedRects, Point point) {
+        for (RotatedRect rotatedRect : rotatedRects) {
+            double width = rotatedRect.size.width;
+            double height = rotatedRect.size.height;
+            double diagonal = Math.sqrt(width * width + height * height);
+            if (getDistance(rotatedRect.center, point) < diagonal / 2) {
+                return rotatedRect;
+            }
+        }
+        return null;
+    }
+
+    public Point plus(Point a, Point b) {
+        return new Point(a.x + b.x, a.y + b.y);
+    }
+
+    public Point minus(Point a, Point b) {
+        return new Point(a.x - b.x, a.y - b.y);
+    }
+
+    public boolean isInBounds(Mat mat, Point point) {
+        return point.x < mat.cols() && point.x >= 0 && point.y >= 0 && point.y < mat.rows();
+    }
+
+    public Point[] calculateCellVectors(List<Point> points) {
+        Point[] result = new Point[2];
+        ArrayList<Point> differenceVectoren = calculateDifferenceVectoren(points);
+        double maxDistanceInCluster = 5;
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxDistanceInCluster, 5);
+        List<Cluster<Point>> clusters = dbscanClusterer.cluster(differenceVectoren);
+        if (clusters.size() < 2) {
+            return null;
+        }
+        Collections.sort(clusters, new Comparator<Cluster<Point>>() {
+            @Override
+            public int compare(Cluster<Point> o1, Cluster<Point> o2) {
+                return o2.getPoints().size() - o1.getPoints().size();
+            }
+        });
+
+        Point point_0 = calculateClusterCenter(clusters.get(0));
+//        Point point_1 = calculateClusterCenter(clusters.get(1));
+//        double angleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, point_1));
+//        double vectorLength = getVectorLength(point_1);
+        ArrayList<Point> candidates = new ArrayList<>();
+        for (int i = 1; i < clusters.size(); i++) {
+            Cluster<Point> tempCluster = clusters.get(i);
+            Point tempPoint = calculateClusterCenter(tempCluster);
+//            double tempVectorLength = getVectorLength(tempPoint);
+            double tempAngleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, tempPoint));
+            double maxAngleDiff = 10;
+            if (tempAngleDiff < maxAngleDiff) {
+                candidates.add(tempPoint);
+            }
+        }
+
+        Collections.sort(candidates, new Comparator<Point>() {
+            @Override
+            public int compare(Point o1, Point o2) {
+                return (int) (getVectorLength(o1) - getVectorLength(o2));
+            }
+        });
+
+        if (candidates.size() < 1) {
+            return null;
+        }
+        result[0] = point_0;
+        result[1] = candidates.get(0);
+        return result;
+    }
+
+
+    public Point[] calculateCellVectors(LinkedList<RotatedRect> referenceRects) {
+        Point[] result = new Point[2];
+        ArrayList<Point> points = new ArrayList<>();
+        for (RotatedRect rotatedRect : referenceRects) {
+            points.add(rotatedRect.center);
+        }
+
+        ArrayList<Point> differenceVectoren = calculateDifferenceVectoren(points);
+        double maxDistanceInCluster = referenceRects.getFirst().size.width / 10;
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxDistanceInCluster, 5);
+        List<Cluster<Point>> clusters = dbscanClusterer.cluster(differenceVectoren);
+        Collections.sort(clusters, new Comparator<Cluster<Point>>() {
+            @Override
+            public int compare(Cluster<Point> o1, Cluster<Point> o2) {
+                return o2.getPoints().size() - o1.getPoints().size();
+            }
+        });
+
+        Point point_0 = calculateClusterCenter(clusters.get(0));
+//        Point point_1 = calculateClusterCenter(clusters.get(1));
+//        double angleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, point_1));
+//        double vectorLength = getVectorLength(point_1);
+        ArrayList<Point> candidates = new ArrayList<>();
+        for (int i = 1; i < clusters.size(); i++) {
+            Cluster<Point> tempCluster = clusters.get(i);
+            Point tempPoint = calculateClusterCenter(tempCluster);
+//            double tempVectorLength = getVectorLength(tempPoint);
+            double tempAngleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, tempPoint));
+            double maxAngleDiff = 10;
+            if (tempAngleDiff < maxAngleDiff) {
+                candidates.add(tempPoint);
+            }
+        }
+
+        Collections.sort(candidates, new Comparator<Point>() {
+            @Override
+            public int compare(Point o1, Point o2) {
+                return (int) (getVectorLength(o1) - getVectorLength(o2));
+            }
+        });
+        result[0] = point_0;
+        result[1] = candidates.get(0);
+        return result;
+    }
+
+    //in degrees
+    public double getAngleBetweenVectors(Point a, Point b) {
+        double nenner = a.x * b.x + a.y * b.y;
+        double zeller = getVectorLength(a) * getVectorLength(b);
+        double cosA = nenner / zeller;
+        double arccos = Math.acos(cosA);
+        return Math.toDegrees(arccos);
+    }
+
+    public Point calculateClusterCenter(Cluster<Point> cluster) {
+        List<Point> points = cluster.getPoints();
+        double x = 0;
+        double y = 0;
+        for (Point point : points) {
+            x = x + point.x;
+            y = y + point.y;
+        }
+        return new Point(x / points.size(), y / points.size());
+    }
+
+    private ArrayList<Point> calculateDifferenceVectoren(List<Point> points) {
+        ArrayList<Point> result = new ArrayList<>();
+        for (int i = 0; i < points.size() - 1; i++) {
+            Point referencePoint = points.get(i);
+            for (int j = i + 1; j < points.size(); j++) {
+                Point point = points.get(j);
+                Point vector = minus(referencePoint, point);
+                result.add(vector);
+                Point negativVector = new Point(-vector.x, -vector.y);
+                result.add(negativVector);
+            }
+        }
+        return result;
+    }
+
+    public boolean isQuadrat(RotatedRect rect) {
+        double minFactor = 0.85;
+        Size size = rect.size;
+        double min = Math.min(size.width, size.height);
+        double max = Math.max(size.width, size.height);
+        double factor = min / max;
+        return factor > minFactor;
+    }
+
+    public LinkedList<RotatedRect> getReferenceRects(List<RotatedRect> allRotatedRects) {
+        double maxFactor = 0.8;
+        LinkedList<RotatedRect> copyRects = new LinkedList<>(allRotatedRects);
+        Collections.sort(copyRects, new Comparator<RotatedRect>() {
+            @Override
+            public int compare(RotatedRect o1, RotatedRect o2) {
+                double area1 = o1.size.area();
+                double area2 = o2.size.area();
+                if (area1 > area2) {
+                    return 1;
+                } else if (area1 < area2) {
+                    return -1;
+                }
+                return 0;
+            }
+        });
+        RotatedRect result = null;
+        boolean found = false;
+        while (copyRects.size() > 3 && !found) {
+            result = copyRects.get(copyRects.size() / 2);
+            RotatedRect firstRect = copyRects.getFirst();
+            RotatedRect lastRect = copyRects.getLast();
+            found = true;
+            if (firstRect.size.area() / result.size.area() < maxFactor) {
+                copyRects.removeFirst();
+                found = false;
+            }
+            if (result.size.area() / lastRect.size.area() < maxFactor) {
+                copyRects.removeLast();
+                found = false;
+            }
+        }
+        return copyRects;
+    }
+
+    public Mat extractCode(Mat grayImage) {
         Mat code = null;
         double imageArea = grayImage.cols() * grayImage.rows();
-        Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), grayImage.type());
-        Imgproc.GaussianBlur(grayImage, binImage, new Size(3, 3), 3, 3);
+        Mat binImage = new Mat(grayImage.rows(), grayImage.cols(), CvType.CV_8UC1);
+        Imgproc.cvtColor(grayImage, binImage, Imgproc.COLOR_RGB2GRAY);
+        Imgproc.GaussianBlur(binImage, binImage, new Size(3, 3), 3, 3);
 
-//        Imgproc.equalizeHist(grayImage, binImage);
-        double iCannyLowerThreshold = 15;
-        double iCannyUpperThreshold = 75;
-//        Imgproc.Canny(binImage, binImage, iCannyLowerThreshold, iCannyUpperThreshold);
-//        Imgcodecs.imwrite("lines/cannyImage_" + counter + ".bmp", binImage);
         Imgproc.adaptiveThreshold(binImage, binImage, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 51, 0);
-//        Imgcodecs.imwrite("lines/thresholdImage_" + counter + ".bmp", binImage);
-//        Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 1);
-//        Imgcodecs.imwrite("lines/dilateImage_" + counter + ".bmp", binImage);
-//        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 1);
-//        Imgcodecs.imwrite("lines/erodeImage_" + counter + ".bmp", binImage);
-        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        MatOfPoint codeContour;
+        Imgproc.dilate(binImage, binImage, new Mat(), new Point(-1, -1), 1);
+        Imgproc.erode(binImage, binImage, new Mat(), new Point(-1, -1), 1);
         Mat hierarchy = new Mat();
         Mat connectedComponents = new Mat();
         int componentsSize = Imgproc.connectedComponents(binImage, connectedComponents);
@@ -227,29 +407,9 @@ public class CodeFinder {
             }
         }
 
-//        Imgcodecs.imwrite("lines/connectedImage_" + counter + ".bmp", connectedComponents);
-//        Imgproc.findContours(binImage, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
         RotatedRect rotatedRect = null;
         for (Set<Point> points : componentPoints) {
-//            MatOfPoint contour = contours.get(i);
             Point[] contourPoints = points.toArray(new Point[0]);
-//            if (contourPoints.length > 10) {
-//                Point[] maxPoints = findPointsByMaxDistance(contourPoints);
-//                double distance_1 = getSqrDistance(maxPoints[0], maxPoints[1]);
-//                double distance_2 = getSqrDistance(maxPoints[1], maxPoints[2]);
-//                double max = Math.max(distance_1, distance_2);
-//                double min = Math.min(distance_1, distance_2);
-//                double diff = min / max;
-//                if (diff > 0.5) {
-//                    Scalar color = new Scalar(255, 0, 0);
-//                    for (Point point : maxPoints) {
-//                        Imgproc.circle(coloredImage, point, 2, color);
-//                    }
-//                        Imgproc.line(coloredImage, maxPoints[0], maxPoints[1], color, 1);
-//                        Imgproc.line(coloredImage, maxPoints[1], maxPoints[2], color, 1);
-//                }
-//            }
-
             RotatedRect tempRotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contourPoints));
             Size rectSize = tempRotatedRect.size;
             double minSize = Math.min(rectSize.width, rectSize.height);
@@ -262,31 +422,10 @@ public class CodeFinder {
             if (sizeDiff > minSizeDiff && area > minArea && area < maxArea) {
                 Point[] rect_points = new Point[4];
                 tempRotatedRect.points(rect_points);
-//                Scalar color = new Scalar(0, 0, 255);
-//                for (int j = 0; j < 4; j++) {
-//                    Imgproc.line(coloredImage, rect_points[j], rect_points[(j + 1) % 4], color, 1);
-//                }
                 rotatedRect = tempRotatedRect;
             }
         }
 
-
-//        MatOfPoint[] maxCounturs = new MatOfPoint[3];
-//        for (int i = 0; i < contours.size(); i++) {
-//            MatOfPoint contour = contours.get(i);
-//            Point[] contourPoints = contour.toArray();
-//            if (maxCounturs[0] == null || maxCounturs[0].toArray().length < contourPoints.length) {
-//                maxCounturs[0] = contour;
-//            } else if (maxCounturs[1] == null || maxCounturs[1].toArray().length < contourPoints.length) {
-//                maxCounturs[1] = contour;
-//            } else if (maxCounturs[2] == null || maxCounturs[2].toArray().length < contourPoints.length) {
-//                maxCounturs[2] = contour;
-//            }
-//        }
-//        for (int i = 0; i < maxCounturs.length; i++) {
-//            Scalar color = new Scalar(Math.random() * 255, Math.random() * 255, Math.random() * 255);
-//            Imgproc.drawContours(coloredImage, Arrays.asList(maxCounturs), i, color, 1);
-//        }
         hierarchy.release();
         if (rotatedRect != null) {
             Mat rotatedImage = ImageUtils.rotate(grayImage, rotatedRect.center, rotatedRect.angle);
@@ -300,62 +439,22 @@ public class CodeFinder {
                 y = 0;
             }
             int width = (int) rotatedRect.size.width + puffer * 2;
-            if (x + width > rotatedImage.cols()) {
+            if (x + width >= rotatedImage.cols()) {
                 width = rotatedImage.cols() - x;
             }
             int height = (int) rotatedRect.size.height + puffer * 2;
-            if (y + height > rotatedImage.rows()) {
+            if (y + height >= rotatedImage.rows()) {
                 height = rotatedImage.rows() - y;
             }
-            code = rotatedImage.submat(new Rect(x, y, width, height));
-//            Imgproc.adaptiveThreshold(code, code, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 51, 0);
+            code = new Mat();
+            Imgproc.cvtColor(rotatedImage, code, Imgproc.COLOR_RGB2GRAY);
+            code = code.submat(new Rect(x, y, width, height));
             Imgproc.threshold(code, code, 120, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
-//            Imgproc.erode(code, code, new Mat(), new Point(-1, -1), 1);
-//            Imgproc.dilate(code, code, new Mat(), new Point(-1, -1), 1);
-
-//            Imgcodecs.imwrite("lines/contour_" + counter + ".bmp", code);
         }
-        counter++;
         return code;
     }
 
-
-
-    private Point[] findPointsByMaxDistance(Point[] contourPoints) {
-        Point point_1 = null;
-        Point point_2 = null;
-        Point point_3 = null;
-        double maxDistance = 0;
-        for (int i = 0; i < contourPoints.length - 1; i++) {
-            Point tempPoint = contourPoints[i];
-            for (int j = i; j < contourPoints.length; j++) {
-                Point tempPoint_2 = contourPoints[j];
-
-                double distance = getSqrDistance(tempPoint, tempPoint_2);
-                if (maxDistance < distance) {
-                    point_1 = tempPoint;
-                    point_2 = tempPoint_2;
-                    maxDistance = distance;
-                }
-            }
-        }
-        maxDistance = 0;
-        for (int i = 0; i < contourPoints.length; i++) {
-            Point tempPoint = contourPoints[i];
-            double distance_1 = getSqrDistance(point_1, tempPoint);
-            double distance_2 = getSqrDistance(point_2, tempPoint);
-            if (distance_1 + distance_2 > maxDistance) {
-                point_3 = tempPoint;
-                maxDistance = distance_1 + distance_2;
-            }
-        }
-        return new Point[]{point_1, point_3, point_2};
-    }
-
-    public double getSqrDistance(Point point_1, Point point_2) {
-        double xDiff = point_1.x - point_2.x;
-        double yDiff = point_1.y - point_2.y;
-        double distance = xDiff * xDiff + yDiff * yDiff;
-        return distance;
+    public int getResizeFactor() {
+        return resizeFactor;
     }
 }
