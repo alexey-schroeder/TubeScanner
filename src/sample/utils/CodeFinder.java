@@ -427,7 +427,7 @@ public class CodeFinder {
         }
 
         hierarchy.release();
-        if (rotatedRect != null) {
+        if (rotatedRect != null && rotatedRect.size.width > 0 && rotatedRect.size.height > 0) {
             Mat rotatedImage = ImageUtils.rotate(grayImage, rotatedRect.center, rotatedRect.angle);
             int puffer = 2;
             int x = (int) (rotatedRect.center.x - puffer - rotatedRect.size.width / 2);
@@ -445,6 +445,10 @@ public class CodeFinder {
             int height = (int) rotatedRect.size.height + puffer * 2;
             if (y + height >= rotatedImage.rows()) {
                 height = rotatedImage.rows() - y;
+            }
+
+            if (width == 0 || height == 0) {
+                return null;
             }
             code = new Mat();
             Imgproc.cvtColor(rotatedImage, code, Imgproc.COLOR_RGB2GRAY);

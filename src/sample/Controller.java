@@ -117,14 +117,13 @@ public class Controller {
             Mat circleImage = coloredFrame.submat(new Rect(x, y, (int) width, (int) height));
             Mat code = codeFinder.extractCode(circleImage);
             if (code != null) {
-
                 Mat boundedCode = codeCleaner.getBoundedCode(code);
-                if(boundedCode == null){
+                if (boundedCode == null) {
                     showFrame(resized);
                     return;
                 }
                 Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
-                if(cleanedCode == null){
+                if (cleanedCode == null) {
                     showFrame(resized);
                     return;
                 }
@@ -135,6 +134,8 @@ public class Controller {
                     System.out.println(text);
                     if (text != null) {
                         Imgproc.circle(resized, center, 10, new Scalar(0, 255, 0), 2);
+                    } else {
+                        Imgproc.circle(resized, center, 10, new Scalar(255, 0, 0), 2);
                     }
                 } catch (IOException e) {
 //                        e.printStackTrace();
