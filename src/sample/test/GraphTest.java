@@ -32,6 +32,7 @@ public class GraphTest {
         Assert.assertEquals(true, nodeB.getNeighbors().contains(nodeC));
         Assert.assertEquals(false, nodeA.getNeighbors().contains(nodeB));
         Assert.assertEquals(false, nodeB.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeC.getOppositeNeighbor(nodeB).equals(nodeA));
     }
 
     //    D
@@ -68,6 +69,7 @@ public class GraphTest {
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeA));
         Assert.assertEquals(false, nodeD.getNeighbors().contains(nodeE));
         Assert.assertEquals(false, nodeE.getNeighbors().contains(nodeD));
+        Assert.assertEquals(true, nodeA.getOppositeNeighbor(nodeE).equals(nodeD));
     }
 
     //      D
@@ -112,6 +114,7 @@ public class GraphTest {
         Assert.assertEquals(false, nodeD.getNeighbors().contains(nodeF));
         Assert.assertEquals(false, nodeE.getNeighbors().contains(nodeF));
         Assert.assertEquals(false, nodeC.getNeighbors().contains(nodeF));
+        Assert.assertEquals(true, nodeA.getOppositeNeighbor(nodeF).equals(nodeC));
     }
 
     //  K   D
@@ -161,6 +164,7 @@ public class GraphTest {
         Assert.assertEquals(true, nodeL.getNeighbors().contains(nodeF));
         Assert.assertEquals(false, nodeK.getNeighbors().contains(nodeL));
         Assert.assertEquals(false, nodeL.getNeighbors().contains(nodeK));
+        Assert.assertEquals(true, nodeF.getOppositeNeighbor(nodeK).equals(nodeL));
     }
 
     //  K - D - M
@@ -216,6 +220,7 @@ public class GraphTest {
         Assert.assertEquals(true, nodeM.getNeighbors().contains(nodeD));
         Assert.assertEquals(false, nodeK.getNeighbors().contains(nodeM));
         Assert.assertEquals(false, nodeM.getNeighbors().contains(nodeK));
+        Assert.assertEquals(true, nodeD.getOppositeNeighbor(nodeK).equals(nodeM));
 
         Node nodeR = new Node("R");
         nodeL = new Node("L");
@@ -242,6 +247,7 @@ public class GraphTest {
         Assert.assertEquals(true, nodeR.getNeighbors().contains(nodeE));
         Assert.assertEquals(false, nodeL.getNeighbors().contains(nodeR));
         Assert.assertEquals(false, nodeR.getNeighbors().contains(nodeL));
+        Assert.assertEquals(true, nodeE.getOppositeNeighbor(nodeL).equals(nodeR));
     }
 
     //  K - D - M
@@ -317,5 +323,8 @@ public class GraphTest {
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeM));
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeA));
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeK));
+        Assert.assertEquals(true, nodeC.getOppositeNeighbor(nodeM).equals(nodeR));
     }
+
+
 }
