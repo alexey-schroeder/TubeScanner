@@ -12,10 +12,11 @@ public class GraphTest {
     // A - C - B
     @Test
     public void testAddNodes_1() throws Exception {
+        Graph graph = new Graph();
+
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        Graph graph = new Graph();
         graph.addNodes(nodeA, nodeB, nodeC);
 
         nodeA = graph.getNodeByCode("A");
@@ -43,10 +44,10 @@ public class GraphTest {
     @Test
     public void testAddNodes_2() throws Exception {
         Graph graph = new Graph();
+
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-
         graph.addNodes(nodeA, nodeB, nodeC);// erster frame
 
         Node nodeD = new Node("D");
@@ -80,10 +81,10 @@ public class GraphTest {
     @Test
     public void testAddNodes_3() throws Exception {
         Graph graph = new Graph();
+
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-
         graph.addNodes(nodeA, nodeB, nodeC);
 
         Node nodeD = new Node("D");
@@ -125,10 +126,10 @@ public class GraphTest {
     @Test
     public void testAddNodes_4() throws Exception {
         Graph graph = new Graph();
+
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-
         graph.addNodes(nodeA, nodeB, nodeC);
 
         Node nodeD = new Node("D");
@@ -175,10 +176,10 @@ public class GraphTest {
     @Test
     public void testAddNodes_5() throws Exception {
         Graph graph = new Graph();
+
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-
         graph.addNodes(nodeA, nodeB, nodeC);
 
         Node nodeD = new Node("D");
@@ -258,10 +259,10 @@ public class GraphTest {
     @Test
     public void testAddNodes_6() throws Exception {
         Graph graph = new Graph();
+
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-
         graph.addNodes(nodeA, nodeB, nodeC);
 
         Node nodeD = new Node("D");
@@ -325,6 +326,4 @@ public class GraphTest {
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeK));
         Assert.assertEquals(true, nodeC.getOppositeNeighbor(nodeM).equals(nodeR));
     }
-
-
 }
