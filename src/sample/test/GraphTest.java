@@ -17,17 +17,21 @@ public class GraphTest {
         Node nodeC = new Node("C");
         Graph graph = new Graph();
         graph.addNodes(nodeA, nodeB, nodeC);
-        
-        Assert.assertEquals(true, graph.getRoot().equals(graph.getNodeByCode("C")));
-        Assert.assertEquals(2, graph.getNodeByCode("C").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("A").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("B").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(true, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("B")));
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("C")));
-        Assert.assertEquals(true, graph.getNodeByCode("B").getNeighbors().contains(graph.getNodeByCode("C")));
-        Assert.assertEquals(false, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("B")));
-        Assert.assertEquals(false, graph.getNodeByCode("B").getNeighbors().contains(graph.getNodeByCode("A")));
+
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+
+        Assert.assertEquals(true, graph.getRoot().equals(nodeC));
+        Assert.assertEquals(2, nodeC.getNeighbors().size());
+        Assert.assertEquals(1, nodeA.getNeighbors().size());
+        Assert.assertEquals(1, nodeB.getNeighbors().size());
+        Assert.assertEquals(true, nodeC.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeC.getNeighbors().contains(nodeB));
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeC));
+        Assert.assertEquals(true, nodeB.getNeighbors().contains(nodeC));
+        Assert.assertEquals(false, nodeA.getNeighbors().contains(nodeB));
+        Assert.assertEquals(false, nodeB.getNeighbors().contains(nodeA));
     }
 
     //    D
@@ -49,16 +53,21 @@ public class GraphTest {
         nodeA = new Node("A");
         graph.addNodes(nodeD, nodeE, nodeA); // zweiter frame
 
-        Assert.assertEquals(3, graph.getNodeByCode("A").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("D").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("E").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("C")));
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("D")));
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("E")));
-        Assert.assertEquals(true, graph.getNodeByCode("E").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(true, graph.getNodeByCode("D").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(false, graph.getNodeByCode("D").getNeighbors().contains(graph.getNodeByCode("E")));
-        Assert.assertEquals(false, graph.getNodeByCode("E").getNeighbors().contains(graph.getNodeByCode("D")));
+        nodeA = graph.getNodeByCode("A");
+        nodeE = graph.getNodeByCode("E");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+
+        Assert.assertEquals(3, nodeA.getNeighbors().size());
+        Assert.assertEquals(1, nodeD.getNeighbors().size());
+        Assert.assertEquals(1, nodeE.getNeighbors().size());
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeC));
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeD));
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeE));
+        Assert.assertEquals(true, nodeE.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeA));
+        Assert.assertEquals(false, nodeD.getNeighbors().contains(nodeE));
+        Assert.assertEquals(false, nodeE.getNeighbors().contains(nodeD));
     }
 
     //      D
@@ -85,17 +94,24 @@ public class GraphTest {
         nodeC = new Node("C");
         graph.addNodes(nodeF, nodeC, nodeA);
 
-        Assert.assertEquals(4, graph.getNodeByCode("A").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("F").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("E").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("C")));
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("D")));
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("E")));
-        Assert.assertEquals(true, graph.getNodeByCode("A").getNeighbors().contains(graph.getNodeByCode("F")));
-        Assert.assertEquals(true, graph.getNodeByCode("F").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(false, graph.getNodeByCode("D").getNeighbors().contains(graph.getNodeByCode("F")));
-        Assert.assertEquals(false, graph.getNodeByCode("E").getNeighbors().contains(graph.getNodeByCode("F")));
-        Assert.assertEquals(false, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("F")));
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+        nodeE = graph.getNodeByCode("E");
+        nodeF = graph.getNodeByCode("F");
+
+        Assert.assertEquals(4, nodeA.getNeighbors().size());
+        Assert.assertEquals(1, nodeF.getNeighbors().size());
+        Assert.assertEquals(1, nodeE.getNeighbors().size());
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeC));
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeD));
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeE));
+        Assert.assertEquals(true, nodeA.getNeighbors().contains(nodeF));
+        Assert.assertEquals(true, nodeF.getNeighbors().contains(nodeA));
+        Assert.assertEquals(false, nodeD.getNeighbors().contains(nodeF));
+        Assert.assertEquals(false, nodeE.getNeighbors().contains(nodeF));
+        Assert.assertEquals(false, nodeC.getNeighbors().contains(nodeF));
     }
 
     //  K   D
@@ -127,16 +143,24 @@ public class GraphTest {
         nodeF = new Node("F");
         graph.addNodes(nodeK, nodeL, nodeF);
 
-        Assert.assertEquals(3, graph.getNodeByCode("F").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("K").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("L").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("F").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(true, graph.getNodeByCode("F").getNeighbors().contains(graph.getNodeByCode("K")));
-        Assert.assertEquals(true, graph.getNodeByCode("F").getNeighbors().contains(graph.getNodeByCode("L")));
-        Assert.assertEquals(true, graph.getNodeByCode("K").getNeighbors().contains(graph.getNodeByCode("F")));
-        Assert.assertEquals(true, graph.getNodeByCode("L").getNeighbors().contains(graph.getNodeByCode("F")));
-        Assert.assertEquals(false, graph.getNodeByCode("K").getNeighbors().contains(graph.getNodeByCode("L")));
-        Assert.assertEquals(false, graph.getNodeByCode("L").getNeighbors().contains(graph.getNodeByCode("K")));
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+        nodeE = graph.getNodeByCode("E");
+        nodeF = graph.getNodeByCode("F");
+        nodeL = graph.getNodeByCode("L");
+
+        Assert.assertEquals(3, nodeF.getNeighbors().size());
+        Assert.assertEquals(1, nodeK.getNeighbors().size());
+        Assert.assertEquals(1, nodeL.getNeighbors().size());
+        Assert.assertEquals(true, nodeF.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeF.getNeighbors().contains(nodeK));
+        Assert.assertEquals(true, nodeF.getNeighbors().contains(nodeL));
+        Assert.assertEquals(true, nodeK.getNeighbors().contains(nodeF));
+        Assert.assertEquals(true, nodeL.getNeighbors().contains(nodeF));
+        Assert.assertEquals(false, nodeK.getNeighbors().contains(nodeL));
+        Assert.assertEquals(false, nodeL.getNeighbors().contains(nodeK));
     }
 
     //  K - D - M
@@ -172,32 +196,52 @@ public class GraphTest {
         nodeD = new Node("D");
         graph.addNodes(nodeK, nodeM, nodeD);
 
-        Assert.assertEquals(3, graph.getNodeByCode("D").getNeighbors().size());
-        Assert.assertEquals(2, graph.getNodeByCode("K").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("M").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("D").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(true, graph.getNodeByCode("D").getNeighbors().contains(graph.getNodeByCode("K")));
-        Assert.assertEquals(true, graph.getNodeByCode("D").getNeighbors().contains(graph.getNodeByCode("M")));
-        Assert.assertEquals(true, graph.getNodeByCode("K").getNeighbors().contains(graph.getNodeByCode("D")));
-        Assert.assertEquals(true, graph.getNodeByCode("M").getNeighbors().contains(graph.getNodeByCode("D")));
-        Assert.assertEquals(false, graph.getNodeByCode("K").getNeighbors().contains(graph.getNodeByCode("M")));
-        Assert.assertEquals(false, graph.getNodeByCode("M").getNeighbors().contains(graph.getNodeByCode("K")));
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+        nodeE = graph.getNodeByCode("E");
+        nodeF = graph.getNodeByCode("F");
+        nodeK = graph.getNodeByCode("K");
+        nodeL = graph.getNodeByCode("L");
+        nodeM = graph.getNodeByCode("M");
+
+        Assert.assertEquals(3, nodeD.getNeighbors().size());
+        Assert.assertEquals(2, nodeK.getNeighbors().size());
+        Assert.assertEquals(1, nodeM.getNeighbors().size());
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeK));
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeM));
+        Assert.assertEquals(true, nodeK.getNeighbors().contains(nodeD));
+        Assert.assertEquals(true, nodeM.getNeighbors().contains(nodeD));
+        Assert.assertEquals(false, nodeK.getNeighbors().contains(nodeM));
+        Assert.assertEquals(false, nodeM.getNeighbors().contains(nodeK));
 
         Node nodeR = new Node("R");
         nodeL = new Node("L");
         nodeE = new Node("E");
         graph.addNodes(nodeL, nodeR, nodeE);
 
-        Assert.assertEquals(3, graph.getNodeByCode("E").getNeighbors().size());
-        Assert.assertEquals(2, graph.getNodeByCode("L").getNeighbors().size());
-        Assert.assertEquals(1, graph.getNodeByCode("R").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("E").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(true, graph.getNodeByCode("E").getNeighbors().contains(graph.getNodeByCode("L")));
-        Assert.assertEquals(true, graph.getNodeByCode("E").getNeighbors().contains(graph.getNodeByCode("R")));
-        Assert.assertEquals(true, graph.getNodeByCode("L").getNeighbors().contains(graph.getNodeByCode("E")));
-        Assert.assertEquals(true, graph.getNodeByCode("R").getNeighbors().contains(graph.getNodeByCode("E")));
-        Assert.assertEquals(false, graph.getNodeByCode("L").getNeighbors().contains(graph.getNodeByCode("R")));
-        Assert.assertEquals(false, graph.getNodeByCode("R").getNeighbors().contains(graph.getNodeByCode("L")));
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+        nodeE = graph.getNodeByCode("E");
+        nodeF = graph.getNodeByCode("F");
+        nodeK = graph.getNodeByCode("K");
+        nodeL = graph.getNodeByCode("L");
+        nodeM = graph.getNodeByCode("M");
+        
+        Assert.assertEquals(3, nodeE.getNeighbors().size());
+        Assert.assertEquals(2, nodeL.getNeighbors().size());
+        Assert.assertEquals(1, nodeR.getNeighbors().size());
+        Assert.assertEquals(true, nodeE.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeE.getNeighbors().contains(nodeL));
+        Assert.assertEquals(true, nodeE.getNeighbors().contains(nodeR));
+        Assert.assertEquals(true, nodeL.getNeighbors().contains(nodeE));
+        Assert.assertEquals(true, nodeR.getNeighbors().contains(nodeE));
+        Assert.assertEquals(false, nodeL.getNeighbors().contains(nodeR));
+        Assert.assertEquals(false, nodeR.getNeighbors().contains(nodeL));
     }
 
     //  K - D - M
@@ -246,16 +290,32 @@ public class GraphTest {
         nodeC = new Node("C");
         graph.addNodes(nodeM, nodeR, nodeC);
 
-        Assert.assertEquals(4, graph.getNodeByCode("C").getNeighbors().size());
-        Assert.assertEquals(2, graph.getNodeByCode("M").getNeighbors().size());
-        Assert.assertEquals(2, graph.getNodeByCode("R").getNeighbors().size());
-        Assert.assertEquals(true, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("A")));
-        Assert.assertEquals(true, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("B")));
-        Assert.assertEquals(true, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("M")));
-        Assert.assertEquals(true, graph.getNodeByCode("C").getNeighbors().contains(graph.getNodeByCode("R")));
-        Assert.assertEquals(true, graph.getNodeByCode("M").getNeighbors().contains(graph.getNodeByCode("C")));
-        Assert.assertEquals(true, graph.getNodeByCode("R").getNeighbors().contains(graph.getNodeByCode("C")));
-        Assert.assertEquals(false, graph.getNodeByCode("M").getNeighbors().contains(graph.getNodeByCode("R")));
-        Assert.assertEquals(false, graph.getNodeByCode("R").getNeighbors().contains(graph.getNodeByCode("M")));
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+        nodeE = graph.getNodeByCode("E");
+        nodeF = graph.getNodeByCode("F");
+        nodeK = graph.getNodeByCode("K");
+        nodeL = graph.getNodeByCode("L");
+        nodeM = graph.getNodeByCode("M");
+        nodeR = graph.getNodeByCode("R");
+
+        Assert.assertEquals(4, nodeC.getNeighbors().size());
+        Assert.assertEquals(2, nodeM.getNeighbors().size());
+        Assert.assertEquals(2, nodeR.getNeighbors().size());
+        Assert.assertEquals(3, nodeE.getNeighbors().size());
+        Assert.assertEquals(3, nodeD.getNeighbors().size());
+        Assert.assertEquals(true, nodeC.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeC.getNeighbors().contains(nodeB));
+        Assert.assertEquals(true, nodeC.getNeighbors().contains(nodeM));
+        Assert.assertEquals(true, nodeC.getNeighbors().contains(nodeR));
+        Assert.assertEquals(true, nodeM.getNeighbors().contains(nodeC));
+        Assert.assertEquals(true, nodeR.getNeighbors().contains(nodeC));
+        Assert.assertEquals(false, nodeM.getNeighbors().contains(nodeR));
+        Assert.assertEquals(false, nodeR.getNeighbors().contains(nodeM));
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeM));
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeA));
+        Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeK));
     }
 }
