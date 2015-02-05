@@ -59,6 +59,9 @@ public class Node {
     }
 
     public boolean addNeighbor(Node node, Graph.NodeAxe axe) {
+        if(node == null){
+            throw new RuntimeException("neighbor node can not be null!");
+        }
         if (neighbors.size() == 4) {
             throw new RuntimeException(" The node has 4 neighbors yet!");
         }
@@ -127,7 +130,7 @@ public class Node {
             return Graph.NodeAxe.AXE_A;
         } else {
             ArrayList<Node> neighborsInAxeB = getNeighborsByAxe(Graph.NodeAxe.AXE_B);
-            if (neighborsInAxeA.contains(neighbor)) {
+            if (neighborsInAxeB.contains(neighbor)) {
                 return Graph.NodeAxe.AXE_B;
             }
         }

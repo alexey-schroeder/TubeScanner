@@ -41,6 +41,16 @@ public class Graph {
         return allNodes;
     }
 
+    public Node getNodeByCode(String code) {
+        HashSet<Node> allNodes = getAllNodes();
+        for (Node node : allNodes) {
+            String tempCode = node.getCode();
+            if (code.equals(tempCode)) {
+                return node;
+            }
+        }
+        return null;
+    }
 //    public boolean addNodes(ArrayList<Node> newNodes) {
 //        boolean result = false;
 //        HashSet<Node> oldNodes = getAllNodes();
@@ -78,50 +88,143 @@ public class Graph {
 
     public void addNodes(Node nodeA, Node nodeB, Node parent) {
         if (root == null) {// graph ist leer
-            root = parent;
-            parent.addNeighbor(nodeA, NodeAxe.AXE_A);
-            parent.addNeighbor(nodeB, NodeAxe.AXE_A);
+            addNodeInCaseEmptyGraph(nodeA, nodeB, parent);
         } else {
             HashSet<Node> allNodes = getAllNodes();
-            Node equalsParent = Utils.findEqualsNode(allNodes, parent);
-            if (equalsParent != null) {// der node gibt es schon in graph
-                HashSet<Node> neighbors = equalsParent.getNeighbors();
-                Node equalsNodeA = Utils.findEqualsNode(neighbors, nodeA);
-                if (equalsNodeA != null) {//der parent hat schon einen gleichen nachbarn
-                    Graph.NodeAxe nodeA_Axe = equalsParent.getNeighborsAxe(equalsNodeA);
+            Node equalsParentInGraph = Utils.findEqualsNode(allNodes, parent);
+            Node equalsNodeAInGraph = Utils.findEqualsNode(allNodes, nodeA);
+            Node equalsNodeBInGraph = Utils.findEqualsNode(allNodes, nodeB);
+            if (equalsParentInGraph != null) {// der node gibt es schon in graph
+                HashSet<Node> neighbors = equalsParentInGraph.getNeighbors();
+                Node equalsNodeAInNeighbors = Utils.findEqualsNode(neighbors, nodeA);
+                Node equalsNodeBInNeighbors = Utils.findEqualsNode(neighbors, nodeB);
+                // der equalsParent hat schon einen gleichen nachbanrn.
+                //der andere equalsNeighbor is in nachbarliste von parent nicht vorhanden
+                //der andere equalsNeighbor is im graph auch nicht vorhanden
+                if (equalsNodeAInNeighbors != null && equalsNodeBInNeighbors == null && equalsNodeBInGraph == null) {//der parent hat schon einen gleichen nachbarn
+                    Graph.NodeAxe nodeA_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeAInNeighbors);
                     if (nodeA_Axe != null) {
-                        equalsParent.addNeighbor(nodeB, nodeA_Axe);
-                    }
-                } else {
-                    Node equalsNodeB = Utils.findEqualsNode(neighbors, nodeB);
-                    if (equalsNodeB != null) {//der parent hat schon einen gleichen nachbarn
-                        Graph.NodeAxe nodeB_Axe = equalsParent.getNeighborsAxe(equalsNodeB);
-                        if (nodeB_Axe != null) {
-                            equalsParent.addNeighbor(nodeA, nodeB_Axe);
-                        }
+                        equalsParentInGraph.addNeighbor(nodeB, nodeA_Axe);
                     }
                 }
+
+                // der equalsParent hat schon einen gleichen nachbanrn.
+                //der andere equalsNeighbor is in nachbarliste von parent nicht vorhanden
+                //der andere equalsNeighbor is im graph auch nicht vorhanden
+                if (equalsNodeBInNeighbors != null && equalsNodeAInNeighbors == null && equalsNodeAInGraph == null) {//der parent hat schon einen gleichen nachbarn
+                    Graph.NodeAxe nodeB_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeBInNeighbors);
+                    if (nodeB_Axe != null) {
+                        equalsParentInGraph.addNeighbor(nodeA, nodeB_Axe);
+                    }
+                }
+
+                // beide nachbarn sin in nachbarnliste von parent nicht vorhanden
+                // eins von nachbarn ist schon in graph
+                if (equalsNodeAInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph == null) {
+                    HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
+                    if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
+                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
+                       NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
+                        NodeAxe currentAxe = getOtherNodeAxe(nodeAxe);
+                        equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
+                        equalsParentInGraph.addNeighbor(nodeB, currentAxe);
+                    }
+                }
+
+                // beide nachbarn sin in nachbarnliste von parent nicht vorhanden
+                // eins von nachbarn ist schon in graph
+                if (equalsNodeBInNeighbors == null && equalsNodeBInGraph != null && equalsNodeAInGraph == null) {
+                    HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
+                    if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
+                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
+                        NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
+                        NodeAxe currentAxe = getOtherNodeAxe(nodeAxe);
+                        equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                        equalsParentInGraph.addNeighbor(nodeA, currentAxe);
+                    }
+                }
+
+                // beide nachbarn sind schon in graph aber nicht als nachbarn von parent
+                if(equalsNodeAInNeighbors == null && equalsNodeBInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph != null){
+                    HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
+                    NodeAxe currentAxe = null;
+                    if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
+                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
+                        NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
+                        currentAxe = getOtherNodeAxe(nodeAxe);
+                    }
+
+                    if(currentAxe == null){
+                        HashSet<Node> equalsNodeAInGraphNeighbors = equalsNodeAInGraph.getNeighbors();
+                        if(equalsNodeAInGraphNeighbors.size() == 3){// es gibt genau einen freien platz
+                            ArrayList<Node> neighborsInAxeA = equalsNodeAInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                            if(neighborsInAxeA.size() == 1){
+                                currentAxe = NodeAxe.AXE_A;
+                            } else {
+                                currentAxe = NodeAxe.AXE_B;
+                            }
+                        }
+                    }
+
+                    if(currentAxe == null){
+                        HashSet<Node> equalsNodeBInGraphNeighbors = equalsNodeBInGraph.getNeighbors();
+                        if(equalsNodeBInGraphNeighbors.size() == 3){// es gibt genau einen freien platz
+                            ArrayList<Node> neighborsInAxeA = equalsNodeBInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                            if(neighborsInAxeA.size() == 1){
+                                currentAxe = NodeAxe.AXE_A;
+                            } else {
+                                currentAxe = NodeAxe.AXE_B;
+                            }
+                        }
+                    }
+                    if(currentAxe != null) {
+                        equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
+                        equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                    }
+                }
+
+                //beide nachbarn sind im graph nicht vorhanden
+                if (equalsNodeAInGraph == null && equalsNodeBInGraph == null) {
+                    addNodeInCaseBothNodesAreNotInGraph(nodeA, nodeB, parent);
+                }
             } else {//parent wurde in graph nicht gefunden
-                Node equalsNodeA = Utils.findEqualsNode(allNodes, nodeA);
-                if(equalsNodeA != null && equalsNodeA.getNeighbors().size() == 3){// es gibt genau ein freies platz, d.h. der platz von neuem nachbarn ist eindeutig
-                    ArrayList<Node> neighborsInAxeA = equalsNodeA.getNeighborsByAxe(NodeAxe.AXE_A);
-                    if(neighborsInAxeA.size() == 1){
-                        equalsNodeA.addNeighbor(parent, NodeAxe.AXE_A);
+                if (equalsNodeAInGraph != null && equalsNodeAInGraph.getNeighbors().size() == 3) {// es gibt genau ein freies platz, d.h. der platz von neuem nachbarn ist eindeutig
+                    ArrayList<Node> neighborsInAxeA = equalsNodeAInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                    if (neighborsInAxeA.size() == 1) {
+                        equalsNodeAInGraph.addNeighbor(parent, NodeAxe.AXE_A);
                     } else {
-                        equalsNodeA.addNeighbor(parent, NodeAxe.AXE_B);
+                        equalsNodeAInGraph.addNeighbor(parent, NodeAxe.AXE_B);
                     }
                 } else {
-                    Node equalsNodeB = Utils.findEqualsNode(allNodes, nodeB);
-                    if(equalsNodeB != null && equalsNodeB.getNeighbors().size() == 3){// es gibt genau ein freies platz, d.h. der platz von neuem nachbarn ist eindeutig
-                        ArrayList<Node> neighborsInAxeA = equalsNodeB.getNeighborsByAxe(NodeAxe.AXE_A);
-                        if(neighborsInAxeA.size() == 1){
-                            equalsNodeB.addNeighbor(parent, NodeAxe.AXE_A);
+                    if (equalsNodeBInGraph != null && equalsNodeBInGraph.getNeighbors().size() == 3) {// es gibt genau ein freies platz, d.h. der platz von neuem nachbarn ist eindeutig
+                        ArrayList<Node> neighborsInAxeA = equalsNodeBInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                        if (neighborsInAxeA.size() == 1) {
+                            equalsNodeBInGraph.addNeighbor(parent, NodeAxe.AXE_A);
                         } else {
-                            equalsNodeB.addNeighbor(parent, NodeAxe.AXE_B);
+                            equalsNodeBInGraph.addNeighbor(parent, NodeAxe.AXE_B);
                         }
                     }
                 }
             }
+        }
+    }
+
+    protected void addNodeInCaseEmptyGraph(Node nodeA, Node nodeB, Node parent) {
+        root = parent;
+        parent.addNeighbor(nodeA, NodeAxe.AXE_A);
+        parent.addNeighbor(nodeB, NodeAxe.AXE_A);
+    }
+
+    protected void addNodeInCaseBothNodesAreNotInGraph(Node nodeA, Node nodeB, Node parent) {
+        HashSet<Node> allNodes = getAllNodes();
+        Node equalsParentInGraph = Utils.findEqualsNode(allNodes, parent);
+        HashSet<Node> neighbors = equalsParentInGraph.getNeighbors();
+        if (neighbors.size() > 0) { // in einer von axen gibt es ein nachbarn
+            Node oldNode = neighbors.iterator().next();
+            Graph.NodeAxe oldNodeAxe = equalsParentInGraph.getNeighborsAxe(oldNode);
+            Graph.NodeAxe currentAxe = getOtherNodeAxe(oldNodeAxe);
+            equalsParentInGraph.addNeighbor(nodeA, currentAxe);
+            equalsParentInGraph.addNeighbor(nodeB, currentAxe);
         }
     }
 
@@ -131,5 +234,13 @@ public class Graph {
 
     public void setRoot(Node root) {
         this.root = root;
+    }
+
+    public NodeAxe getOtherNodeAxe(NodeAxe nodeAxe) {
+        if (nodeAxe.equals(NodeAxe.AXE_A)) {
+            return NodeAxe.AXE_B;
+        } else {
+            return NodeAxe.AXE_A;
+        }
     }
 }
