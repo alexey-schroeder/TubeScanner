@@ -1,6 +1,7 @@
 package sample.utils;
 
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.awt.*;
@@ -125,7 +126,7 @@ public class ImageUtils {
         Mat r = Imgproc.getRotationMatrix2D(center, angle, 1.0);
 //        int maxLen = (int) Math.sqrt(src.rows() * src.rows() + src.cols() * src.cols());
         int maxLen = src.rows();
-        Mat dst =  Mat.zeros(maxLen, maxLen, src.type());
+        Mat dst = Mat.zeros(maxLen, maxLen, src.type());
         Imgproc.warpAffine(src, dst, r, new Size(maxLen, maxLen));
         return dst;
     }
@@ -136,5 +137,24 @@ public class ImageUtils {
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
         BufferedImage rotatedImage = op.filter(image, null);
         return rotatedImage;
+    }
+
+    public static double getVectorLength(Point point) {
+        return Math.sqrt(point.x * point.x + point.y * point.y);
+    }
+
+    public static boolean arePointsEquals(Point pointA, Point pointB) {
+        double maxDiff = 0.1;
+        if (pointA == pointB) {
+            return true;
+        } else {
+            return getDistance(pointA, pointB) <= maxDiff;
+        }
+    }
+
+    public static double getDistance(Point a, Point b) {
+        double xDiff = a.x - b.x;
+        double yDiff = a.y - b.y;
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     }
 }
