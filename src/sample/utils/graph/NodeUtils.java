@@ -6,7 +6,7 @@ import java.util.HashSet;
 /**
  * Created by Alex on 28.01.2015.
  */
-public class Utils {
+public class NodeUtils {
 
     public static Node findEqualsNode(Collection<Node> nodes, Node referenceNode){
         for(Node candidatNode : nodes){

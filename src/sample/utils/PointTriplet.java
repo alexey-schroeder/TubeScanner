@@ -5,7 +5,7 @@ import org.opencv.core.Point;
 /**
  * Created by Alex on 09.02.2015.
  */
-public class Triplet {
+public class PointTriplet {
     private Point center;
     private Point pointA;
     private Point pointB;
@@ -34,7 +34,7 @@ public class Triplet {
         this.pointB = pointB;
     }
 
-    public Triplet(Point pointA, Point pointB, Point center) {
+    public PointTriplet(Point pointA, Point pointB, Point center) {
         this.center = center;
         this.pointA = pointA;
         this.pointB = pointB;
@@ -51,7 +51,7 @@ public class Triplet {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Triplet triplet = (Triplet) o;
+        PointTriplet triplet = (PointTriplet) o;
 
         if (!ImageUtils.arePointsEquals(center, triplet.center)) return false;
         if (!ImageUtils.arePointsEquals(pointA, triplet.pointA) && !ImageUtils.arePointsEquals(pointA, triplet.pointB))
@@ -72,7 +72,7 @@ public class Triplet {
 
     @Override
     public String toString() {
-        return "Triplet{" +
+        return "PointTriplet{" +
                 "center=" + center +
                 ", pointA=" + pointA +
                 ", pointB=" + pointB +

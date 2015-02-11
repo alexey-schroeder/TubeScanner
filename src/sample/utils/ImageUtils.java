@@ -157,4 +157,6 @@ public class ImageUtils {
         double yDiff = a.y - b.y;
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     }
+
+
 }

@@ -101,10 +101,10 @@ public class CodeFinder {
         double distance = 0;
         LinkedList<RotatedRect> rectsInColumn = createRotatedRectsInColumn(image, startRect, vectorB, referenceRects);
         tempResult.addAll(rectsInColumn);
-        double vectorALength = getVectorLength(vectorA);
+        double vectorALength = PointUtils.getVectorLength(vectorA);
         RotatedRect referenceRect = startRect;
         while (distance < maxDistance) {
-            Point nextPoint = plus(referenceRect.center, vectorA);
+            Point nextPoint = PointUtils.plus(referenceRect.center, vectorA);
             RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
             if (rect == null) {
                 rect = new RotatedRect(nextPoint, referenceRect.size, referenceRect.angle);
@@ -119,7 +119,7 @@ public class CodeFinder {
         distance = 0;
         referenceRect = startRect;
         while (distance < maxDistance) {
-            Point nextPoint = minus(referenceRect.center, vectorA);
+            Point nextPoint = PointUtils.minus(referenceRect.center, vectorA);
             RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
             if (rect == null) {
                 rect = new RotatedRect(nextPoint, referenceRect.size, referenceRect.angle);
@@ -145,10 +145,10 @@ public class CodeFinder {
         LinkedList<RotatedRect> result = new LinkedList<>();
         double maxDistance = Math.sqrt(image.cols() * image.cols() + image.rows() * image.rows());
         double distance = 0;
-        double vectorLength = getVectorLength(vector);
+        double vectorLength = PointUtils.getVectorLength(vector);
         RotatedRect referenceRect = startRect;
         while (distance < maxDistance) {
-            Point nextPoint = plus(referenceRect.center, vector);
+            Point nextPoint = PointUtils.plus(referenceRect.center, vector);
             RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
             if (rect == null) {
                 rect = new RotatedRect(nextPoint, startRect.size, startRect.angle);
@@ -161,7 +161,7 @@ public class CodeFinder {
         distance = 0;
         referenceRect = startRect;
         while (distance < maxDistance) {
-            Point nextPoint = minus(referenceRect.center, vector);
+            Point nextPoint = PointUtils.minus(referenceRect.center, vector);
             RotatedRect rect = findRotatedRect(referenceRects, nextPoint);
             if (rect == null) {
                 rect = new RotatedRect(nextPoint, startRect.size, startRect.angle);
@@ -179,10 +179,6 @@ public class CodeFinder {
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     }
 
-    public double getVectorLength(Point point) {
-        return Math.sqrt(point.x * point.x + point.y * point.y);
-    }
-
     public RotatedRect findRotatedRect(LinkedList<RotatedRect> rotatedRects, Point point) {
         for (RotatedRect rotatedRect : rotatedRects) {
             double width = rotatedRect.size.width;
@@ -193,14 +189,6 @@ public class CodeFinder {
             }
         }
         return null;
-    }
-
-    public Point plus(Point a, Point b) {
-        return new Point(a.x + b.x, a.y + b.y);
-    }
-
-    public Point minus(Point a, Point b) {
-        return new Point(a.x - b.x, a.y - b.y);
     }
 
     public boolean isInBounds(Mat mat, Point point) {
@@ -232,7 +220,7 @@ public class CodeFinder {
             Cluster<Point> tempCluster = clusters.get(i);
             Point tempPoint = calculateClusterCenter(tempCluster);
 //            double tempVectorLength = getVectorLength(tempPoint);
-            double tempAngleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, tempPoint));
+            double tempAngleDiff = Math.abs(90 - PointUtils.getAngleBetweenVectors(point_0, tempPoint));
             double maxAngleDiff = 10;
             if (tempAngleDiff < maxAngleDiff) {
                 candidates.add(tempPoint);
@@ -242,7 +230,7 @@ public class CodeFinder {
         Collections.sort(candidates, new Comparator<Point>() {
             @Override
             public int compare(Point o1, Point o2) {
-                return (int) (getVectorLength(o1) - getVectorLength(o2));
+                return (int) (PointUtils.getVectorLength(o1) - PointUtils.getVectorLength(o2));
             }
         });
 
@@ -282,7 +270,7 @@ public class CodeFinder {
             Cluster<Point> tempCluster = clusters.get(i);
             Point tempPoint = calculateClusterCenter(tempCluster);
 //            double tempVectorLength = getVectorLength(tempPoint);
-            double tempAngleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, tempPoint));
+            double tempAngleDiff = Math.abs(90 - PointUtils.getAngleBetweenVectors(point_0, tempPoint));
             double maxAngleDiff = 10;
             if (tempAngleDiff < maxAngleDiff) {
                 candidates.add(tempPoint);
@@ -292,7 +280,7 @@ public class CodeFinder {
         Collections.sort(candidates, new Comparator<Point>() {
             @Override
             public int compare(Point o1, Point o2) {
-                return (int) (getVectorLength(o1) - getVectorLength(o2));
+                return (int) (PointUtils.getVectorLength(o1) - PointUtils.getVectorLength(o2));
             }
         });
         result[0] = point_0;
@@ -300,14 +288,7 @@ public class CodeFinder {
         return result;
     }
 
-    //in degrees
-    public double getAngleBetweenVectors(Point a, Point b) {
-        double nenner = a.x * b.x + a.y * b.y;
-        double zeller = getVectorLength(a) * getVectorLength(b);
-        double cosA = nenner / zeller;
-        double arccos = Math.acos(cosA);
-        return Math.toDegrees(arccos);
-    }
+
 
     public Point calculateClusterCenter(Cluster<Point> cluster) {
         List<Point> points = cluster.getPoints();
@@ -326,7 +307,7 @@ public class CodeFinder {
             Point referencePoint = points.get(i);
             for (int j = i + 1; j < points.size(); j++) {
                 Point point = points.get(j);
-                Point vector = minus(referencePoint, point);
+                Point vector = PointUtils.minus(referencePoint, point);
                 result.add(vector);
                 Point negativVector = new Point(-vector.x, -vector.y);
                 result.add(negativVector);

@@ -3,9 +3,7 @@ package sample.test;
 import junit.framework.Assert;
 import org.opencv.core.Point;
 import org.testng.annotations.Test;
-import sample.utils.Triplet;
-
-import static org.testng.Assert.*;
+import sample.utils.PointTriplet;
 
 public class TripletTest {
 
@@ -20,16 +18,16 @@ public class TripletTest {
         Point pointB_2 = new Point(2.5, 5);
         Point pointC_2 = new Point(7.5, 5);
 
-        Triplet tripletA = new Triplet(pointA, pointB, pointC);
-        Triplet tripletB = new Triplet(pointA_2, pointB_2, pointC_2);
+        PointTriplet tripletA = new PointTriplet(pointA, pointB, pointC);
+        PointTriplet tripletB = new PointTriplet(pointA_2, pointB_2, pointC_2);
         Assert.assertTrue(tripletA.equals(tripletB));
         Assert.assertTrue(tripletB.equals(tripletA));
 
-        Triplet tripletC = new Triplet(pointA, pointB, pointD);
+        PointTriplet tripletC = new PointTriplet(pointA, pointB, pointD);
         Assert.assertFalse(tripletA.equals(tripletC));
         Assert.assertFalse(tripletC.equals(tripletA));
 
-        Triplet tripletD = new Triplet(pointB, pointA, pointC);
+        PointTriplet tripletD = new PointTriplet(pointB, pointA, pointC);
         Assert.assertTrue(tripletD.equals(tripletA));
         Assert.assertTrue(tripletD.equals(tripletB));
     }

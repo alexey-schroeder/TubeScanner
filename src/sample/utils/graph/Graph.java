@@ -47,19 +47,18 @@ public class Graph {
         return null;
     }
 
-    public void addNodes(Node nodeA, Node nodeB, Node parent) {
+    public boolean addNodes(Node nodeA, Node nodeB, Node parent) {
         if (root == null) {// graph ist leer
-            addNodeInCaseEmptyGraph(nodeA, nodeB, parent);
-            return;
+            return addNodeInCaseEmptyGraph(nodeA, nodeB, parent);
         } else {
             HashSet<Node> allNodes = getAllNodes();
-            Node equalsParentInGraph = Utils.findEqualsNode(allNodes, parent);
-            Node equalsNodeAInGraph = Utils.findEqualsNode(allNodes, nodeA);
-            Node equalsNodeBInGraph = Utils.findEqualsNode(allNodes, nodeB);
+            Node equalsParentInGraph = NodeUtils.findEqualsNode(allNodes, parent);
+            Node equalsNodeAInGraph = NodeUtils.findEqualsNode(allNodes, nodeA);
+            Node equalsNodeBInGraph = NodeUtils.findEqualsNode(allNodes, nodeB);
             if (equalsParentInGraph != null) {// der node gibt es schon in graph
                 HashSet<Node> neighbors = equalsParentInGraph.getNeighbors();
-                Node equalsNodeAInNeighbors = Utils.findEqualsNode(neighbors, nodeA);
-                Node equalsNodeBInNeighbors = Utils.findEqualsNode(neighbors, nodeB);
+                Node equalsNodeAInNeighbors = NodeUtils.findEqualsNode(neighbors, nodeA);
+                Node equalsNodeBInNeighbors = NodeUtils.findEqualsNode(neighbors, nodeB);
                 // der equalsParent hat schon einen gleichen nachbanrn.
                 //der andere equalsNeighbor is in nachbarliste von parent nicht vorhanden
                 //der andere equalsNeighbor is im graph auch nicht vorhanden
@@ -67,7 +66,7 @@ public class Graph {
                     Graph.NodeAxe nodeA_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeAInNeighbors);
                     if (nodeA_Axe != null) {
                         equalsParentInGraph.addNeighbor(nodeB, nodeA_Axe);
-                        return;
+                        return true;
                     }
                 }
 
@@ -78,7 +77,7 @@ public class Graph {
                     Graph.NodeAxe nodeB_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeBInNeighbors);
                     if (nodeB_Axe != null) {
                         equalsParentInGraph.addNeighbor(nodeA, nodeB_Axe);
-                        return;
+                        return true;
                     }
                 }
 
@@ -92,7 +91,7 @@ public class Graph {
                         NodeAxe currentAxe = getOtherNodeAxe(nodeAxe);
                         equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(nodeB, currentAxe);
-                        return;
+                        return true;
                     }
                 }
 
@@ -106,7 +105,7 @@ public class Graph {
                         NodeAxe currentAxe = getOtherNodeAxe(nodeAxe);
                         equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(nodeA, currentAxe);
-                        return;
+                        return true;
                     }
                 }
 
@@ -146,7 +145,7 @@ public class Graph {
                     if (currentAxe != null) {
                         equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
-                        return;
+                        return true;
                     }
                 }
 
@@ -162,7 +161,7 @@ public class Graph {
                     } else {
                         equalsNodeAInGraph.addNeighbor(parent, NodeAxe.AXE_B);
                     }
-                   return;
+                    return true;
                 }
 
                 if (equalsNodeBInGraph != null && equalsNodeBInGraph.getNeighbors().size() == 3) {// es gibt genau ein freies platz, d.h. der platz von neuem nachbarn ist eindeutig
@@ -172,21 +171,23 @@ public class Graph {
                     } else {
                         equalsNodeBInGraph.addNeighbor(parent, NodeAxe.AXE_B);
                     }
-                    return;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
-    protected void addNodeInCaseEmptyGraph(Node nodeA, Node nodeB, Node parent) {
+    protected boolean addNodeInCaseEmptyGraph(Node nodeA, Node nodeB, Node parent) {
         root = parent;
         parent.addNeighbor(nodeA, NodeAxe.AXE_A);
         parent.addNeighbor(nodeB, NodeAxe.AXE_A);
+        return true;
     }
 
     protected void addNodeInCaseBothNodesAreNotInGraph(Node nodeA, Node nodeB, Node parent) {
         HashSet<Node> allNodes = getAllNodes();
-        Node equalsParentInGraph = Utils.findEqualsNode(allNodes, parent);
+        Node equalsParentInGraph = NodeUtils.findEqualsNode(allNodes, parent);
         HashSet<Node> neighbors = equalsParentInGraph.getNeighbors();
         if (neighbors.size() > 0) { // in einer von axen gibt es ein nachbarn
             Node oldNode = neighbors.iterator().next();

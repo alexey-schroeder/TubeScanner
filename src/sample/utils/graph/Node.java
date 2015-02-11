@@ -1,7 +1,6 @@
 package sample.utils.graph;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -93,7 +92,7 @@ public class Node {
     }
 
     public boolean replaceNeighbor(Node node) {
-        Node neighbor = Utils.findEqualsNode(neighbors, node);
+        Node neighbor = NodeUtils.findEqualsNode(neighbors, node);
         if (neighbor != null) {
             Graph.NodeAxe axe = nodeToAxeMap.get(neighbor);
             neighbors.remove(neighbor);

@@ -7,11 +7,13 @@ import javafx.scene.image.WritableImage;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import sample.utils.*;
+import sample.utils.graph.Graph;
+import sample.utils.graph.Node;
+import sample.utils.graph.NodeUtils;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -21,6 +23,7 @@ public class Controller {
     public Canvas canvas;
     VideoCapture camera;
     CodeFinder codeFinder;
+    private Graph graph;
 
     public void initialize() throws Exception {
         codeFinder = new CodeFinder();
@@ -92,7 +95,7 @@ public class Controller {
             return;
         }
         Point vectorA = cellVectors[0];
-        double radius = codeFinder.getVectorLength(vectorA) / 3.0;
+        double radius = PointUtils.getVectorLength(vectorA) / 3.0;
 
         DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
         CodeCleaner codeCleaner = new CodeCleaner();
@@ -234,5 +237,44 @@ public class Controller {
         });
     }
 
+    public void addTripletsInGraph(List<NodeTriplet> triplets) {
+        if (graph == null) {
+            graph = new Graph();
+        }
+        List<NodeTriplet> tripletsForAdd = new ArrayList<>();
+        List<NodeTriplet> notAddedTriplets = new ArrayList<>(triplets);
+        while (notAddedTriplets.size() != tripletsForAdd.size()) {
+            tripletsForAdd = notAddedTriplets;
+            notAddedTriplets = new ArrayList<>();
+            for (NodeTriplet nodeTriplet : tripletsForAdd) {
+                Node nodeA = nodeTriplet.getNodeA();
+                Node nodeB = nodeTriplet.getNodeB();
+                Node center = nodeTriplet.getCenter();
+                boolean isAdded = graph.addNodes(nodeA, nodeB, center);
+                if (!isAdded) {
+                    notAddedTriplets.add(nodeTriplet);
+                }
+            }
+        }
+    }
 
+    public ArrayList<Point> graphToPoints(PointTriplet pointBasis, NodeTriplet nodeBasis){
+        Node nodeA = nodeBasis.getNodeA();
+        Node nodeB = nodeBasis.getNodeB();
+        Node nodeCenter = nodeBasis.getCenter();
+        HashSet<Node> allNodes = graph.getAllNodes();
+
+        Node nodeAInGraph = NodeUtils.findEqualsNode(allNodes, nodeA);
+        Node nodeBInGraph = NodeUtils.findEqualsNode(allNodes, nodeB);
+        Node nodeCenterInGraph = NodeUtils.findEqualsNode(allNodes, nodeCenter);
+
+        Graph.NodeAxe nodeAAxe = nodeCenterInGraph.getNeighborsAxe(nodeAInGraph);
+        Graph.NodeAxe nodeBAxe = nodeCenterInGraph.getNeighborsAxe(nodeBInGraph);
+
+        Point nodeAVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointA());
+        Point nodeBVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointB());
+
+        ArrayList<Point> result = new ArrayList<>(allNodes.size());
+        nodeCenterInGraph
+    }
 }

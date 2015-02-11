@@ -8,11 +8,11 @@ import java.util.List;
 /**
  * Created by Alex on 09.02.2015.
  */
-public class TripleFinder {
+public class PointTripleFinder {
     private List<Point> centers;
 
-    public ArrayList<Triplet> findTriplets(List<Point> points, Point[] cellVectors) {
-        ArrayList<Triplet> result = new ArrayList<>();
+    public ArrayList<PointTriplet> findTriplets(List<Point> points, Point[] cellVectors) {
+        ArrayList<PointTriplet> result = new ArrayList<>();
         Point vector_1 = cellVectors[0];
         Point vector_2 = cellVectors[1];
         double averageCellVectorLength = (ImageUtils.getVectorLength(vector_1) + ImageUtils.getVectorLength(vector_2)) / 2;
@@ -23,20 +23,20 @@ public class TripleFinder {
             for (Point neighbor : neighbors) {
                 ArrayList<Point> thirdPoints = findThirdPoint(point, neighbor, points, averageCellVectorLength, maxError);
                 for(Point thirdPoint : thirdPoints){
-                    Triplet triplet = createTriplet(point, neighbor, thirdPoint);
+                    PointTriplet triplet = createTriplet(point, neighbor, thirdPoint);
                     result.add(triplet);
                 }
             }
         }
-        ArrayList<Triplet> filteredResult =  filterDublicateTriplets(result);
+        ArrayList<PointTriplet> filteredResult =  filterDublicateTriplets(result);
         return filteredResult;
     }
 
-    public ArrayList<Triplet> filterDublicateTriplets(List<Triplet> triplets) {
-        ArrayList<Triplet> result = new ArrayList<>();
-        for(Triplet triplet : triplets){
+    public ArrayList<PointTriplet> filterDublicateTriplets(List<PointTriplet> triplets) {
+        ArrayList<PointTriplet> result = new ArrayList<>();
+        for(PointTriplet triplet : triplets){
             boolean contains = false;
-            for(Triplet filteredTriplet : result){
+            for(PointTriplet filteredTriplet : result){
                 if(triplet.equals(filteredTriplet)){
                     contains = true;
                     break;
@@ -78,16 +78,16 @@ public class TripleFinder {
         return result;
     }
 
-    public Triplet createTriplet(Point point1, Point point2, Point point3){
+    public PointTriplet createTriplet(Point point1, Point point2, Point point3){
         double distance1 = ImageUtils.getDistance(point1, point2);
         double distance2 = ImageUtils.getDistance(point1, point3);
         double distance3 = ImageUtils.getDistance(point2, point3);
         if(distance1 > distance2 && distance1 > distance3){
-            return new Triplet(point1, point2, point3);
+            return new PointTriplet(point1, point2, point3);
         } else if(distance2 > distance1 && distance2 > distance3){
-            return new Triplet(point1, point3, point2);
+            return new PointTriplet(point1, point3, point2);
         } else {
-            return new Triplet(point2, point3, point1);
+            return new PointTriplet(point2, point3, point1);
         }
     }
 
