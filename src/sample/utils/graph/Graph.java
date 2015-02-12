@@ -214,4 +214,54 @@ public class Graph {
             return NodeAxe.AXE_A;
         }
     }
+
+    public ArrayList<Node> getDiagonallyNeighbors(Node node) {
+        ArrayList<Node> result = new ArrayList<Node>();
+        ArrayList<Node> neighborsInAxeA = node.getNeighborsByAxe(NodeAxe.AXE_A);
+        ArrayList<Node> neighborsInAxeB = node.getNeighborsByAxe(NodeAxe.AXE_B);
+        if (neighborsInAxeA.isEmpty() || neighborsInAxeB.isEmpty()) {
+            return result; // der node hat keine nachbarn
+        }
+
+        Node neighbor_1_A = neighborsInAxeA.get(0);
+        Node neighbor_2_A = null;
+        if (neighborsInAxeA.size() > 1) {
+            neighbor_2_A = neighborsInAxeA.get(1);
+        }
+
+        Node neighbor_1_B = neighborsInAxeB.get(0);
+        Node neighbor_2_B = null;
+        if (neighborsInAxeB.size() > 1) {
+            neighbor_2_B = neighborsInAxeB.get(1);
+        }
+
+        ArrayList<Node> diagonallyNeighbors_1 = NodeUtils.getJointNeighbors(neighbor_1_A, neighbor_1_B);
+        if(diagonallyNeighbors_1 != null){
+            diagonallyNeighbors_1.remove(node);
+            result.addAll(diagonallyNeighbors_1);
+        }
+
+        ArrayList<Node> diagonallyNeighbors_2 = NodeUtils.getJointNeighbors(neighbor_1_A, neighbor_2_B);
+        if(diagonallyNeighbors_2 != null){
+            diagonallyNeighbors_2.remove(node);
+            result.addAll(diagonallyNeighbors_2);
+        }
+
+        ArrayList<Node> diagonallyNeighbors_3 = NodeUtils.getJointNeighbors(neighbor_2_A, neighbor_1_B);
+        if(diagonallyNeighbors_3 != null){
+            diagonallyNeighbors_3.remove(node);
+            result.addAll(diagonallyNeighbors_3);
+        }
+
+        ArrayList<Node> diagonallyNeighbors_4 = NodeUtils.getJointNeighbors(neighbor_2_A, neighbor_2_B);
+        if(diagonallyNeighbors_4 != null){
+            diagonallyNeighbors_4.remove(node);
+            result.addAll(diagonallyNeighbors_4);
+        }
+
+        return result;
+    }
+
+
+
 }

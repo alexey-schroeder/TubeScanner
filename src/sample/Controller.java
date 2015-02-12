@@ -258,7 +258,7 @@ public class Controller {
         }
     }
 
-    public ArrayList<Point> graphToPoints(PointTriplet pointBasis, NodeTriplet nodeBasis){
+    public HashMap<Node, Point> graphToPoints(PointTriplet pointBasis, NodeTriplet nodeBasis) {
         Node nodeA = nodeBasis.getNodeA();
         Node nodeB = nodeBasis.getNodeB();
         Node nodeCenter = nodeBasis.getCenter();
@@ -274,7 +274,107 @@ public class Controller {
         Point nodeAVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointA());
         Point nodeBVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointB());
 
-        ArrayList<Point> result = new ArrayList<>(allNodes.size());
-        nodeCenterInGraph
+        HashMap<Node, Point> result = new HashMap<>();
+        result.put(nodeAInGraph, pointBasis.getPointA().clone());
+        result.put(nodeBInGraph, pointBasis.getPointB().clone());
+        result.put(nodeCenterInGraph, pointBasis.getCenter().clone());
+
+        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, nodeAVector);
+        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, PointUtils.turnOver(nodeAVector));
+        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, nodeBVector);
+        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, PointUtils.turnOver(nodeBVector));
+        boolean wasAdded = true;
+        while (wasAdded) {
+            wasAdded = false;
+            for (Node node : allNodes) {
+                if (!result.keySet().contains(node)) {
+                    Point point = getCoordinateForNode(node, result);
+                    if (point != null) {
+                        result.put(node, point);
+                        wasAdded = true;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public Point getCoordinateForNode(Node node, HashMap<Node, Point> result) {
+        ArrayList<Node> neighborsInAxeA = node.getNeighborsByAxe(Graph.NodeAxe.AXE_A);
+        ArrayList<Node> neighborsInAxeB = node.getNeighborsByAxe(Graph.NodeAxe.AXE_B);
+        if (neighborsInAxeA.isEmpty() || neighborsInAxeB.isEmpty()) {
+            return null; // der node hat keine nachbarn
+        }
+
+        Node neighbor_1_A = neighborsInAxeA.get(0);
+        Node neighbor_2_A = null;
+        if (neighborsInAxeA.size() > 1) {
+            neighbor_2_A = neighborsInAxeA.get(1);
+        }
+
+        Node neighbor_1_B = neighborsInAxeB.get(0);
+        Node neighbor_2_B = null;
+        if (neighborsInAxeB.size() > 1) {
+            neighbor_2_B = neighborsInAxeB.get(1);
+        }
+        Point point = getCoordinateForNodeByNeighbors(node, neighbor_1_A, neighbor_1_B, result);
+        if (point != null) {
+            return point;
+        }
+
+        point = getCoordinateForNodeByNeighbors(node, neighbor_1_A, neighbor_2_B, result);
+        if (point != null) {
+            return point;
+        }
+
+        point = getCoordinateForNodeByNeighbors(node, neighbor_2_A, neighbor_1_B, result);
+        if (point != null) {
+            return point;
+        }
+
+        point = getCoordinateForNodeByNeighbors(node, neighbor_2_A, neighbor_2_B, result);
+        if (point != null) {
+            return point;
+        }
+
+        return null;
+    }
+
+    public Point getCoordinateForNodeByNeighbors(Node node, Node neighborA, Node neighborB, HashMap<Node, Point> result) {
+        if (neighborA == null || neighborB == null || node == null) {
+            return null;
+        }
+        if (result.keySet().contains(neighborA) && result.keySet().contains(neighborB)) {
+            ArrayList<Node> diagonallyNeighbors_1 = NodeUtils.getJointNeighbors(neighborA, neighborB);
+            if (diagonallyNeighbors_1 != null) {
+                diagonallyNeighbors_1.remove(node);
+                if (!diagonallyNeighbors_1.isEmpty()) {
+                    Node diagonallyNeighbor = diagonallyNeighbors_1.get(0);
+                    if (result.keySet().contains(diagonallyNeighbor)) {
+                        Point resultPoint = calculateQuadratEdge(result.get(neighborA), result.get(diagonallyNeighbor), result.get(neighborB));
+                        return resultPoint;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private Point calculateQuadratEdge(Point point1, Point point2, Point point3) {// point1 und point3 liegen auf der diagonal des quadrates!
+        double x4 = point1.x + point3.x - point2.x;
+        double y4 = point1.y + point3.y - point2.y;
+        return new Point(x4, y4);
+    }
+
+    public void calculateCoordinateInStraightLine(HashMap<Node, Point> result, Node referencePoint, Node lastNeighbor, Point vector) {
+        Node oppositeNeighbor = referencePoint.getOppositeNeighbor(lastNeighbor);
+        Point lastPoint = vector;
+        while (oppositeNeighbor != null) {
+            lastPoint = PointUtils.plus(lastPoint, vector);
+            result.put(oppositeNeighbor, lastPoint);
+            lastNeighbor = referencePoint;
+            referencePoint = oppositeNeighbor;
+            oppositeNeighbor = referencePoint.getOppositeNeighbor(lastNeighbor);
+        }
     }
 }

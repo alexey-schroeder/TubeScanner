@@ -27,4 +27,8 @@ public class PointUtils {
     public static double getVectorLength(Point point) {
         return Math.sqrt(point.x * point.x + point.y * point.y);
     }
+
+    public static Point turnOver(Point point){
+        return new Point(-point.x, -point.y);
+    }
 }

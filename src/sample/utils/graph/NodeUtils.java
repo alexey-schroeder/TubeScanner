@@ -1,5 +1,6 @@
 package sample.utils.graph;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -15,5 +16,20 @@ public class NodeUtils {
             }
         }
         return null;
+    }
+
+    public static ArrayList<Node> getJointNeighbors(Node nodeA, Node nodeB) {
+        ArrayList<Node> result = new ArrayList<>();
+        if(nodeA == null || nodeB == null){
+            return result;
+        }
+        HashSet<Node> neighborsA = nodeA.getNeighbors();
+        HashSet<Node> neighborsB = nodeB.getNeighbors();
+        for (Node neighborA : neighborsA) {
+            if (neighborsB.contains(neighborA)) {
+                result.add(neighborA);
+            }
+        }
+        return result;
     }
 }

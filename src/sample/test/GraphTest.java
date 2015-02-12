@@ -5,7 +5,7 @@ import org.testng.annotations.Test;
 import sample.utils.graph.Graph;
 import sample.utils.graph.Node;
 
-import static org.testng.Assert.*;
+import java.util.ArrayList;
 
 public class GraphTest {
 
@@ -237,7 +237,7 @@ public class GraphTest {
         nodeK = graph.getNodeByCode("K");
         nodeL = graph.getNodeByCode("L");
         nodeM = graph.getNodeByCode("M");
-        
+
         Assert.assertEquals(3, nodeE.getNeighbors().size());
         Assert.assertEquals(2, nodeL.getNeighbors().size());
         Assert.assertEquals(1, nodeR.getNeighbors().size());
@@ -286,7 +286,6 @@ public class GraphTest {
         graph.addNodes(nodeK, nodeM, nodeD);
 
 
-
         Node nodeR = new Node("R");
         nodeL = new Node("L");
         nodeE = new Node("E");
@@ -325,5 +324,83 @@ public class GraphTest {
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeA));
         Assert.assertEquals(true, nodeD.getNeighbors().contains(nodeK));
         Assert.assertEquals(true, nodeC.getOppositeNeighbor(nodeM).equals(nodeR));
+    }
+
+    //  K - D - M
+    //  |   |   |
+    //  F - A - C - B
+    //  |   |   |
+    //  L - E - R
+    @Test
+    public void testGetDiagonallyNeighbors() throws Exception {
+        Graph graph = new Graph();
+
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+        Node nodeC = new Node("C");
+        graph.addNodes(nodeA, nodeB, nodeC);
+
+        Node nodeD = new Node("D");
+        Node nodeE = new Node("E");
+        nodeA = new Node("A");
+        graph.addNodes(nodeD, nodeE, nodeA);
+
+        Node nodeF = new Node("F");
+        nodeA = new Node("A");
+        nodeC = new Node("C");
+        graph.addNodes(nodeF, nodeC, nodeA);
+
+        Node nodeK = new Node("K");
+        Node nodeL = new Node("L");
+        nodeF = new Node("F");
+        graph.addNodes(nodeK, nodeL, nodeF);
+
+        Node nodeM = new Node("M");
+        nodeD = new Node("D");
+        nodeK = new Node("K");
+        graph.addNodes(nodeK, nodeM, nodeD);
+
+
+        Node nodeR = new Node("R");
+        nodeL = new Node("L");
+        nodeE = new Node("E");
+        graph.addNodes(nodeL, nodeR, nodeE);
+
+        nodeR = new Node("R");
+        nodeM = new Node("M");
+        nodeC = new Node("C");
+        graph.addNodes(nodeM, nodeR, nodeC);
+
+        nodeA = graph.getNodeByCode("A");
+        nodeB = graph.getNodeByCode("B");
+        nodeC = graph.getNodeByCode("C");
+        nodeD = graph.getNodeByCode("D");
+        nodeE = graph.getNodeByCode("E");
+        nodeF = graph.getNodeByCode("F");
+        nodeK = graph.getNodeByCode("K");
+        nodeL = graph.getNodeByCode("L");
+        nodeM = graph.getNodeByCode("M");
+        nodeR = graph.getNodeByCode("R");
+
+        ArrayList<Node> neighborsOfA = graph.getDiagonallyNeighbors(nodeA);
+        Assert.assertTrue(neighborsOfA.size() == 4);
+        Assert.assertTrue(neighborsOfA.contains(nodeK));
+        Assert.assertTrue(neighborsOfA.contains(nodeM));
+        Assert.assertTrue(neighborsOfA.contains(nodeL));
+        Assert.assertTrue(neighborsOfA.contains(nodeR));
+
+        ArrayList<Node> neighborsOfM = graph.getDiagonallyNeighbors(nodeM);
+        Assert.assertTrue(neighborsOfM.size() == 1);
+        Assert.assertTrue(neighborsOfM.contains(nodeA));
+
+        ArrayList<Node> neighborsOfC = graph.getDiagonallyNeighbors(nodeC);
+        Assert.assertTrue(neighborsOfC.size() == 2);
+        Assert.assertTrue(neighborsOfC.contains(nodeD));
+        Assert.assertTrue(neighborsOfC.contains(nodeE));
+
+        ArrayList<Node> neighborsOfD = graph.getDiagonallyNeighbors(nodeD);
+        Assert.assertTrue(neighborsOfD.size() == 2);
+        Assert.assertTrue(neighborsOfD.contains(nodeF));
+        Assert.assertTrue(neighborsOfD.contains(nodeC));
     }
 }

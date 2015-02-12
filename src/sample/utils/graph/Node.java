@@ -38,7 +38,7 @@ public class Node {
         }
         for (Node tempNode : nodeToAxeMap.keySet()) {
             Graph.NodeAxe tempAxe = nodeToAxeMap.get(tempNode);
-            if (tempAxe.equals(axe) && tempNode != node) {
+            if (tempAxe.equals(axe) && !tempNode.equals(node)) {
                 return tempNode;
             }
         }
