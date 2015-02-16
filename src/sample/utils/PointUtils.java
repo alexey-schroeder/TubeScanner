@@ -28,7 +28,12 @@ public class PointUtils {
         return Math.sqrt(point.x * point.x + point.y * point.y);
     }
 
-    public static Point turnOver(Point point){
+    public static double getDistance(Point pointA, Point pointB) {
+        Point diff = minus(pointA, pointB);
+        return getVectorLength(diff);
+    }
+
+    public static Point turnOver(Point point) {
         return new Point(-point.x, -point.y);
     }
 }

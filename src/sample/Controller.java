@@ -82,7 +82,7 @@ public class Controller {
 
         MatOfKeyPoint codeKeyPoints = computeKeyPoints(resized);
         List<KeyPoint> keyPointsList = codeKeyPoints.toList();
-        List<Point> centers = new ArrayList<>(keyPointsList.size());
+        List<Point> centers = new ArrayList<Point>(keyPointsList.size());
         for (KeyPoint keyPoint : keyPointsList) {
             Point center = keyPoint.pt;
             centers.add(center);
@@ -99,6 +99,7 @@ public class Controller {
 
         DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
         CodeCleaner codeCleaner = new CodeCleaner();
+        HashMap<Point, Node> goodPoints = new HashMap<Point, Node>();
         for (Point center : centers) {
             double width = radius * 2 * resizeFactor;
             double height = radius * 2 * resizeFactor;
@@ -134,17 +135,77 @@ public class Controller {
                 BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
                 try {
                     String text = dataMatrixInterpreter.decode(bufferedImage);
-                    System.out.println(text);
+//                    System.out.println(text);
                     if (text != null) {
-                        Imgproc.circle(resized, center, 10, new Scalar(0, 255, 0), 2);
-                    } else {
-                        Imgproc.circle(resized, center, 10, new Scalar(255, 0, 0), 2);
+//                        Imgproc.circle(resized, center, 10, new Scalar(0, 255, 0), 2);
+                        Node node = new Node(text);
+                        goodPoints.put(center, node);
+                    }
+                    else {
+                        Imgproc.circle(resized, center, 10, new Scalar(0, 0, 255), 2);
                     }
                 } catch (IOException e) {
 //                        e.printStackTrace();
                 }
             }
         }
+
+        PointTripleFinder pointTripleFinder = new PointTripleFinder();
+        ArrayList<PointTriplet> pointTriplets = pointTripleFinder.findTriplets(goodPoints.keySet(), cellVectors);
+        System.out.println("founded pointTriplets: " + pointTriplets.size());
+        if (!pointTriplets.isEmpty()) {
+            List<NodeTriplet> nodeTriplets = new ArrayList<>(pointTriplets.size());
+            for (PointTriplet pointTriplet : pointTriplets) {
+                Node nodeA = goodPoints.get(pointTriplet.getPointA());
+                Node nodeB = goodPoints.get(pointTriplet.getPointB());
+                Node nodeCenter = goodPoints.get(pointTriplet.getCenter());
+                NodeTriplet nodeTriplet = new NodeTriplet(nodeA, nodeB, nodeCenter);
+                nodeTriplets.add(nodeTriplet);
+            }
+            addTripletsInGraph(nodeTriplets);
+            HashSet<Node> allNodes = graph.getAllNodes();
+            int graphSize = allNodes.size();
+            System.out.println("graphSize: " + graphSize);
+            BasisFinder basisFinder = new BasisFinder();
+            ArrayList<Basis> bases = basisFinder.findBases(allNodes,goodPoints, cellVectors);
+            System.out.println("bases: " + bases.size());
+            HashMap<Node, Point> bestNodeCoordinates = new HashMap<>();
+            Basis bestBasis = null;
+            int maxSize = 0;
+            for (Basis basis : bases) {
+                HashMap<Node, Point> nodeCoordinates = graphToPoints(basis.getPointBasis(), basis.getNodeBasis());
+                if (nodeCoordinates.size() == graphSize) {
+                    bestNodeCoordinates = nodeCoordinates;
+                    bestBasis = basis;
+                    break;
+                } else {
+                    if (nodeCoordinates.size() > maxSize) {
+                        bestNodeCoordinates = nodeCoordinates;
+                        maxSize = nodeCoordinates.size();
+                        bestBasis = basis;
+                    }
+                }
+            }
+            System.out.println("bestNodeCoordinates: " + bestNodeCoordinates.size());
+            ArrayList<Node> basisNodes = new ArrayList<>();
+            if(bestBasis != null) {
+               NodeTriplet bestNodeBasis =  bestBasis.getNodeBasis();
+                basisNodes.add(bestNodeBasis.getNodeA());
+                basisNodes.add(bestNodeBasis.getNodeB());
+                basisNodes.add(bestNodeBasis.getCenter());
+            }
+            for (Node node : bestNodeCoordinates.keySet()) {
+                Point point = bestNodeCoordinates.get(node);
+                Scalar color;
+                if(basisNodes.contains(node)){
+                   color = new Scalar(255, 0, 0);
+                } else {
+                    color = new Scalar(0, 255, 0);
+                }
+                Imgproc.circle(resized, point, 10, color, 2);
+            }
+        }
+
 
 //        for(KeyPoint keyPoint : keyPointsArray){
 //            Point center = keyPoint.pt;
@@ -250,6 +311,8 @@ public class Controller {
                 Node nodeA = nodeTriplet.getNodeA();
                 Node nodeB = nodeTriplet.getNodeB();
                 Node center = nodeTriplet.getCenter();
+//                HashSet<Node>  allNodes = graph.getAllNodes();
+//                Node equalsParentInGraph = NodeUtils.findEqualsNode(allNodes, center);
                 boolean isAdded = graph.addNodes(nodeA, nodeB, center);
                 if (!isAdded) {
                     notAddedTriplets.add(nodeTriplet);

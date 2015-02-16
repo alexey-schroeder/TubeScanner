@@ -23,6 +23,12 @@ public class NodeTriplet {
         center = new Node(codes.get(pointCenter));
     }
 
+    public NodeTriplet(Node nodeA, Node nodeB, Node center) {
+        this.nodeA = nodeA;
+        this.nodeB = nodeB;
+        this.center = center;
+    }
+
     public Node getNodeA() {
         return nodeA;
     }

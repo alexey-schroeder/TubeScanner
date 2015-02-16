@@ -3,7 +3,9 @@ package sample.utils;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Alex on 09.02.2015.
@@ -11,7 +13,7 @@ import java.util.List;
 public class PointTripleFinder {
     private List<Point> centers;
 
-    public ArrayList<PointTriplet> findTriplets(List<Point> points, Point[] cellVectors) {
+    public ArrayList<PointTriplet> findTriplets(Collection<Point> points, Point[] cellVectors) {
         ArrayList<PointTriplet> result = new ArrayList<>();
         Point vector_1 = cellVectors[0];
         Point vector_2 = cellVectors[1];
@@ -22,34 +24,34 @@ public class PointTripleFinder {
             ArrayList<Point> neighbors = findNeighbor(point, points, averageCellVectorLength, maxError);
             for (Point neighbor : neighbors) {
                 ArrayList<Point> thirdPoints = findThirdPoint(point, neighbor, points, averageCellVectorLength, maxError);
-                for(Point thirdPoint : thirdPoints){
+                for (Point thirdPoint : thirdPoints) {
                     PointTriplet triplet = createTriplet(point, neighbor, thirdPoint);
                     result.add(triplet);
                 }
             }
         }
-        ArrayList<PointTriplet> filteredResult =  filterDublicateTriplets(result);
+        ArrayList<PointTriplet> filteredResult = filterDublicateTriplets(result);
         return filteredResult;
     }
 
-    public ArrayList<PointTriplet> filterDublicateTriplets(List<PointTriplet> triplets) {
+    public ArrayList<PointTriplet> filterDublicateTriplets(Collection<PointTriplet> triplets) {
         ArrayList<PointTriplet> result = new ArrayList<>();
-        for(PointTriplet triplet : triplets){
+        for (PointTriplet triplet : triplets) {
             boolean contains = false;
-            for(PointTriplet filteredTriplet : result){
-                if(triplet.equals(filteredTriplet)){
+            for (PointTriplet filteredTriplet : result) {
+                if (triplet.equals(filteredTriplet)) {
                     contains = true;
                     break;
                 }
             }
-            if(!contains){
+            if (!contains) {
                 result.add(triplet);
             }
         }
         return result;
     }
 
-    public ArrayList<Point> findNeighbor(Point point, List<Point> points, double referenceDistance, double maxError) {
+    public ArrayList<Point> findNeighbor(Point point, Collection<Point> points, double referenceDistance, double maxError) {
         ArrayList<Point> neighbors = new ArrayList<>();
         for (Point tempPoint : points) {
             double distanceDiff = Math.abs(referenceDistance - ImageUtils.getDistance(point, tempPoint));
@@ -60,7 +62,7 @@ public class PointTripleFinder {
         return neighbors;
     }
 
-    public ArrayList<Point> findThirdPoint(Point pointA, Point pointB, List<Point> points, double referenceDistance, double maxError) {
+    public ArrayList<Point> findThirdPoint(Point pointA, Point pointB, Collection<Point> points, double referenceDistance, double maxError) {
         ArrayList<Point> result = new ArrayList<>();
         for (Point tempPoint : points) {
             double distanceDiff_1 = Math.abs(referenceDistance - ImageUtils.getDistance(pointA, tempPoint));
@@ -78,18 +80,16 @@ public class PointTripleFinder {
         return result;
     }
 
-    public PointTriplet createTriplet(Point point1, Point point2, Point point3){
+    public PointTriplet createTriplet(Point point1, Point point2, Point point3) {
         double distance1 = ImageUtils.getDistance(point1, point2);
         double distance2 = ImageUtils.getDistance(point1, point3);
         double distance3 = ImageUtils.getDistance(point2, point3);
-        if(distance1 > distance2 && distance1 > distance3){
+        if (distance1 > distance2 && distance1 > distance3) {
             return new PointTriplet(point1, point2, point3);
-        } else if(distance2 > distance1 && distance2 > distance3){
+        } else if (distance2 > distance1 && distance2 > distance3) {
             return new PointTriplet(point1, point3, point2);
         } else {
             return new PointTriplet(point2, point3, point1);
         }
     }
-
-
 }

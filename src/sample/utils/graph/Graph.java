@@ -112,40 +112,42 @@ public class Graph {
                 // beide nachbarn sind schon in graph aber nicht als nachbarn von parent
                 if (equalsNodeAInNeighbors == null && equalsNodeBInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph != null) {
                     HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
-                    NodeAxe currentAxe = null;
-                    if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
-                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
-                        NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
-                        currentAxe = getOtherNodeAxe(nodeAxe);
-                    }
+                    if (equalsParentNeighbors.size() < 4) {
+                        NodeAxe currentAxe = null;
+                        if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
+                            Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
+                            NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
+                            currentAxe = getOtherNodeAxe(nodeAxe);
+                        }
 
-                    if (currentAxe == null) {
-                        HashSet<Node> equalsNodeAInGraphNeighbors = equalsNodeAInGraph.getNeighbors();
-                        if (equalsNodeAInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
-                            ArrayList<Node> neighborsInAxeA = equalsNodeAInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
-                            if (neighborsInAxeA.size() == 1) {
-                                currentAxe = NodeAxe.AXE_A;
-                            } else {
-                                currentAxe = NodeAxe.AXE_B;
+                        if (currentAxe == null) {
+                            HashSet<Node> equalsNodeAInGraphNeighbors = equalsNodeAInGraph.getNeighbors();
+                            if (equalsNodeAInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
+                                ArrayList<Node> neighborsInAxeA = equalsNodeAInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                                if (neighborsInAxeA.size() == 1) {
+                                    currentAxe = NodeAxe.AXE_A;
+                                } else {
+                                    currentAxe = NodeAxe.AXE_B;
+                                }
                             }
                         }
-                    }
 
-                    if (currentAxe == null) {
-                        HashSet<Node> equalsNodeBInGraphNeighbors = equalsNodeBInGraph.getNeighbors();
-                        if (equalsNodeBInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
-                            ArrayList<Node> neighborsInAxeA = equalsNodeBInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
-                            if (neighborsInAxeA.size() == 1) {
-                                currentAxe = NodeAxe.AXE_A;
-                            } else {
-                                currentAxe = NodeAxe.AXE_B;
+                        if (currentAxe == null) {
+                            HashSet<Node> equalsNodeBInGraphNeighbors = equalsNodeBInGraph.getNeighbors();
+                            if (equalsNodeBInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
+                                ArrayList<Node> neighborsInAxeA = equalsNodeBInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                                if (neighborsInAxeA.size() == 1) {
+                                    currentAxe = NodeAxe.AXE_A;
+                                } else {
+                                    currentAxe = NodeAxe.AXE_B;
+                                }
                             }
                         }
-                    }
-                    if (currentAxe != null) {
-                        equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
-                        equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
-                        return true;
+                        if (currentAxe != null) {
+                            equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
+                            equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                            return true;
+                        }
                     }
                 }
 
@@ -236,32 +238,31 @@ public class Graph {
         }
 
         ArrayList<Node> diagonallyNeighbors_1 = NodeUtils.getJointNeighbors(neighbor_1_A, neighbor_1_B);
-        if(diagonallyNeighbors_1 != null){
+        if (diagonallyNeighbors_1 != null) {
             diagonallyNeighbors_1.remove(node);
             result.addAll(diagonallyNeighbors_1);
         }
 
         ArrayList<Node> diagonallyNeighbors_2 = NodeUtils.getJointNeighbors(neighbor_1_A, neighbor_2_B);
-        if(diagonallyNeighbors_2 != null){
+        if (diagonallyNeighbors_2 != null) {
             diagonallyNeighbors_2.remove(node);
             result.addAll(diagonallyNeighbors_2);
         }
 
         ArrayList<Node> diagonallyNeighbors_3 = NodeUtils.getJointNeighbors(neighbor_2_A, neighbor_1_B);
-        if(diagonallyNeighbors_3 != null){
+        if (diagonallyNeighbors_3 != null) {
             diagonallyNeighbors_3.remove(node);
             result.addAll(diagonallyNeighbors_3);
         }
 
         ArrayList<Node> diagonallyNeighbors_4 = NodeUtils.getJointNeighbors(neighbor_2_A, neighbor_2_B);
-        if(diagonallyNeighbors_4 != null){
+        if (diagonallyNeighbors_4 != null) {
             diagonallyNeighbors_4.remove(node);
             result.addAll(diagonallyNeighbors_4);
         }
 
         return result;
     }
-
 
 
 }
