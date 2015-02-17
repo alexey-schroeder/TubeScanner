@@ -1,7 +1,5 @@
 package sample.test;
 
-import com.googlecode.javacv.cpp.opencv_features2d;
-import com.googlecode.javacv.cpp.opencv_stitching;
 import org.opencv.core.*;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;

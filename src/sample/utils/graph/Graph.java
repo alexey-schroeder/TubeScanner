@@ -81,7 +81,7 @@ public class Graph {
                     }
                 }
 
-                // beide nachbarn sin in nachbarnliste von parent nicht vorhanden
+                // beide nachbarn sind in nachbarnliste von parent nicht vorhanden
                 // eins von nachbarn ist schon in graph
                 if (equalsNodeAInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph == null) {
                     HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
@@ -95,7 +95,7 @@ public class Graph {
                     }
                 }
 
-                // beide nachbarn sin in nachbarnliste von parent nicht vorhanden
+                // beide nachbarn sind in nachbarnliste von parent nicht vorhanden
                 // eins von nachbarn ist schon in graph
                 if (equalsNodeBInNeighbors == null && equalsNodeBInGraph != null && equalsNodeAInGraph == null) {
                     HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();

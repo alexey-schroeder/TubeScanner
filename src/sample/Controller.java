@@ -137,7 +137,7 @@ public class Controller {
                     String text = dataMatrixInterpreter.decode(bufferedImage);
 //                    System.out.println(text);
                     if (text != null) {
-//                        Imgproc.circle(resized, center, 10, new Scalar(0, 255, 0), 2);
+                        Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
                         Node node = new Node(text);
                         goodPoints.put(center, node);
                     }

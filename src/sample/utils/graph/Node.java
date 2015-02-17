@@ -58,15 +58,22 @@ public class Node {
     }
 
     public boolean addNeighbor(Node node, Graph.NodeAxe axe) {
-        if(node == null){
+        if (node == null) {
             throw new RuntimeException("neighbor node can not be null!");
         }
         if (neighbors.size() == 4) {
-            throw new RuntimeException(" The node has 4 neighbors yet!");
+            String text = "The node has 4 neighbors yet!" + System.lineSeparator()
+                    + this + System.lineSeparator()
+                    + " the node are try to add in axe "+ axe +": " + node;
+
+            throw new RuntimeException(text);
         }
 
         if (getNeighborsByAxe(axe).size() > 1) {
-            throw new RuntimeException(" There are always 2 node in the axe!");
+            String text = "There are always 2 node in the axe "  + axe + "!" + System.lineSeparator()
+                    + this + System.lineSeparator()
+                    + " the node are try to add in axe "+ axe +": " + node;
+            throw new RuntimeException(text);
         }
         if (!neighbors.contains(node)) {
             neighbors.add(node);
@@ -141,14 +148,14 @@ public class Node {
         ArrayList<Node> neighborsInAxeA = getNeighborsByAxe(Graph.NodeAxe.AXE_A);
         String neighborsInAxeAasString = "";
         for (Node node : neighborsInAxeA) {
-            neighborsInAxeAasString = ", " + neighborsInAxeAasString + node.getCode();
+            neighborsInAxeAasString = neighborsInAxeAasString + ", " + node.getCode();
         }
         neighborsInAxeAasString = neighborsInAxeAasString.replaceFirst(", ", "");
 
         ArrayList<Node> neighborsInAxeB = getNeighborsByAxe(Graph.NodeAxe.AXE_B);
         String neighborsInAxeBasString = "";
         for (Node node : neighborsInAxeB) {
-            neighborsInAxeBasString = ", " + neighborsInAxeBasString + node.getCode();
+            neighborsInAxeBasString = neighborsInAxeBasString + ", " + node.getCode();
         }
         neighborsInAxeBasString = neighborsInAxeBasString.replaceFirst(", ", "");
         return "Node{" +
