@@ -17,7 +17,7 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -48,12 +48,12 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);// erster frame
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));// erster frame
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
         nodeA = new Node("A");
-        graph.addNodes(nodeD, nodeE, nodeA); // zweiter frame
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA)); // zweiter frame
 
         nodeA = graph.getNodeByCode("A");
         nodeE = graph.getNodeByCode("E");
@@ -85,17 +85,17 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
         nodeA = new Node("A");
-        graph.addNodes(nodeD, nodeE, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA));
 
         Node nodeF = new Node("F");
         nodeA = new Node("A");
         nodeC = new Node("C");
-        graph.addNodes(nodeF, nodeC, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeF, nodeC, nodeA));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -130,22 +130,22 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
         nodeA = new Node("A");
-        graph.addNodes(nodeD, nodeE, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA));
 
         Node nodeF = new Node("F");
         nodeA = new Node("A");
         nodeC = new Node("C");
-        graph.addNodes(nodeF, nodeC, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeF, nodeC, nodeA));
 
         Node nodeK = new Node("K");
         Node nodeL = new Node("L");
         nodeF = new Node("F");
-        graph.addNodes(nodeK, nodeL, nodeF);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeL, nodeF));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -180,26 +180,26 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
-        graph.addNodes(nodeD, nodeE, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA));
 
         Node nodeF = new Node("F");
         nodeA = new Node("A");
         nodeC = new Node("C");
-        graph.addNodes(nodeF, nodeC, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeF, nodeC, nodeA));
 
         Node nodeK = new Node("K");
         Node nodeL = new Node("L");
         nodeF = new Node("F");
-        graph.addNodes(nodeK, nodeL, nodeF);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeL, nodeF));
 
         Node nodeM = new Node("M");
         nodeK = new Node("K");
         nodeD = new Node("D");
-        graph.addNodes(nodeK, nodeM, nodeD);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeM, nodeD));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -226,7 +226,7 @@ public class GraphTest {
         Node nodeR = new Node("R");
         nodeL = new Node("L");
         nodeE = new Node("E");
-        graph.addNodes(nodeL, nodeR, nodeE);
+        Assert.assertTrue(graph.addNodes(nodeL, nodeR, nodeE));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -263,38 +263,38 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
         nodeA = new Node("A");
-        graph.addNodes(nodeD, nodeE, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA));
 
         Node nodeF = new Node("F");
         nodeA = new Node("A");
         nodeC = new Node("C");
-        graph.addNodes(nodeF, nodeC, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeF, nodeC, nodeA));
 
         Node nodeK = new Node("K");
         Node nodeL = new Node("L");
         nodeF = new Node("F");
-        graph.addNodes(nodeK, nodeL, nodeF);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeL, nodeF));
 
         Node nodeM = new Node("M");
         nodeD = new Node("D");
         nodeK = new Node("K");
-        graph.addNodes(nodeK, nodeM, nodeD);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeM, nodeD));
 
 
         Node nodeR = new Node("R");
         nodeL = new Node("L");
         nodeE = new Node("E");
-        graph.addNodes(nodeL, nodeR, nodeE);
+        Assert.assertTrue(graph.addNodes(nodeL, nodeR, nodeE));
 
         nodeR = new Node("R");
         nodeM = new Node("M");
         nodeC = new Node("C");
-        graph.addNodes(nodeM, nodeR, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeM, nodeR, nodeC));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -338,30 +338,30 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
-        graph.addNodes(nodeD, nodeE, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA));
 
         Node nodeF = new Node("F");
         nodeA = new Node("A");
         nodeC = new Node("C");
-        graph.addNodes(nodeF, nodeC, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeF, nodeC, nodeA));
 
         Node nodeK = new Node("K");
         Node nodeL = new Node("L");
         nodeF = new Node("F");
-        graph.addNodes(nodeK, nodeL, nodeF);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeL, nodeF));
 
         nodeE = new Node("E");
         nodeL = new Node("L");
         Node nodeR = new Node("R");
-        graph.addNodes(nodeL, nodeR, nodeE);
+        Assert.assertTrue(graph.addNodes(nodeL, nodeR, nodeE));
 
         Node nodeM = new Node("M");
         nodeR = new Node("R");
-        graph.addNodes(nodeM, nodeR, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeM, nodeR, nodeC));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -399,38 +399,38 @@ public class GraphTest {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
-        graph.addNodes(nodeA, nodeB, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeA, nodeB, nodeC));
 
         Node nodeD = new Node("D");
         Node nodeE = new Node("E");
         nodeA = new Node("A");
-        graph.addNodes(nodeD, nodeE, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeD, nodeE, nodeA));
 
         Node nodeF = new Node("F");
         nodeA = new Node("A");
         nodeC = new Node("C");
-        graph.addNodes(nodeF, nodeC, nodeA);
+        Assert.assertTrue(graph.addNodes(nodeF, nodeC, nodeA));
 
         Node nodeK = new Node("K");
         Node nodeL = new Node("L");
         nodeF = new Node("F");
-        graph.addNodes(nodeK, nodeL, nodeF);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeL, nodeF));
 
         Node nodeM = new Node("M");
         nodeD = new Node("D");
         nodeK = new Node("K");
-        graph.addNodes(nodeK, nodeM, nodeD);
+        Assert.assertTrue(graph.addNodes(nodeK, nodeM, nodeD));
 
 
         Node nodeR = new Node("R");
         nodeL = new Node("L");
         nodeE = new Node("E");
-        graph.addNodes(nodeL, nodeR, nodeE);
+        Assert.assertTrue(graph.addNodes(nodeL, nodeR, nodeE));
 
         nodeR = new Node("R");
         nodeM = new Node("M");
         nodeC = new Node("C");
-        graph.addNodes(nodeM, nodeR, nodeC);
+        Assert.assertTrue(graph.addNodes(nodeM, nodeR, nodeC));
 
         nodeA = graph.getNodeByCode("A");
         nodeB = graph.getNodeByCode("B");
@@ -464,6 +464,4 @@ public class GraphTest {
         Assert.assertTrue(neighborsOfD.contains(nodeF));
         Assert.assertTrue(neighborsOfD.contains(nodeC));
     }
-
-
 }

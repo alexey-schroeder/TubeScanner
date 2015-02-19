@@ -149,7 +149,11 @@ public class Controller {
                 }
             }
         }
-
+//        System.out.println(goodPoints);
+//        System.out.println(Arrays.deepToString(cellVectors));
+        if(goodPoints.size() == 9){
+            System.out.printf("");
+        }
         PointTripleFinder pointTripleFinder = new PointTripleFinder();
         ArrayList<PointTriplet> pointTriplets = pointTripleFinder.findTriplets(goodPoints.keySet(), cellVectors);
         System.out.println("founded pointTriplets: " + pointTriplets.size());
