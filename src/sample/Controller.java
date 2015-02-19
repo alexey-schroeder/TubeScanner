@@ -137,12 +137,11 @@ public class Controller {
                     String text = dataMatrixInterpreter.decode(bufferedImage);
 //                    System.out.println(text);
                     if (text != null) {
-                        Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
+//                        Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
                         Node node = new Node(text);
                         goodPoints.put(center, node);
-                    }
-                    else {
-                        Imgproc.circle(resized, center, 10, new Scalar(0, 0, 255), 2);
+                    } else {
+//                        Imgproc.circle(resized, center, 10, new Scalar(0, 0, 255), 2);
                     }
                 } catch (IOException e) {
 //                        e.printStackTrace();
@@ -151,7 +150,7 @@ public class Controller {
         }
 //        System.out.println(goodPoints);
 //        System.out.println(Arrays.deepToString(cellVectors));
-        if(goodPoints.size() == 9){
+        if (goodPoints.size() == 9) {
             System.out.printf("");
         }
         PointTripleFinder pointTripleFinder = new PointTripleFinder();
@@ -171,7 +170,7 @@ public class Controller {
             int graphSize = allNodes.size();
             System.out.println("graphSize: " + graphSize);
             BasisFinder basisFinder = new BasisFinder();
-            ArrayList<Basis> bases = basisFinder.findBases(allNodes,goodPoints, cellVectors);
+            ArrayList<Basis> bases = basisFinder.findBases(allNodes, goodPoints, cellVectors);
             System.out.println("bases: " + bases.size());
             HashMap<Node, Point> bestNodeCoordinates = new HashMap<>();
             Basis bestBasis = null;
@@ -192,8 +191,8 @@ public class Controller {
             }
             System.out.println("bestNodeCoordinates: " + bestNodeCoordinates.size());
             ArrayList<Node> basisNodes = new ArrayList<>();
-            if(bestBasis != null) {
-               NodeTriplet bestNodeBasis =  bestBasis.getNodeBasis();
+            if (bestBasis != null) {
+                NodeTriplet bestNodeBasis = bestBasis.getNodeBasis();
                 basisNodes.add(bestNodeBasis.getNodeA());
                 basisNodes.add(bestNodeBasis.getNodeB());
                 basisNodes.add(bestNodeBasis.getCenter());
@@ -201,11 +200,11 @@ public class Controller {
             for (Node node : bestNodeCoordinates.keySet()) {
                 Point point = bestNodeCoordinates.get(node);
                 Scalar color;
-                if(basisNodes.contains(node)){
-                   color = new Scalar(255, 0, 0);
-                } else {
+//                if (basisNodes.contains(node)) {
+//                    color = new Scalar(255, 0, 0);
+//                } else {
                     color = new Scalar(0, 255, 0);
-                }
+//                }
                 Imgproc.circle(resized, point, 10, color, 2);
             }
         }
@@ -342,14 +341,16 @@ public class Controller {
         Point nodeBVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointB());
 
         HashMap<Node, Point> result = new HashMap<>();
-        result.put(nodeAInGraph, pointBasis.getPointA().clone());
-        result.put(nodeBInGraph, pointBasis.getPointB().clone());
+        Point coordinateA = pointBasis.getPointA().clone();
+        Point coordinateB = pointBasis.getPointB().clone();
+        result.put(nodeAInGraph, coordinateA);
+        result.put(nodeBInGraph, coordinateB);
         result.put(nodeCenterInGraph, pointBasis.getCenter().clone());
 
-        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, nodeAVector);
-        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, PointUtils.turnOver(nodeAVector));
-        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, nodeBVector);
-        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, PointUtils.turnOver(nodeBVector));
+        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, coordinateA, nodeAVector);
+        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, coordinateA, PointUtils.turnOver(nodeAVector));
+        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, coordinateB, nodeBVector);
+        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, coordinateB, PointUtils.turnOver(nodeBVector));
         boolean wasAdded = true;
         while (wasAdded) {
             wasAdded = false;
@@ -433,9 +434,9 @@ public class Controller {
         return new Point(x4, y4);
     }
 
-    public void calculateCoordinateInStraightLine(HashMap<Node, Point> result, Node referencePoint, Node lastNeighbor, Point vector) {
+    public void calculateCoordinateInStraightLine(HashMap<Node, Point> result, Node referencePoint, Node lastNeighbor, Point referencePointCoordinate, Point vector) {
         Node oppositeNeighbor = referencePoint.getOppositeNeighbor(lastNeighbor);
-        Point lastPoint = vector;
+        Point lastPoint = referencePointCoordinate;
         while (oppositeNeighbor != null) {
             lastPoint = PointUtils.plus(lastPoint, vector);
             result.put(oppositeNeighbor, lastPoint);

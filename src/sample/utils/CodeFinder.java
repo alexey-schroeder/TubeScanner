@@ -421,11 +421,11 @@ public class CodeFinder {
             }
             int width = (int) rotatedRect.size.width + puffer * 2;
             if (x + width >= rotatedImage.cols()) {
-                width = rotatedImage.cols() - x;
+                width = rotatedImage.cols() - x - 1;
             }
             int height = (int) rotatedRect.size.height + puffer * 2;
             if (y + height >= rotatedImage.rows()) {
-                height = rotatedImage.rows() - y;
+                height = rotatedImage.rows() - y - 1;
             }
 
             if (width == 0 || height == 0) {

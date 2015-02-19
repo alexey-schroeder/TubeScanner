@@ -112,7 +112,6 @@ public class Graph {
                 // beide nachbarn sind schon in graph aber nicht als nachbarn von parent
                 if (equalsNodeAInNeighbors == null && equalsNodeBInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph != null) {
                     HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
-                    if (equalsParentNeighbors.size() < 4) {
                         NodeAxe currentAxe = null;
                         if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
                             Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
@@ -148,7 +147,6 @@ public class Graph {
                             equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
                             return true;
                         }
-                    }
                 }
 
                 //beide nachbarn sind im graph nicht vorhanden
