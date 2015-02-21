@@ -199,9 +199,10 @@ public class CodeFinder {
         Point[] result = new Point[2];
         ArrayList<Point> differenceVectoren = calculateDifferenceVectoren(points);
         double maxDistanceInCluster = 5;
-        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxDistanceInCluster, 5);
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxDistanceInCluster, 3);
         List<Cluster<Point>> clusters = dbscanClusterer.cluster(differenceVectoren);
-        if (clusters.size() < 2) {
+//        System.out.println("clusters size: " + clusters.size());
+        if (clusters.size() < 3) {
             return null;
         }
         Collections.sort(clusters, new Comparator<Cluster<Point>>() {
@@ -216,12 +217,13 @@ public class CodeFinder {
 //        double angleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, point_1));
 //        double vectorLength = getVectorLength(point_1);
         ArrayList<Point> candidates = new ArrayList<>();
+        double maxAngleDiff = 10;
         for (int i = 1; i < clusters.size(); i++) {
             Cluster<Point> tempCluster = clusters.get(i);
             Point tempPoint = calculateClusterCenter(tempCluster);
 //            double tempVectorLength = getVectorLength(tempPoint);
             double tempAngleDiff = Math.abs(90 - PointUtils.getAngleBetweenVectors(point_0, tempPoint));
-            double maxAngleDiff = 10;
+
             if (tempAngleDiff < maxAngleDiff) {
                 candidates.add(tempPoint);
             }
@@ -236,6 +238,16 @@ public class CodeFinder {
 
         if (candidates.size() < 1) {
             return null;
+        }
+        Point point_1 = candidates.get(0);
+        double maxProcentDiff = 15;
+        double length_0 = PointUtils.getVectorLength(point_0);
+        double length_1 = PointUtils.getVectorLength(point_1);
+        double min = Math.min(length_0, length_1);
+        double max = Math.max(length_0, length_1);
+        double procentDiff = (max - min) / max  * 100;
+        if(procentDiff > maxProcentDiff){
+            return  null;
         }
         result[0] = point_0;
         result[1] = candidates.get(0);
@@ -428,7 +440,7 @@ public class CodeFinder {
                 height = rotatedImage.rows() - y - 1;
             }
 
-            if (width == 0 || height == 0) {
+            if (width < 24 || height < 24) {
                 return null;
             }
             code = new Mat();

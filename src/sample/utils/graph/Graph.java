@@ -143,8 +143,13 @@ public class Graph {
                             }
                         }
                         if (currentAxe != null) {
-                            equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
-                            equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                            try {
+                                equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
+                                equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                            } catch (RuntimeException e){
+                                System.out.println(equalsParentInGraph + ", " + equalsNodeAInGraph + ", " + equalsNodeBInGraph);
+                                throw e;
+                            }
                             return true;
                         }
                 }

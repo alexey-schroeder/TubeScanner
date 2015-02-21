@@ -93,6 +93,9 @@ public class TripleFinderTest {
 
     @Test
     public void testFindNeighbor() throws Exception {
+        Point vector_1 = new Point(0, 2.4);
+        Point vector_2 = new Point(2.4, 0);
+        Point[] cellVectors = new Point[]{vector_1, vector_2};
         Point pointA = new Point(5, 5);
         Point pointB = new Point(2.5, 5);
         Point pointC = new Point(7.5, 5);
@@ -109,7 +112,7 @@ public class TripleFinderTest {
         points.add(pointF);
 
         PointTripleFinder tripleFinder = new PointTripleFinder();
-        ArrayList<Point> neighbors = tripleFinder.findNeighbor(pointA, points, 2.44, 0.07);
+        ArrayList<Point> neighbors = tripleFinder.findNeighbor(pointA, points, 2.44, 0.07, cellVectors);
         Assert.assertTrue(neighbors.contains(pointB));
         Assert.assertTrue(neighbors.contains(pointC));
         Assert.assertTrue(neighbors.contains(pointE));
@@ -117,7 +120,7 @@ public class TripleFinderTest {
         Assert.assertFalse(neighbors.contains(pointF));
         Assert.assertFalse(neighbors.contains(pointD));
 
-        neighbors = tripleFinder.findNeighbor(pointB, points, 2.44, 0.07);
+        neighbors = tripleFinder.findNeighbor(pointB, points, 2.44, 0.07, cellVectors);
         Assert.assertTrue(neighbors.contains(pointA));
         Assert.assertTrue(neighbors.contains(pointF));
 

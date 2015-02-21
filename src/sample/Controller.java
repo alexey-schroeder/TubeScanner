@@ -38,8 +38,6 @@ public class Controller {
             System.out.println("Camera OK?");
             startThread();
         }
-
-
     }
 
     private void startThread() throws Exception {
@@ -122,40 +120,47 @@ public class Controller {
             Mat code = codeFinder.extractCode(circleImage);
             if (code != null) {
                 Mat boundedCode = codeCleaner.getBoundedCode(code);
-                if (boundedCode == null) {
-                    showFrame(resized);
-                    return;
-                }
-                Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
-                if (cleanedCode == null) {
-                    showFrame(resized);
-                    return;
-                }
-                Core.bitwise_not(cleanedCode, cleanedCode);
-                BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
-                try {
-                    String text = dataMatrixInterpreter.decode(bufferedImage);
+                if (boundedCode != null) {
+////                    showFrame(resized);
+////                    return;
+//                    break;
+//                }
+                    Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
+                    if (cleanedCode != null) {
+//                    showFrame(resized);
+//                    return;
+//                    break;
+//                }
+                        Core.bitwise_not(cleanedCode, cleanedCode);
+                        BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
+                        try {
+                            String text = dataMatrixInterpreter.decode(bufferedImage);
 //                    System.out.println(text);
-                    if (text != null) {
-//                        Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
-                        Node node = new Node(text);
-                        goodPoints.put(center, node);
-                    } else {
-//                        Imgproc.circle(resized, center, 10, new Scalar(0, 0, 255), 2);
-                    }
-                } catch (IOException e) {
+                            if (text != null) {
+//                                Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
+                                Node node = new Node(text);
+                                goodPoints.put(center, node);
+                            } else {
+//                                Imgproc.circle(resized, center, 6, new Scalar(0, 0, 255), 2);
+                            }
+                        } catch (IOException e) {
 //                        e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
+
+        cellVectors = correctCellVectors(cellVectors, goodPoints);
+
 //        System.out.println(goodPoints);
 //        System.out.println(Arrays.deepToString(cellVectors));
-        if (goodPoints.size() == 9) {
-            System.out.printf("");
-        }
+//        if (goodPoints.size() == 9) {
+//            System.out.printf("");
+//        }
         PointTripleFinder pointTripleFinder = new PointTripleFinder();
         ArrayList<PointTriplet> pointTriplets = pointTripleFinder.findTriplets(goodPoints.keySet(), cellVectors);
-        System.out.println("founded pointTriplets: " + pointTriplets.size());
+//        System.out.println("founded pointTriplets: " + pointTriplets.size());
         if (!pointTriplets.isEmpty()) {
             List<NodeTriplet> nodeTriplets = new ArrayList<>(pointTriplets.size());
             for (PointTriplet pointTriplet : pointTriplets) {
@@ -168,10 +173,10 @@ public class Controller {
             addTripletsInGraph(nodeTriplets);
             HashSet<Node> allNodes = graph.getAllNodes();
             int graphSize = allNodes.size();
-            System.out.println("graphSize: " + graphSize);
+//            System.out.println("graphSize: " + graphSize);
             BasisFinder basisFinder = new BasisFinder();
             ArrayList<Basis> bases = basisFinder.findBases(allNodes, goodPoints, cellVectors);
-            System.out.println("bases: " + bases.size());
+//            System.out.println("bases: " + bases.size());
             HashMap<Node, Point> bestNodeCoordinates = new HashMap<>();
             Basis bestBasis = null;
             int maxSize = 0;
@@ -189,21 +194,23 @@ public class Controller {
                     }
                 }
             }
-            System.out.println("bestNodeCoordinates: " + bestNodeCoordinates.size());
-            ArrayList<Node> basisNodes = new ArrayList<>();
-            if (bestBasis != null) {
-                NodeTriplet bestNodeBasis = bestBasis.getNodeBasis();
-                basisNodes.add(bestNodeBasis.getNodeA());
-                basisNodes.add(bestNodeBasis.getNodeB());
-                basisNodes.add(bestNodeBasis.getCenter());
-            }
-            for (Node node : bestNodeCoordinates.keySet()) {
-                Point point = bestNodeCoordinates.get(node);
+//            System.out.println("bestNodeCoordinates: " + bestNodeCoordinates.size());
+//            ArrayList<Node> basisNodes = new ArrayList<>();
+//            if (bestBasis != null) {
+//                NodeTriplet bestNodeBasis = bestBasis.getNodeBasis();
+//                basisNodes.add(bestNodeBasis.getNodeA());
+//                basisNodes.add(bestNodeBasis.getNodeB());
+//                basisNodes.add(bestNodeBasis.getCenter());
+//            }
+
+            HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(bestNodeCoordinates, goodPoints);
+            for (Node node : correctedNodeCoordinates.keySet()) {
+                Point point = correctedNodeCoordinates.get(node);
                 Scalar color;
 //                if (basisNodes.contains(node)) {
 //                    color = new Scalar(255, 0, 0);
 //                } else {
-                    color = new Scalar(0, 255, 0);
+                color = new Scalar(0, 255, 0);
 //                }
                 Imgproc.circle(resized, point, 10, color, 2);
             }
@@ -216,6 +223,134 @@ public class Controller {
 //        }
 //        Features2d.drawKeypoints(resized, codeKeyPoints, resized);
         showFrame(resized);
+    }
+
+    public HashMap<Node, Point> correctNodeCoordinates(HashMap<Node, Point> bestNodeCoordinates, HashMap<Point, Node> goodPoints) {
+        HashSet<Node> allGraphNodes = graph.getAllNodes();
+        HashMap<Node, Point> result = new HashMap<>(bestNodeCoordinates);
+        for (Point goodPointCoordinate : goodPoints.keySet()) {
+            Node goodNode = goodPoints.get(goodPointCoordinate);
+            if (bestNodeCoordinates.containsKey(goodNode)) {
+                result.remove(goodNode);
+                Node equalsGoodNodeInGraph = NodeUtils.findEqualsNode(allGraphNodes, goodNode);
+                result.put(equalsGoodNodeInGraph, goodPointCoordinate);
+            }
+        }
+        boolean wasAdded = true;
+        while (wasAdded) {
+            wasAdded = false;
+            if (allGraphNodes.size() == result.size()) {
+                System.out.println("alls");
+                return result;
+            } else {
+                HashMap<Node, Point> resultCopy = new HashMap<>(result);
+                for (Node nodeInResult : resultCopy.keySet()) {
+//                    if(nodeInResult.getCode().equalsIgnoreCase("0122708290")){
+//                        System.out.println();
+//                    }
+                    ArrayList<Node> neighborsInAxeA = nodeInResult.getNeighborsByAxe(Graph.NodeAxe.AXE_A);
+                    if (neighborsInAxeA.size() == 2) {
+                        Node neighborInAxeA_1 = neighborsInAxeA.get(0);
+                        Node neighborInAxeA_2 = neighborsInAxeA.get(1);
+                        if (!result.containsKey(neighborInAxeA_1) && result.containsKey(neighborInAxeA_2)) {// nachbarn 1 ist nicht inresultat, aber nachbarn 2 schon
+                            Point coordinateNeighbor_1 = new Point();
+                            Point coordinateNeighbor_2 = result.get(neighborInAxeA_2);
+                            Point parentCoordinate = result.get(nodeInResult);
+                            coordinateNeighbor_1.x = 2 * parentCoordinate.x - coordinateNeighbor_2.x;
+                            coordinateNeighbor_1.y = 2 * parentCoordinate.y - coordinateNeighbor_2.y;
+                            result.put(neighborInAxeA_1, coordinateNeighbor_1);
+                            wasAdded = true;
+//                            System.out.println("added");
+                        } else if (result.containsKey(neighborInAxeA_1) && !result.containsKey(neighborInAxeA_2)) {// nachbarn 2 ist nicht inresultat, aber nachbarn 1 schon
+                            Point coordinateNeighbor_2 = new Point();
+                            Point coordinateNeighbor_1 = result.get(neighborInAxeA_1);
+                            Point parentCoordinate = result.get(nodeInResult);
+                            coordinateNeighbor_2.x = 2 * parentCoordinate.x - coordinateNeighbor_1.x;
+                            coordinateNeighbor_2.y = 2 * parentCoordinate.y - coordinateNeighbor_1.y;
+                            result.put(neighborInAxeA_2, coordinateNeighbor_2);
+                            wasAdded = true;
+//                            System.out.println("added");
+                        }
+                    }
+                    ArrayList<Node> neighborsInAxeB = nodeInResult.getNeighborsByAxe(Graph.NodeAxe.AXE_B);
+                    if (neighborsInAxeB.size() == 2) {
+                        Node neighborInAxeB_1 = neighborsInAxeB.get(0);
+                        Node neighborInAxeB_2 = neighborsInAxeB.get(1);
+                        if (!result.containsKey(neighborInAxeB_1) && result.containsKey(neighborInAxeB_2)) {// nachbarn 1 ist nicht inresultat, aber nachbarn 2 schon
+                            Point coordinateNeighbor_1 = new Point();
+                            Point coordinateNeighbor_2 = result.get(neighborInAxeB_2);
+                            Point parentCoordinate = result.get(nodeInResult);
+                            coordinateNeighbor_1.x = 2 * parentCoordinate.x - coordinateNeighbor_2.x;
+                            coordinateNeighbor_1.y = 2 * parentCoordinate.y - coordinateNeighbor_2.y;
+                            result.put(neighborInAxeB_1, coordinateNeighbor_1);
+                            wasAdded = true;
+//                            System.out.println("added");
+                        } else if (result.containsKey(neighborInAxeB_1) && !result.containsKey(neighborInAxeB_2)) {// nachbarn 2 ist nicht inresultat, aber nachbarn 1 schon
+                            Point coordinateNeighbor_2 = new Point();
+                            Point coordinateNeighbor_1 = result.get(neighborInAxeB_1);
+                            Point parentCoordinate = result.get(nodeInResult);
+                            coordinateNeighbor_2.x = 2 * parentCoordinate.x - coordinateNeighbor_1.x;
+                            coordinateNeighbor_2.y = 2 * parentCoordinate.y - coordinateNeighbor_1.y;
+                            result.put(neighborInAxeB_2, coordinateNeighbor_2);
+                            wasAdded = true;
+//                            System.out.println("added");
+                        }
+                    }
+                }
+            }
+        }
+
+        if(allGraphNodes.size() != result.size()){
+            wasAdded = true;
+            while (wasAdded) {
+                wasAdded = false;
+                for (Node node : allGraphNodes) {
+                    if (!result.keySet().contains(node)) {
+                        Point point = getCoordinateForNode(node, result);
+                        if (point != null) {
+                            result.put(node, point);
+                            wasAdded = true;
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println(allGraphNodes.size() + " / " + bestNodeCoordinates.size() + "/ " + result.size());
+        return result;
+    }
+
+    private Point[] correctCellVectors(Point[] cellVectors, HashMap<Point, Node> goodPoints) {
+        if (graph == null) {
+            return cellVectors;
+        }
+        HashSet<Node> allNodesInGraph = graph.getAllNodes();
+        Collection<Node> allGoodNodes = goodPoints.values();
+        for (Node node : allGoodNodes) {
+            Node equalsNodeInGraph = NodeUtils.findEqualsNode(allNodesInGraph, node);
+            if (equalsNodeInGraph != null) {
+                Point equalsNodePoint = findKeyForValueInMap(goodPoints, node);
+                HashSet<Node> neighbors = equalsNodeInGraph.getNeighbors();
+                for (Node neighbor : neighbors) {
+                    Node equalsNeighborNode = NodeUtils.findEqualsNode(allGoodNodes, neighbor);
+                    if (equalsNeighborNode != null) {
+                        Point equalsNeighborNodePoint = findKeyForValueInMap(goodPoints, neighbor);
+                        Point trueVector_1 = PointUtils.minus(equalsNodePoint, equalsNeighborNodePoint);
+                        Point trueVector_2 = PointUtils.getPerpendicularVector(trueVector_1);
+                        return new Point[]{trueVector_1, trueVector_2};
+                    }
+                }
+            }
+        }
+        return cellVectors;
+    }
+
+    private Point findKeyForValueInMap(HashMap<Point, Node> goodPoints, Node node) {
+        for (Point point : goodPoints.keySet()) {
+            if (goodPoints.get(point).equals(node)) {
+                return point;
+            }
+        }
+        return null;
     }
 
 

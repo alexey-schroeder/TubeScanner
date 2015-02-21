@@ -36,4 +36,21 @@ public class PointUtils {
     public static Point turnOver(Point point) {
         return new Point(-point.x, -point.y);
     }
+
+    public static Point getPerpendicularVector(Point vector) {
+        return rotateVector(vector, 90);
+    }
+
+    /**
+     * @param point
+     * @param angle angle in degrees
+     * @return
+     */
+    public static Point rotateVector(Point point, double angle) {
+        angle = Math.toRadians(angle);
+        Point rotated_point = new Point();
+        rotated_point.x = point.x * Math.cos(angle) - point.y * Math.sin(angle);
+        rotated_point.y = point.x * Math.sin(angle) + point.y * Math.cos(angle);
+        return rotated_point;
+    }
 }

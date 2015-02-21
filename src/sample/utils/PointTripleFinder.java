@@ -21,7 +21,7 @@ public class PointTripleFinder {
         double circleRadius = averageCellVectorLength / 3;
         double maxError = circleRadius / 2;
         for (Point point : points) {
-            ArrayList<Point> neighbors = findNeighbor(point, points, averageCellVectorLength, maxError);
+            ArrayList<Point> neighbors = findNeighbor(point, points, averageCellVectorLength, maxError, cellVectors);
             for (Point neighbor : neighbors) {
                 ArrayList<Point> thirdPoints = findThirdPoint(point, neighbor, points, averageCellVectorLength, maxError);
                 for (Point thirdPoint : thirdPoints) {
@@ -51,12 +51,20 @@ public class PointTripleFinder {
         return result;
     }
 
-    public ArrayList<Point> findNeighbor(Point point, Collection<Point> points, double referenceDistance, double maxError) {
+    public ArrayList<Point> findNeighbor(Point point, Collection<Point> points, double referenceDistance, double maxError, Point[] cellVectors) {
         ArrayList<Point> neighbors = new ArrayList<>();
+        double maxAngleDiff = 10;
         for (Point tempPoint : points) {
             double distanceDiff = Math.abs(referenceDistance - ImageUtils.getDistance(point, tempPoint));
             if (distanceDiff <= maxError) {
-                neighbors.add(tempPoint);
+                Point vector = PointUtils.minus(point, tempPoint);
+                double angle_1 = PointUtils.getAngleBetweenVectors(cellVectors[0], vector);
+                double angle_2 = PointUtils.getAngleBetweenVectors(cellVectors[1], vector);
+                boolean angle_1IsCorrect = Math.abs(angle_1 - 90) < maxAngleDiff;
+                boolean angle_2IsCorrect = Math.abs(angle_2 - 90) < maxAngleDiff;
+                if (angle_1IsCorrect || angle_2IsCorrect) {
+                    neighbors.add(tempPoint);
+                }
             }
         }
         return neighbors;
