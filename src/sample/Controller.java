@@ -24,6 +24,7 @@ public class Controller {
     VideoCapture camera;
     CodeFinder codeFinder;
     private Graph graph;
+    private HashMap<Node, Point> oldNodeCoordinates;
 
     public void initialize() throws Exception {
         codeFinder = new CodeFinder();
@@ -89,6 +90,12 @@ public class Controller {
         CodeFinder codeFinder = new CodeFinder();
         Point[] cellVectors = codeFinder.calculateCellVectors(centers);
         if (cellVectors == null) {
+            if (oldNodeCoordinates != null) {
+                drawNodeCircles(oldNodeCoordinates, resized);
+                oldNodeCoordinates = null;
+                System.out.println("old circles drawded");
+            }
+
             showFrame(resized);
             return;
         }
@@ -204,16 +211,8 @@ public class Controller {
 //            }
 
             HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(bestNodeCoordinates, goodPoints);
-            for (Node node : correctedNodeCoordinates.keySet()) {
-                Point point = correctedNodeCoordinates.get(node);
-                Scalar color;
-//                if (basisNodes.contains(node)) {
-//                    color = new Scalar(255, 0, 0);
-//                } else {
-                color = new Scalar(0, 255, 0);
-//                }
-                Imgproc.circle(resized, point, 10, color, 2);
-            }
+            oldNodeCoordinates = correctedNodeCoordinates;
+            drawNodeCircles(correctedNodeCoordinates, resized);
         }
 
 
@@ -223,6 +222,19 @@ public class Controller {
 //        }
 //        Features2d.drawKeypoints(resized, codeKeyPoints, resized);
         showFrame(resized);
+    }
+
+    public void drawNodeCircles(HashMap<Node, Point> correctedNodeCoordinates, Mat resized) {
+        for (Node node : correctedNodeCoordinates.keySet()) {
+            Point point = correctedNodeCoordinates.get(node);
+            Scalar color;
+//                if (basisNodes.contains(node)) {
+//                    color = new Scalar(255, 0, 0);
+//                } else {
+            color = new Scalar(0, 255, 0);
+//                }
+            Imgproc.circle(resized, point, 10, color, 2);
+        }
     }
 
     public HashMap<Node, Point> correctNodeCoordinates(HashMap<Node, Point> bestNodeCoordinates, HashMap<Point, Node> goodPoints) {
@@ -236,12 +248,38 @@ public class Controller {
                 result.put(equalsGoodNodeInGraph, goodPointCoordinate);
             }
         }
+
+        correctNodeCoordinatesByNeighbors(result);
+
+        if (allGraphNodes.size() != result.size()) {
+            boolean wasAdded = true;
+            while (wasAdded) {
+                wasAdded = false;
+                for (Node node : allGraphNodes) {
+                    if (!result.keySet().contains(node)) {
+                        Point point = getCoordinateForNode(node, result);
+                        if (point != null) {
+                            result.put(node, point);
+                            wasAdded = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        correctNodeCoordinatesByNeighbors(result);
+        System.out.println(allGraphNodes.size() + " / " + bestNodeCoordinates.size() + "/ " + result.size());
+        return result;
+    }
+
+    public void correctNodeCoordinatesByNeighbors(HashMap<Node, Point> result) {
         boolean wasAdded = true;
+        HashSet<Node> allGraphNodes = graph.getAllNodes();
         while (wasAdded) {
             wasAdded = false;
             if (allGraphNodes.size() == result.size()) {
                 System.out.println("alls");
-                return result;
+//                return result;
             } else {
                 HashMap<Node, Point> resultCopy = new HashMap<>(result);
                 for (Node nodeInResult : resultCopy.keySet()) {
@@ -299,24 +337,6 @@ public class Controller {
                 }
             }
         }
-
-        if(allGraphNodes.size() != result.size()){
-            wasAdded = true;
-            while (wasAdded) {
-                wasAdded = false;
-                for (Node node : allGraphNodes) {
-                    if (!result.keySet().contains(node)) {
-                        Point point = getCoordinateForNode(node, result);
-                        if (point != null) {
-                            result.put(node, point);
-                            wasAdded = true;
-                        }
-                    }
-                }
-            }
-        }
-        System.out.println(allGraphNodes.size() + " / " + bestNodeCoordinates.size() + "/ " + result.size());
-        return result;
     }
 
     private Point[] correctCellVectors(Point[] cellVectors, HashMap<Point, Node> goodPoints) {
