@@ -14,7 +14,6 @@ public class Graph {
 
     ;
 
-
     public HashSet<Node> getAllNodes() {
         if (root == null) {
             return new HashSet<>();
@@ -112,46 +111,46 @@ public class Graph {
                 // beide nachbarn sind schon in graph aber nicht als nachbarn von parent
                 if (equalsNodeAInNeighbors == null && equalsNodeBInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph != null) {
                     HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
-                        NodeAxe currentAxe = null;
-                        if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
-                            Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
-                            NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
-                            currentAxe = getOtherNodeAxe(nodeAxe);
-                        }
+                    NodeAxe currentAxe = null;
+                    if (!equalsParentNeighbors.isEmpty()) { // es gibt ein nachbarn in anderer axe
+                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
+                        NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
+                        currentAxe = getOtherNodeAxe(nodeAxe);
+                    }
 
-                        if (currentAxe == null) {
-                            HashSet<Node> equalsNodeAInGraphNeighbors = equalsNodeAInGraph.getNeighbors();
-                            if (equalsNodeAInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
-                                ArrayList<Node> neighborsInAxeA = equalsNodeAInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
-                                if (neighborsInAxeA.size() == 1) {
-                                    currentAxe = NodeAxe.AXE_A;
-                                } else {
-                                    currentAxe = NodeAxe.AXE_B;
-                                }
+                    if (currentAxe == null) {
+                        HashSet<Node> equalsNodeAInGraphNeighbors = equalsNodeAInGraph.getNeighbors();
+                        if (equalsNodeAInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
+                            ArrayList<Node> neighborsInAxeA = equalsNodeAInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                            if (neighborsInAxeA.size() == 1) {
+                                currentAxe = NodeAxe.AXE_A;
+                            } else {
+                                currentAxe = NodeAxe.AXE_B;
                             }
                         }
+                    }
 
-                        if (currentAxe == null) {
-                            HashSet<Node> equalsNodeBInGraphNeighbors = equalsNodeBInGraph.getNeighbors();
-                            if (equalsNodeBInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
-                                ArrayList<Node> neighborsInAxeA = equalsNodeBInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
-                                if (neighborsInAxeA.size() == 1) {
-                                    currentAxe = NodeAxe.AXE_A;
-                                } else {
-                                    currentAxe = NodeAxe.AXE_B;
-                                }
+                    if (currentAxe == null) {
+                        HashSet<Node> equalsNodeBInGraphNeighbors = equalsNodeBInGraph.getNeighbors();
+                        if (equalsNodeBInGraphNeighbors.size() == 3) {// es gibt genau einen freien platz
+                            ArrayList<Node> neighborsInAxeA = equalsNodeBInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                            if (neighborsInAxeA.size() == 1) {
+                                currentAxe = NodeAxe.AXE_A;
+                            } else {
+                                currentAxe = NodeAxe.AXE_B;
                             }
                         }
-                        if (currentAxe != null) {
-                            try {
-                                equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
-                                equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
-                            } catch (RuntimeException e){
-                                System.out.println(equalsParentInGraph + ", " + equalsNodeAInGraph + ", " + equalsNodeBInGraph);
-                                throw e;
-                            }
-                            return true;
+                    }
+                    if (currentAxe != null) {
+                        try {
+                            equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
+                            equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                        } catch (RuntimeException e) {
+                            System.out.println(equalsParentInGraph + ", " + equalsNodeAInGraph + ", " + equalsNodeBInGraph);
+                            throw e;
                         }
+                        return true;
+                    }
                 }
 
                 //beide nachbarn sind im graph nicht vorhanden
@@ -316,5 +315,8 @@ public class Graph {
         return result;
     }
 
+    public boolean isEmpty() {
+        return root == null;
+    }
 
 }

@@ -15,6 +15,9 @@ public class PointTripleFinder {
 
     public ArrayList<PointTriplet> findTriplets(Collection<Point> points, Point[] cellVectors) {
         ArrayList<PointTriplet> result = new ArrayList<>();
+        if(cellVectors == null){
+            return result;
+        }
         Point vector_1 = cellVectors[0];
         Point vector_2 = cellVectors[1];
         double averageCellVectorLength = (ImageUtils.getVectorLength(vector_1) + ImageUtils.getVectorLength(vector_2)) / 2;

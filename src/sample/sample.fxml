@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.canvas.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
-<HBox spacing="10.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2"
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.layout.VBox?>
+<VBox spacing="10.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2"
       fx:controller="sample.Controller">
     <children>
-
-        <Canvas fx:id="canvas" height="720" width="1280"/>
+        <Canvas fx:id="canvas" height="400" width="700"/>
+        <VBox fx:id="graphPane" prefHeight="400" prefWidth="700" />
     </children>
-</HBox>
+</VBox>

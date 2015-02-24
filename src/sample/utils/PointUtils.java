@@ -53,4 +53,10 @@ public class PointUtils {
         rotated_point.y = point.x * Math.sin(angle) + point.y * Math.cos(angle);
         return rotated_point;
     }
+
+    public static Point calculateQuadratEdge(Point point1, Point point2, Point point3) {// point1 und point3 liegen auf der diagonal des quadrates!
+        double x4 = point1.x + point3.x - point2.x;
+        double y4 = point1.y + point3.y - point2.y;
+        return new Point(x4, y4);
+    }
 }
