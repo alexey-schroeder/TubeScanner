@@ -33,6 +33,15 @@ public class PointUtils {
         return getVectorLength(diff);
     }
 
+    public static Point multWithFactor(Point point, double factor){
+        return new Point(point.x * factor, point.y * factor);
+    }
+
+    public static  Point flipByY(Point point, Point flipCenterPoint){
+        double yDiff = flipCenterPoint.y - point.y;
+        return new Point(point.x, flipCenterPoint.y + yDiff);
+    }
+
     public static Point turnOver(Point point) {
         return new Point(-point.x, -point.y);
     }

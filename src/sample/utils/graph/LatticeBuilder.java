@@ -10,10 +10,10 @@ import java.util.HashSet;
 /**
  * Created by Alex on 28.01.2015.
  */
-public class GraphVisualiser {
+public class LatticeBuilder {
     private Graph graph;
 
-    public GraphVisualiser(Graph graph) {
+    public LatticeBuilder(Graph graph) {
         this.graph = graph;
     }
 
@@ -22,22 +22,15 @@ public class GraphVisualiser {
         int graphSize = allNodes.size();
         BasisFinder basisFinder = new BasisFinder();
         ArrayList<Basis> bases = basisFinder.findBases(allNodes, goodPoints, cellVectors);
-        HashMap<Node, Point> bestNodeCoordinates = new HashMap<>();
-        Basis bestBasis = null;
-        int maxSize = 0;
+        HashMap<Node, Point> allNodeCoordinates = new HashMap<>();
         for (Basis basis : bases) {
             HashMap<Node, Point> nodeCoordinates = graphToPoints(basis.getPointBasis(), basis.getNodeBasis());
-            if (nodeCoordinates.size() == graphSize) {
-                bestNodeCoordinates = nodeCoordinates;
+            allNodeCoordinates.putAll(nodeCoordinates);
+            if (allNodeCoordinates.size() == graphSize) {
                 break;
-            } else {
-                if (nodeCoordinates.size() > maxSize) {
-                    bestNodeCoordinates = nodeCoordinates;
-                    maxSize = nodeCoordinates.size();
-                }
             }
         }
-        HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(bestNodeCoordinates, goodPoints);
+        HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, goodPoints);
         return correctedNodeCoordinates;
     }
 
@@ -159,12 +152,12 @@ public class GraphVisualiser {
         return null;
     }
 
-    public HashMap<Node, Point> correctNodeCoordinates(HashMap<Node, Point> bestNodeCoordinates, HashMap<Point, Node> goodPoints) {
+    public HashMap<Node, Point> correctNodeCoordinates(HashMap<Node, Point> nodeCoordinates, HashMap<Point, Node> goodPoints) {
         HashSet<Node> allGraphNodes = graph.getAllNodes();
-        HashMap<Node, Point> result = new HashMap<>(bestNodeCoordinates);
+        HashMap<Node, Point> result = new HashMap<>(nodeCoordinates);
         for (Point goodPointCoordinate : goodPoints.keySet()) {
             Node goodNode = goodPoints.get(goodPointCoordinate);
-            if (bestNodeCoordinates.containsKey(goodNode)) {
+            if (nodeCoordinates.containsKey(goodNode)) {
                 result.remove(goodNode);
                 Node equalsGoodNodeInGraph = NodeUtils.findEqualsNode(allGraphNodes, goodNode);
                 result.put(equalsGoodNodeInGraph, goodPointCoordinate);
@@ -190,7 +183,7 @@ public class GraphVisualiser {
         }
 
         correctNodeCoordinatesByNeighbors(result);
-        System.out.println(allGraphNodes.size() + " / " + bestNodeCoordinates.size() + "/ " + result.size());
+//        System.out.println(allGraphNodes.size() + " / " + nodeCoordinates.size() + " / " + result.size());
         return result;
     }
 
@@ -200,7 +193,7 @@ public class GraphVisualiser {
         while (wasAdded) {
             wasAdded = false;
             if (allGraphNodes.size() == result.size()) {
-                System.out.println("alls");
+//                System.out.println("alls");
 //                return result;
             } else {
                 HashMap<Node, Point> resultCopy = new HashMap<>(result);

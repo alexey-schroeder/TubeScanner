@@ -3,16 +3,13 @@ package sample;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
 import javafx.scene.shape.Circle;
 import org.opencv.core.*;
 import org.opencv.core.Point;
@@ -21,10 +18,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import sample.utils.*;
-import sample.utils.graph.Graph;
-import sample.utils.graph.GraphVisualiser;
-import sample.utils.graph.Node;
-import sample.utils.graph.NodeUtils;
+import sample.utils.graph.*;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -34,23 +28,34 @@ public class Controller {
     @FXML
     private Canvas canvas;
     @FXML
-    private Pane graphPane;
+    private Canvas graphPane;
     private VideoCapture camera;
     private CodeFinder codeFinder;
     private Graph graph;
     private HashMap<Node, Point> oldNodeCoordinates;
     private double oldRadius = -1;
     private AutoScalingGroup group;
-    private GraphVisualiser graphVisualiser;
+    private CanvasGraphVisualiser canvasGraphVisualiser;
+//    private Group group;
+    private LatticeBuilder latticeBuilder;
 
     public void initialize() throws Exception {
-        group = new AutoScalingGroup(200);
-        group.setAutoScale(true);
-        graphPane.getChildren().add(group);
+//        double prefWidth = graphPane.getPrefWidth();
+//        double prefHeight = graphPane.getPrefHeight();
+//        group = new AutoScalingGroup(prefWidth, prefHeight);
+//        group = new Group();
+//        group.setAutoSizeChildren(true);
+//        group.prefWidth(prefWidth);
+//        group.prefHeight(prefHeight);
+//        group.setAutoScale(true);
+//        graphPane.getChildren().add(group);
+        graphPane.setStyle("-fx-border-color: red;");
         codeFinder = new CodeFinder();
         camera = new VideoCapture(0);
         graph = new Graph();
-        graphVisualiser = new GraphVisualiser(graph);
+        latticeBuilder = new LatticeBuilder(graph);
+        canvasGraphVisualiser = new CanvasGraphVisualiser();
+        canvasGraphVisualiser.setCanvas(graphPane);
         camera.open(0); //Useless
         boolean wset = camera.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 1280);
         boolean hset = camera.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 720);
@@ -193,7 +198,7 @@ public class Controller {
             }
             addTripletsInGraph(nodeTriplets);
 
-            HashMap<Node, Point> correctedNodeCoordinates = graphVisualiser.calculateNodeCoordinates(goodPoints, cellVectors);
+            HashMap<Node, Point> correctedNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
             oldNodeCoordinates = correctedNodeCoordinates;
             drawNodeCircles(correctedNodeCoordinates, resized);
         }
@@ -271,29 +276,32 @@ public class Controller {
 
     private void showGraph(HashMap<Node, Point> nodeCoordinates) {
         if (nodeCoordinates != null && !nodeCoordinates.isEmpty()) {
-            System.out.println("in showGraph");
-            group.getChildren().clear();
-            for (Node node : nodeCoordinates.keySet()) {
-                Point coordinate = nodeCoordinates.get(node);
-                javafx.scene.shape.Circle circle = new Circle(coordinate.x, coordinate.y, 20);
-                Tooltip tooltip = new Tooltip(node.getCode());
-                circle.setOnMouseEntered(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        tooltip.show(circle, event.getScreenX() + 10, event.getScreenY());
-                        circle.setFill(Color.GREEN);
-                    }
-                });
+////            System.out.println("in showGraph");
+//            group.getChildren().clear();
+//            for (Node node : nodeCoordinates.keySet()) {
+//                Point coordinate = nodeCoordinates.get(node);
+//                javafx.scene.shape.Circle circle = new Circle(coordinate.x, coordinate.y, 20);
+//                Tooltip tooltip = new Tooltip(node.getCode());
+//                circle.setOnMouseEntered(new EventHandler<MouseEvent>() {
+//                    @Override
+//                    public void handle(MouseEvent event) {
+//                        tooltip.show(circle, event.getScreenX() + 10, event.getScreenY());
+//                        circle.setFill(Color.GREEN);
+//                    }
+//                });
+//
+//                circle.setOnMouseExited(new EventHandler<MouseEvent>() {
+//                    @Override
+//                    public void handle(MouseEvent event) {
+//                        tooltip.hide();
+//                        circle.setFill(Color.BLACK);
+//                    }
+//                });
+//                group.getChildren().add(circle);
+//            }
 
-                circle.setOnMouseExited(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        tooltip.hide();
-                        circle.setFill(Color.BLACK);
-                    }
-                });
-                group.getChildren().add(circle);
-            }
+            canvasGraphVisualiser.setNodeCoordinates(nodeCoordinates);
+            canvasGraphVisualiser.drawGraph();
         }
     }
 
