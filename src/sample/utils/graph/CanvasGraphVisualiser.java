@@ -58,7 +58,7 @@ public class CanvasGraphVisualiser {
             Point point = nodeCoordinates.get(node);
             Point shiftedPoint = new Point(point.x + shiftX, point.y + shiftY);// der graph ist jetzt zentriert
             // um richtig zu zoommen müssen wir zuerst in koordinat system rechnen, das sein zentrum in der mitte des canvas hat
-            Point vector = PointUtils.minus(canvasCenter, shiftedPoint);
+            Point vector = PointUtils.minus(shiftedPoint, canvasCenter);
             Point scaledVector = PointUtils.multWithFactor(vector, scaleFactor);
             // hier wird zurück aus dem koordinat system mit zentrum in Canvas-zentrum in system mit anfang in linkem oberem ecke gerechnet
             Point scaledShiftedPoint = PointUtils.plus(canvasCenter, scaledVector);
@@ -69,21 +69,12 @@ public class CanvasGraphVisualiser {
     public void calculateGraphScaleAndCenter() {
         double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
         double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE;
-        boolean first = true;
         for (Node node : nodeCoordinates.keySet()) {
             Point point = nodeCoordinates.get(node);
-            if (first) {
-                minX = point.x - defaultRadius;
-                minY = point.y - defaultRadius;
-                maxX = point.x + defaultRadius;
-                maxY = point.y + defaultRadius;
-                first = false;
-            } else {
-                minX = Math.min(point.x - defaultRadius, minX);
-                minY = Math.min(point.y - defaultRadius, minY);
-                maxX = Math.max(point.x + defaultRadius, maxX);
-                maxY = Math.max(point.y + defaultRadius, maxY);
-            }
+            minX = Math.min(point.x - defaultRadius, minX);
+            minY = Math.min(point.y - defaultRadius, minY);
+            maxX = Math.max(point.x + defaultRadius, maxX);
+            maxY = Math.max(point.y + defaultRadius, maxY);
         }
 
         double w = maxX - minX;
@@ -102,7 +93,6 @@ public class CanvasGraphVisualiser {
         } else {
             scaleFactor = Math.min(scaleX, scaleY);
         }
-//        scaleFactor = 1;
         System.out.println(scaleX + " / " + scaleY + " / " + scaleFactor);
     }
 }
