@@ -1,18 +1,21 @@
 package sample;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
+import javafx.util.Callback;
 import org.opencv.core.*;
-import org.opencv.core.Point;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
@@ -26,6 +29,12 @@ import java.util.*;
 
 public class Controller {
     @FXML
+    private Label numberOfCodes;
+    @FXML
+    private TableColumn<Node, String> codeTableColumn;
+    @FXML
+    private TableView<Node> table;
+    @FXML
     private Canvas canvas;
     @FXML
     private Canvas graphPane;
@@ -36,8 +45,10 @@ public class Controller {
     private double oldRadius = -1;
     private AutoScalingGroup group;
     private CanvasGraphVisualiser canvasGraphVisualiser;
-//    private Group group;
+    private boolean stop;
+    //    private Group group;
     private LatticeBuilder latticeBuilder;
+    int oldGraphSize;
 
     public void initialize() throws Exception {
 //        double prefWidth = graphPane.getPrefWidth();
@@ -56,6 +67,20 @@ public class Controller {
         latticeBuilder = new LatticeBuilder(graph);
         canvasGraphVisualiser = new CanvasGraphVisualiser();
         canvasGraphVisualiser.setCanvas(graphPane);
+        codeTableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Node, String>, ObservableValue<String>>() {
+            @Override
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Node, String> param) {
+                return new SimpleStringProperty(param.getValue().getCode());
+            }
+        });
+
+        table.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                Node selectedNode = table.getSelectionModel().getSelectedItem();
+                canvasGraphVisualiser.markNodeByCode(selectedNode.getCode());
+            }
+        });
         camera.open(0); //Useless
         boolean wset = camera.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 1280);
         boolean hset = camera.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 720);
@@ -67,13 +92,18 @@ public class Controller {
         }
     }
 
+    public void stop() {
+        stop = true;
+    }
+
     private void startThread() throws Exception {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (!stop) {
                     threadCode();
                 }
+                camera.release();
             }
         });
         thread.start();
@@ -270,8 +300,25 @@ public class Controller {
                 if (repaintGraphGroup) {
                     showGraph(nodeCoordinates);
                 }
+                int currentGraphSize = graph.getAllNodes().size();
+                if (currentGraphSize > oldGraphSize) {
+                    oldGraphSize = currentGraphSize;
+                    refreshTable();
+                    refreshNumberOfCodes(currentGraphSize);
+                }
             }
         });
+    }
+
+    private void refreshNumberOfCodes(int size) {
+        numberOfCodes.setText(String.valueOf(size));
+    }
+
+    private void refreshTable() {
+        ObservableList<Node> nodes = FXCollections.observableArrayList();
+        HashSet<Node> allNodes = graph.getAllNodes();
+        nodes.addAll(allNodes);
+        table.setItems(nodes);
     }
 
     private void showGraph(HashMap<Node, Point> nodeCoordinates) {

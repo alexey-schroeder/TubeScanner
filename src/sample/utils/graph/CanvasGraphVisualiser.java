@@ -112,6 +112,22 @@ public class CanvasGraphVisualiser {
         return null;
     }
 
+    public void markNodeByCode(String code){
+        setDefaultColorToAllNodes();
+        for (Point point : graphNodeInCanvasMap.keySet()) {
+            Node node = graphNodeInCanvasMap.get(point);
+            if(node.getCode().equalsIgnoreCase(code)){
+                markNode(point);
+            }
+        }
+    }
+
+    private void setDefaultColorToAllNodes() {
+        for(Point point : graphNodeInCanvasMap.keySet()){
+            unMarkNode(point);
+        }
+    }
+
     public HashMap<Node, Point> getNodeCoordinates() {
         return nodeCoordinates;
     }
