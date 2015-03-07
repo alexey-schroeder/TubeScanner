@@ -44,9 +44,6 @@ public class LatticeBuilder {
         Node nodeBInGraph = NodeUtils.findEqualsNode(allNodes, nodeB);
         Node nodeCenterInGraph = NodeUtils.findEqualsNode(allNodes, nodeCenter);
 
-        Graph.NodeAxe nodeAAxe = nodeCenterInGraph.getNeighborsAxe(nodeAInGraph);
-        Graph.NodeAxe nodeBAxe = nodeCenterInGraph.getNeighborsAxe(nodeBInGraph);
-
         Point nodeAVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointA());
         Point nodeBVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointB());
 
@@ -205,7 +202,7 @@ public class LatticeBuilder {
                     if (neighborsInAxeA.size() == 2) {
                         Node neighborInAxeA_1 = neighborsInAxeA.get(0);
                         Node neighborInAxeA_2 = neighborsInAxeA.get(1);
-                        if (!result.containsKey(neighborInAxeA_1) && result.containsKey(neighborInAxeA_2)) {// nachbarn 1 ist nicht inresultat, aber nachbarn 2 schon
+                        if (!result.containsKey(neighborInAxeA_1) && result.containsKey(neighborInAxeA_2)) {// nachbarn 1 ist nicht in resultat, aber nachbarn 2 schon
                             Point coordinateNeighbor_1 = new Point();
                             Point coordinateNeighbor_2 = result.get(neighborInAxeA_2);
                             Point parentCoordinate = result.get(nodeInResult);
@@ -214,7 +211,7 @@ public class LatticeBuilder {
                             result.put(neighborInAxeA_1, coordinateNeighbor_1);
                             wasAdded = true;
 //                            System.out.println("added");
-                        } else if (result.containsKey(neighborInAxeA_1) && !result.containsKey(neighborInAxeA_2)) {// nachbarn 2 ist nicht inresultat, aber nachbarn 1 schon
+                        } else if (result.containsKey(neighborInAxeA_1) && !result.containsKey(neighborInAxeA_2)) {// nachbarn 2 ist nicht in resultat, aber nachbarn 1 schon
                             Point coordinateNeighbor_2 = new Point();
                             Point coordinateNeighbor_1 = result.get(neighborInAxeA_1);
                             Point parentCoordinate = result.get(nodeInResult);
@@ -238,7 +235,7 @@ public class LatticeBuilder {
                             result.put(neighborInAxeB_1, coordinateNeighbor_1);
                             wasAdded = true;
 //                            System.out.println("added");
-                        } else if (result.containsKey(neighborInAxeB_1) && !result.containsKey(neighborInAxeB_2)) {// nachbarn 2 ist nicht inresultat, aber nachbarn 1 schon
+                        } else if (result.containsKey(neighborInAxeB_1) && !result.containsKey(neighborInAxeB_2)) {// nachbarn 2 ist nicht in resultat, aber nachbarn 1 schon
                             Point coordinateNeighbor_2 = new Point();
                             Point coordinateNeighbor_1 = result.get(neighborInAxeB_1);
                             Point parentCoordinate = result.get(nodeInResult);

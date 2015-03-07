@@ -8,6 +8,10 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import org.opencv.core.*;
+import sample.utils.frameSorce.CameraFrameSource;
+import sample.utils.frameSorce.FrameSource;
+import sample.utils.frameSorce.ImageFileFrameSource;
+
 import java.lang.reflect.Field;
 
 public class Main extends Application {
@@ -21,15 +25,17 @@ public class Main extends Application {
         controller = fxmlLoader.getController();
         primaryStage.setTitle("Calibrator");
         primaryStage.setScene(new Scene(root));
-
-        primaryStage.show();
-
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent windowEvent) {
                 controller.stop();
             }
         });
+        FrameSource frameSource = new CameraFrameSource();
+//        FrameSource frameSource = new ImageFileFrameSource();
+        controller.setFrameSource(frameSource);
+        primaryStage.show();
+        controller.start();
     }
 
 

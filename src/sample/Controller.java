@@ -21,6 +21,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import sample.utils.*;
+import sample.utils.frameSorce.FrameSource;
 import sample.utils.graph.*;
 
 import java.awt.image.BufferedImage;
@@ -38,7 +39,7 @@ public class Controller {
     private Canvas canvas;
     @FXML
     private Canvas graphPane;
-    private VideoCapture camera;
+    private FrameSource frameSource;
     private CodeFinder codeFinder;
     private Graph graph;
     private HashMap<Node, Point> oldNodeCoordinates;
@@ -50,19 +51,10 @@ public class Controller {
     private LatticeBuilder latticeBuilder;
     int oldGraphSize;
 
-    public void initialize() throws Exception {
-//        double prefWidth = graphPane.getPrefWidth();
-//        double prefHeight = graphPane.getPrefHeight();
-//        group = new AutoScalingGroup(prefWidth, prefHeight);
-//        group = new Group();
-//        group.setAutoSizeChildren(true);
-//        group.prefWidth(prefWidth);
-//        group.prefHeight(prefHeight);
-//        group.setAutoScale(true);
-//        graphPane.getChildren().add(group);
+    public void initialize() {
         graphPane.setStyle("-fx-border-color: red;");
         codeFinder = new CodeFinder();
-        camera = new VideoCapture(0);
+
         graph = new Graph();
         latticeBuilder = new LatticeBuilder(graph);
         canvasGraphVisualiser = new CanvasGraphVisualiser();
@@ -81,15 +73,10 @@ public class Controller {
                 canvasGraphVisualiser.markNodeByCode(selectedNode.getCode());
             }
         });
-        camera.open(0); //Useless
-        boolean wset = camera.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, 1280);
-        boolean hset = camera.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, 720);
-        if (!camera.isOpened()) {
-            System.out.println("Camera Error");
-        } else {
-            System.out.println("Camera OK?");
-            startThread();
-        }
+    }
+
+    public void start() throws Exception {
+        startThread();
     }
 
     public void stop() {
@@ -103,15 +90,15 @@ public class Controller {
                 while (!stop) {
                     threadCode();
                 }
-                camera.release();
+                frameSource.stop();
             }
         });
         thread.start();
     }
 
     public void threadCode() {
-        Mat coloredFrame = new Mat();
-        camera.read(coloredFrame);
+        Mat coloredFrame = frameSource.getFrame();
+
         Core.flip(coloredFrame, coloredFrame, 0);
         double resizeFactor = Math.min(coloredFrame.rows(), coloredFrame.cols()) / 300.0;
         if (resizeFactor < 1) {
@@ -368,5 +355,13 @@ public class Controller {
                 }
             }
         }
+    }
+
+    public FrameSource getFrameSource() {
+        return frameSource;
+    }
+
+    public void setFrameSource(FrameSource frameSource) {
+        this.frameSource = frameSource;
     }
 }

@@ -29,6 +29,7 @@ public class CanvasGraphVisualiser {
     private HashMap<Point, Node> graphNodeInCanvasMap;
     private Tooltip tooltip;
     private Point lastPointWithTooltip;
+    private boolean stopShowByException = false;
 
     public Canvas getCanvas() {
         return canvas;
@@ -48,7 +49,7 @@ public class CanvasGraphVisualiser {
     }
 
     protected EventHandler<MouseEvent> getMouseClickedListener() {
-        return  new EventHandler<MouseEvent>() {
+        return new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 System.out.println("click");
@@ -56,39 +57,39 @@ public class CanvasGraphVisualiser {
         };
     }
 
-   protected EventHandler<MouseEvent> getMouseMovedListener() {
-       return new EventHandler<MouseEvent>() {
-           @Override
-           public void handle(MouseEvent event) {
-               Point point = getNodePointByCoordinaten(event.getX(), event.getY());
+    protected EventHandler<MouseEvent> getMouseMovedListener() {
+        return new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                Point point = getNodePointByCoordinaten(event.getX(), event.getY());
 
-               if (point != null) {
-                   lastPointWithTooltip = point;
-                   unMarkNode(point);
-                   Node node = graphNodeInCanvasMap.get(point);
-                   markNode(point);
-                   if (tooltip != null) {
-                       if (!tooltip.getText().equalsIgnoreCase(node.getCode())) { // das ist ein anderes node
-                           tooltip.setText(node.getCode());
-                       }
-                       tooltip.setAnchorX(event.getScreenX() + 20);
-                       tooltip.setAnchorY(event.getScreenY());
-                   } else {
-                       tooltip = new Tooltip(node.getCode());
-                       tooltip.show(canvas, event.getScreenX() + 20, event.getScreenY());
-                   }
-               } else {
-                   if(lastPointWithTooltip != null){
-                       unMarkNode(lastPointWithTooltip);
-                   }
-                   if (tooltip != null) {
-                       tooltip.hide();
-                       tooltip = null; // todo auf null setzen ist eigentlich falsch, man muss den tooltip einfach wieder erscheinen lassen
-                   }
-               }
-           }
-       };
-   }
+                if (point != null) {
+                    lastPointWithTooltip = point;
+                    unMarkNode(point);
+                    Node node = graphNodeInCanvasMap.get(point);
+                    markNode(point);
+                    if (tooltip != null) {
+                        if (!tooltip.getText().equalsIgnoreCase(node.getCode())) { // das ist ein anderes node
+                            tooltip.setText(node.getCode());
+                        }
+                        tooltip.setAnchorX(event.getScreenX() + 20);
+                        tooltip.setAnchorY(event.getScreenY());
+                    } else {
+                        tooltip = new Tooltip(node.getCode());
+                        tooltip.show(canvas, event.getScreenX() + 20, event.getScreenY());
+                    }
+                } else {
+                    if (lastPointWithTooltip != null) {
+                        unMarkNode(lastPointWithTooltip);
+                    }
+                    if (tooltip != null) {
+                        tooltip.hide();
+                        tooltip = null; // todo auf null setzen ist eigentlich falsch, man muss den tooltip einfach wieder erscheinen lassen
+                    }
+                }
+            }
+        };
+    }
 
     private void markNode(Point point) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -96,7 +97,7 @@ public class CanvasGraphVisualiser {
         gc.strokeOval(point.x - currentRadius, point.y - currentRadius, currentRadius * 2, currentRadius * 2);
     }
 
-    private void unMarkNode(Point point){
+    private void unMarkNode(Point point) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.clearRect(point.x - currentRadius, point.y - currentRadius, currentRadius * 2, currentRadius * 2);
         gc.setStroke(Color.GREEN);
@@ -112,18 +113,18 @@ public class CanvasGraphVisualiser {
         return null;
     }
 
-    public void markNodeByCode(String code){
+    public void markNodeByCode(String code) {
         setDefaultColorToAllNodes();
         for (Point point : graphNodeInCanvasMap.keySet()) {
             Node node = graphNodeInCanvasMap.get(point);
-            if(node.getCode().equalsIgnoreCase(code)){
+            if (node.getCode().equalsIgnoreCase(code)) {
                 markNode(point);
             }
         }
     }
 
     private void setDefaultColorToAllNodes() {
-        for(Point point : graphNodeInCanvasMap.keySet()){
+        for (Point point : graphNodeInCanvasMap.keySet()) {
             unMarkNode(point);
         }
     }
@@ -137,7 +138,10 @@ public class CanvasGraphVisualiser {
     }
 
     // Achtung! Canvas hat Zero point in dem left-oberee Ecke. Um richtig zu zoommenmüssen wir zuesrt in system rechnen, wo der zero point in zentrum von canvas ist.
-    public void drawGraph() {
+    public synchronized void drawGraph() {
+        if (stopShowByException) {
+            return;
+        }
         calculateGraphScaleAndCenter();
         graphNodeInCanvasMap.clear();
         double shiftX = width / 2 - graphCenterX; // differenze zwischen zentrum von canvas und zentrum von graph
@@ -158,9 +162,25 @@ public class CanvasGraphVisualiser {
             Point scaledVector = PointUtils.multWithFactor(vector, scaleFactor);
             // hier wird zurück aus dem koordinat system mit zentrum in Canvas-zentrum in system mit anfang in linkem oberem ecke gerechnet
             Point scaledShiftedPoint = PointUtils.plus(canvasCenter, scaledVector);
+            boolean isPointValid = checkNodeCoordinate(scaledShiftedPoint); // passt  point in canvas?
+
             gc.strokeOval(scaledShiftedPoint.x - currentRadius, scaledShiftedPoint.y - currentRadius, currentRadius * 2, currentRadius * 2);
+            if (!isPointValid) {
+                stopShowByException = true;
+                String exceptionString = "Error in drawGraph, point is out of the canvas(" + width + " x " + height + "). "
+                        + scaledShiftedPoint + ", currentRadius = " + currentRadius + ", scaleFactor = " + scaleFactor;
+                throw new RuntimeException(exceptionString);
+            }
             graphNodeInCanvasMap.put(scaledShiftedPoint, node);
         }
+    }
+
+    public boolean checkNodeCoordinate(Point scaledShiftedPoint) {
+        boolean isValid = scaledShiftedPoint.x - currentRadius >= 0 &&
+                scaledShiftedPoint.x + currentRadius <= width &&
+                scaledShiftedPoint.y - currentRadius >= 0 &&
+                scaledShiftedPoint.y + currentRadius <= height;
+        return isValid;
     }
 
     public void calculateGraphScaleAndCenter() {
@@ -183,13 +203,7 @@ public class CanvasGraphVisualiser {
         double scaleX = (width - 2 * rand) / w;
         double scaleY = (height - 2 * rand) / h;
 
-        if (scaleX > 1 && scaleY > 1) {
-            scaleFactor = Math.min(scaleX, scaleY);
-        } else if (scaleX < 1 && scaleY < 1) {
-            scaleFactor = Math.max(scaleX, scaleY);
-        } else {
-            scaleFactor = Math.min(scaleX, scaleY);
-        }
+        scaleFactor = Math.min(scaleX, scaleY);
 //        System.out.println(scaleX + " / " + scaleY + " / " + scaleFactor);
     }
 }
