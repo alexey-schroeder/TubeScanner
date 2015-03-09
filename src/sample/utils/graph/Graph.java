@@ -87,11 +87,15 @@ public class Graph {
                 // beide nachbarn sind in nachbarnliste von parent nicht vorhanden
                 // eins von nachbarn ist schon in graph
                 if (equalsNodeAInNeighbors == null && equalsNodeAInGraph != null && equalsNodeBInGraph == null) {
-                    HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
-                    if (equalsParentNeighbors.size() == 1) { // es gibt ein nachbarn in anderer axe. genau 1 für den fall, wann cellVectoren fasch berechnet wurden
-                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
-                        NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
-                        NodeAxe currentAxe = getOtherNodeAxe(nodeAxe);
+                    ArrayList<Node> equalsParentNeighborsInAxeA = equalsParentInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                    ArrayList<Node> equalsParentNeighborsInAxeB = equalsParentInGraph.getNeighborsByAxe(NodeAxe.AXE_B);
+                    Graph.NodeAxe currentAxe = null;
+                    if (equalsParentNeighborsInAxeA.isEmpty() && !equalsParentNeighborsInAxeB.isEmpty()) { // eine axe muss leer sein
+                        currentAxe = NodeAxe.AXE_A;
+                    } else if(!equalsParentNeighborsInAxeA.isEmpty() && equalsParentNeighborsInAxeB.isEmpty()) {
+                        currentAxe = NodeAxe.AXE_B;
+                    }
+                    if(currentAxe != null){
                         equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(nodeB, currentAxe);
                         return true;
@@ -101,11 +105,15 @@ public class Graph {
                 // beide nachbarn sind in nachbarnliste von parent nicht vorhanden
                 // eins von nachbarn ist schon in graph
                 if (equalsNodeBInNeighbors == null && equalsNodeBInGraph != null && equalsNodeAInGraph == null) {
-                    HashSet<Node> equalsParentNeighbors = equalsParentInGraph.getNeighbors();
-                    if (equalsParentNeighbors.size() == 1) { // es gibt ein nachbarn in anderer axe. genau 1 für den fall, wann cellVectoren fasch berechnet wurden
-                        Node equalsParentNeighbor = equalsParentNeighbors.iterator().next();
-                        NodeAxe nodeAxe = equalsParentInGraph.getNeighborsAxe(equalsParentNeighbor);
-                        NodeAxe currentAxe = getOtherNodeAxe(nodeAxe);
+                    ArrayList<Node> equalsParentNeighborsInAxeA = equalsParentInGraph.getNeighborsByAxe(NodeAxe.AXE_A);
+                    ArrayList<Node> equalsParentNeighborsInAxeB = equalsParentInGraph.getNeighborsByAxe(NodeAxe.AXE_B);
+                    Graph.NodeAxe currentAxe = null;
+                    if (equalsParentNeighborsInAxeA.isEmpty() && !equalsParentNeighborsInAxeB.isEmpty()) { // eine axe muss leer sein
+                        currentAxe = NodeAxe.AXE_A;
+                    } else if(!equalsParentNeighborsInAxeA.isEmpty() && equalsParentNeighborsInAxeB.isEmpty()) {
+                        currentAxe = NodeAxe.AXE_B;
+                    }
+                    if(currentAxe != null){
                         equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(nodeA, currentAxe);
                         return true;

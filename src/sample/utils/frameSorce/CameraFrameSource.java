@@ -12,7 +12,7 @@ import java.io.File;
  */
 public class CameraFrameSource extends FrameSource {
     private VideoCapture camera;
-    private boolean withFrameSave = false;
+    private boolean withFrameSave = true;
     private String saveFolderName = "frames";
     private File saveFolder;
     private int frameCounter;

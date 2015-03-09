@@ -44,20 +44,21 @@ public class LatticeBuilder {
         Node nodeBInGraph = NodeUtils.findEqualsNode(allNodes, nodeB);
         Node nodeCenterInGraph = NodeUtils.findEqualsNode(allNodes, nodeCenter);
 
-        Point nodeAVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointA());
-        Point nodeBVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointB());
+//        Point nodeAVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointA());
+//        Point nodeBVector = PointUtils.minus(pointBasis.getCenter(), pointBasis.getPointB());
 
         HashMap<Node, Point> result = new HashMap<>();
         Point coordinateA = pointBasis.getPointA().clone();
         Point coordinateB = pointBasis.getPointB().clone();
+        Point coordinateCenter = pointBasis.getCenter().clone();
         result.put(nodeAInGraph, coordinateA);
         result.put(nodeBInGraph, coordinateB);
         result.put(nodeCenterInGraph, pointBasis.getCenter().clone());
 
-        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, coordinateA, nodeAVector);
-        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, coordinateA, PointUtils.turnOver(nodeAVector));
-        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, coordinateB, nodeBVector);
-        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, coordinateB, PointUtils.turnOver(nodeBVector));
+        calculateCoordinateInStraightLine(result, nodeAInGraph, nodeCenterInGraph, coordinateA, coordinateCenter);
+        calculateCoordinateInStraightLine(result, nodeCenterInGraph, nodeAInGraph, coordinateCenter, coordinateA);
+        calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, coordinateB, coordinateCenter);
+        calculateCoordinateInStraightLine(result, nodeCenterInGraph, nodeBInGraph, coordinateCenter, coordinateB);
         boolean wasAdded = true;
         while (wasAdded) {
             wasAdded = false;
@@ -95,8 +96,8 @@ public class LatticeBuilder {
     }
 
 
-
-    public void calculateCoordinateInStraightLine(HashMap<Node, Point> result, Node referencePoint, Node lastNeighbor, Point referencePointCoordinate, Point vector) {
+    public void calculateCoordinateInStraightLine(HashMap<Node, Point> result, Node referencePoint, Node lastNeighbor, Point referencePointCoordinate, Point lastNeighborCoordinate) {
+        Point vector = PointUtils.minus(referencePointCoordinate, lastNeighborCoordinate);
         Node oppositeNeighbor = referencePoint.getOppositeNeighbor(lastNeighbor);
         Point lastPoint = referencePointCoordinate;
         while (oppositeNeighbor != null) {

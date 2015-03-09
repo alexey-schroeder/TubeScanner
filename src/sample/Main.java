@@ -31,8 +31,8 @@ public class Main extends Application {
                 controller.stop();
             }
         });
-        FrameSource frameSource = new CameraFrameSource();
-//        FrameSource frameSource = new ImageFileFrameSource();
+//        FrameSource frameSource = new CameraFrameSource();
+        FrameSource frameSource = new ImageFileFrameSource();
         controller.setFrameSource(frameSource);
         primaryStage.show();
         controller.start();
