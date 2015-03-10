@@ -59,6 +59,12 @@ public class LatticeBuilder {
         calculateCoordinateInStraightLine(result, nodeCenterInGraph, nodeAInGraph, coordinateCenter, coordinateA);
         calculateCoordinateInStraightLine(result, nodeBInGraph, nodeCenterInGraph, coordinateB, coordinateCenter);
         calculateCoordinateInStraightLine(result, nodeCenterInGraph, nodeBInGraph, coordinateCenter, coordinateB);
+        calculateCoordinateByNeighbors(result);
+        return result;
+    }
+
+    public void calculateCoordinateByNeighbors(HashMap<Node, Point> result){
+        HashSet<Node> allNodes = graph.getAllNodes();
         boolean wasAdded = true;
         while (wasAdded) {
             wasAdded = false;
@@ -72,7 +78,6 @@ public class LatticeBuilder {
                 }
             }
         }
-        return result;
     }
 
     public Point getCoordinateForNodeByNeighbors(Node node, Node neighborA, Node neighborB, HashMap<Node, Point> result) {

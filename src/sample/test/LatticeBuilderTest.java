@@ -10,6 +10,7 @@ import sample.utils.graph.Node;
 import sample.utils.graph.NodeUtils;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 import static org.testng.Assert.*;
 
@@ -93,7 +94,29 @@ public class LatticeBuilderTest {
 
     @Test
     public void testGetCoordinateForNodeByNeighbors() throws Exception {
+        HashSet<Node> allNodes = graph.getAllNodes();
+        Node nodeA = NodeUtils.findEqualsNode(allNodes, new Node("A"));
+        Node nodeE = NodeUtils.findEqualsNode(allNodes, new Node("E"));
+        Node nodeC = NodeUtils.findEqualsNode(allNodes, new Node("C"));
+        Node nodeR = NodeUtils.findEqualsNode(allNodes, new Node("R"));
 
+        LatticeBuilder latticeBuilder = new LatticeBuilder(graph);
+        HashMap<Node, Point> result = new HashMap<>();
+        Point point1 = new Point(1, 1);
+        Point point2 = new Point(2, 1);
+        Point point3 = new Point(2, 2);
+        Point point4 = new Point(1, 2);
+        result.put(nodeR, point2);
+        result.put(nodeC, point3);
+        result.put(nodeE, point1);
+
+        Point point = latticeBuilder.getCoordinateForNodeByNeighbors(nodeA, nodeC, nodeE, result);
+        Assert.assertEquals(point, point4);
+
+        result.remove(nodeE);
+        result.put(nodeA, point4);
+        point = latticeBuilder.getCoordinateForNodeByNeighbors(nodeE, nodeA, nodeR, result);
+        Assert.assertEquals(point, point1);
     }
 
     @Test
@@ -124,7 +147,7 @@ public class LatticeBuilderTest {
         referencePoint = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("A"));
         lastNeighbor = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("F"));
         referencePointCoordinate = new Point(1, 1);
-         lastNeighborPointCoordinate = new Point(0, 0);
+        lastNeighborPointCoordinate = new Point(0, 0);
         latticeBuilder.calculateCoordinateInStraightLine(result, referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
         Assert.assertEquals(3, result.size());
 
@@ -153,5 +176,24 @@ public class LatticeBuilderTest {
     @Test
     public void testCorrectNodeCoordinatesByNeighbors() throws Exception {
 
+    }
+
+    @Test
+    public void testCalculateCoordinateByNeighbors() throws Exception {
+        HashSet<Node> allNodes = graph.getAllNodes();
+        LatticeBuilder latticeBuilder = new LatticeBuilder(graph);
+        Node nodeM = NodeUtils.findEqualsNode(allNodes, new Node("M"));
+        Node nodeA = NodeUtils.findEqualsNode(allNodes, new Node("A"));
+        Node nodeD = NodeUtils.findEqualsNode(allNodes, new Node("D"));
+        HashMap<Node, Point> result = new HashMap<>();
+        Point point1 = new Point(1, 1);
+        Point point2 = new Point(2, 1);
+        Point point3 = new Point(2, 2);
+        Point point4 = new Point(1, 2);
+        result.put(nodeM, point3);
+        result.put(nodeD, point4);
+        result.put(nodeA, point1);
+        latticeBuilder.calculateCoordinateByNeighbors(result);
+        System.out.println(result.size());
     }
 }
