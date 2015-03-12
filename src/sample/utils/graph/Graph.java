@@ -279,7 +279,7 @@ public class Graph {
         this.root = root;
     }
 
-    public NodeAxe getOtherNodeAxe(NodeAxe nodeAxe) {
+    public static NodeAxe getOtherNodeAxe(NodeAxe nodeAxe) {
         if (nodeAxe.equals(NodeAxe.AXE_A)) {
             return NodeAxe.AXE_B;
         } else {

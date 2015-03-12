@@ -23,7 +23,14 @@ public class LatticeBuilder {
         BasisFinder basisFinder = new BasisFinder();
         ArrayList<Basis> bases = basisFinder.findBases(allNodes, goodPoints, cellVectors);
         HashMap<Node, Point> allNodeCoordinates = new HashMap<>();
+        for (Point point : goodPoints.keySet()) {
+            Node node = goodPoints.get(point);
+            if (allNodes.contains(node)) {
+                allNodeCoordinates.put(node, point);
+            }
+        }
         for (Basis basis : bases) {
+            correctGraphByBasis(basis.getNodeBasis(), allNodes);
             HashMap<Node, Point> nodeCoordinates = graphToPoints(basis.getPointBasis(), basis.getNodeBasis());
             allNodeCoordinates.putAll(nodeCoordinates);
             if (allNodeCoordinates.size() == graphSize) {
@@ -32,6 +39,34 @@ public class LatticeBuilder {
         }
         HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, goodPoints);
         return correctedNodeCoordinates;
+    }
+
+    public void correctGraphByBasis(NodeTriplet nodeTriplet, HashSet<Node> allNodes) {
+        Node nodeA = nodeTriplet.getNodeA();
+        Node nodeB = nodeTriplet.getNodeB();
+        Node centerNode = nodeTriplet.getCenter();
+
+        Node equalsNodeCenter = NodeUtils.findEqualsNode(allNodes, centerNode);
+        HashSet<Node> centerNeighbors = equalsNodeCenter.getNeighbors();
+        if (centerNeighbors.size() < 4) {
+            Node equalsNodeA = NodeUtils.findEqualsNode(allNodes, nodeA);
+            Node equalsNodeB = NodeUtils.findEqualsNode(allNodes, nodeB);
+            boolean isNodeAContains = centerNeighbors.contains(equalsNodeA);
+            boolean isNodeBContains = centerNeighbors.contains(equalsNodeB);
+            if (isNodeAContains && isNodeBContains || !isNodeAContains && !isNodeBContains) {//beide nodes aus triplet sind entweder nachbarn odern nicht nachbarn
+                return; // wir können nichts machen
+            } else {
+                if (isNodeAContains) {// nodeA ist als nachbar bekannt
+                    Graph.NodeAxe axe = equalsNodeCenter.getNeighborsAxe(equalsNodeA);
+                    Graph.NodeAxe otherAxe = Graph.getOtherNodeAxe(axe);
+                    equalsNodeCenter.addNeighbor(equalsNodeB, otherAxe);
+                } else {// nodeB ist als nachbar bekannt
+                    Graph.NodeAxe axe = equalsNodeCenter.getNeighborsAxe(equalsNodeB);
+                    Graph.NodeAxe otherAxe = Graph.getOtherNodeAxe(axe);
+                    equalsNodeCenter.addNeighbor(equalsNodeA, otherAxe);
+                }
+            }
+        }
     }
 
     public HashMap<Node, Point> graphToPoints(PointTriplet pointBasis, NodeTriplet nodeBasis) {
@@ -63,7 +98,7 @@ public class LatticeBuilder {
         return result;
     }
 
-    public void calculateCoordinateByNeighbors(HashMap<Node, Point> result){
+    public void calculateCoordinateByNeighbors(HashMap<Node, Point> result) {
         HashSet<Node> allNodes = graph.getAllNodes();
         boolean wasAdded = true;
         while (wasAdded) {
