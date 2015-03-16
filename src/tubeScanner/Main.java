@@ -10,6 +10,7 @@ import javafx.stage.WindowEvent;
 import org.opencv.core.*;
 import tubeScanner.code.frameSorce.CameraFrameSource;
 import tubeScanner.code.frameSorce.FrameSource;
+import tubeScanner.code.frameSorce.ImageFileFrameSource;
 
 import java.lang.reflect.Field;
 
@@ -30,8 +31,8 @@ public class Main extends Application {
                 controller.stop();
             }
         });
-        FrameSource frameSource = new CameraFrameSource();
-//        FrameSource frameSource = new ImageFileFrameSource();
+//        FrameSource frameSource = new CameraFrameSource();
+        FrameSource frameSource = new ImageFileFrameSource();
         controller.setFrameSource(frameSource);
         primaryStage.show();
         controller.start();

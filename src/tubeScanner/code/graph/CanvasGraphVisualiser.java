@@ -165,6 +165,9 @@ public class CanvasGraphVisualiser {
             boolean isPointValid = checkNodeCoordinate(scaledShiftedPoint); // passt  point in canvas?
 
             gc.strokeOval(scaledShiftedPoint.x - currentRadius, scaledShiftedPoint.y - currentRadius, currentRadius * 2, currentRadius * 2);
+            String code = node.getCode();
+            String textToShow = code.substring(code.length() - 3);
+            gc.fillText(textToShow, scaledShiftedPoint.x - 5, scaledShiftedPoint.y);
             if (!isPointValid) {
                 stopShowByException = true;
                 String exceptionString = "Error in drawGraph, point is out of the canvas(" + width + " x " + height + "). "

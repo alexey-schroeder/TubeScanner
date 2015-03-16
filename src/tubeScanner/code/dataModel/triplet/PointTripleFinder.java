@@ -1,32 +1,31 @@
 package tubeScanner.code.dataModel.triplet;
 
 import org.opencv.core.Point;
-import tubeScanner.code.dataModel.triplet.PointTriplet;
+import tubeScanner.code.utils.FindUtils;
 import tubeScanner.code.utils.ImageUtils;
-import tubeScanner.code.utils.PointUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by Alex on 09.02.2015.
+ * Klasse findet set aus drei point, die auf einer gerade leigen.
  */
 public class PointTripleFinder {
-    private List<Point> centers;
 
     public ArrayList<PointTriplet> findTriplets(Collection<Point> points, Point[] cellVectors) {
         ArrayList<PointTriplet> result = new ArrayList<>();
         if(cellVectors == null){
             return result;
         }
+        //todo den code muss man in utils ubertragen, da er im mehreren klassen verwendet wird
         Point vector_1 = cellVectors[0];
         Point vector_2 = cellVectors[1];
         double averageCellVectorLength = (ImageUtils.getVectorLength(vector_1) + ImageUtils.getVectorLength(vector_2)) / 2;
         double circleRadius = averageCellVectorLength / 3;
         double maxError = circleRadius / 2;
         for (Point point : points) {
-            ArrayList<Point> neighbors = findNeighbor(point, points, averageCellVectorLength, maxError, cellVectors);
+            ArrayList<Point> neighbors = FindUtils.findNeighbor(point, points, averageCellVectorLength, maxError, cellVectors);
             for (Point neighbor : neighbors) {
                 ArrayList<Point> thirdPoints = findThirdPoint(point, neighbor, points, averageCellVectorLength, maxError);
                 for (Point thirdPoint : thirdPoints) {
@@ -35,44 +34,8 @@ public class PointTripleFinder {
                 }
             }
         }
-        ArrayList<PointTriplet> filteredResult = filterDublicateTriplets(result);
+        ArrayList<PointTriplet> filteredResult = FindUtils.filterDublicate(result);
         return filteredResult;
-    }
-
-    public ArrayList<PointTriplet> filterDublicateTriplets(Collection<PointTriplet> triplets) {
-        ArrayList<PointTriplet> result = new ArrayList<>();
-        for (PointTriplet triplet : triplets) {
-            boolean contains = false;
-            for (PointTriplet filteredTriplet : result) {
-                if (triplet.equals(filteredTriplet)) {
-                    contains = true;
-                    break;
-                }
-            }
-            if (!contains) {
-                result.add(triplet);
-            }
-        }
-        return result;
-    }
-
-    public ArrayList<Point> findNeighbor(Point point, Collection<Point> points, double referenceDistance, double maxError, Point[] cellVectors) {
-        ArrayList<Point> neighbors = new ArrayList<>();
-        double maxAngleDiff = 10;
-        for (Point tempPoint : points) {
-            double distanceDiff = Math.abs(referenceDistance - ImageUtils.getDistance(point, tempPoint));
-            if (distanceDiff <= maxError) {
-                Point vector = PointUtils.minus(point, tempPoint);
-                double angle_1 = PointUtils.getAngleBetweenVectors(cellVectors[0], vector);
-                double angle_2 = PointUtils.getAngleBetweenVectors(cellVectors[1], vector);
-                boolean angle_1IsCorrect = Math.abs(angle_1 - 90) < maxAngleDiff;
-                boolean angle_2IsCorrect = Math.abs(angle_2 - 90) < maxAngleDiff;
-                if (angle_1IsCorrect || angle_2IsCorrect) {
-                    neighbors.add(tempPoint);
-                }
-            }
-        }
-        return neighbors;
     }
 
     public ArrayList<Point> findThirdPoint(Point pointA, Point pointB, Collection<Point> points, double referenceDistance, double maxError) {

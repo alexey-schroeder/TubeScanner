@@ -5,6 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import tubeScanner.code.dataModel.triplet.PointTripleFinder;
 import tubeScanner.code.dataModel.triplet.PointTriplet;
+import tubeScanner.code.utils.FindUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +84,7 @@ public class TripleFinderTest {
         triplets.add(tripletE);
 
         PointTripleFinder tripleFinder = new PointTripleFinder();
-        ArrayList<PointTriplet> filteredTriplets = tripleFinder.filterDublicateTriplets(triplets);
+        ArrayList<PointTriplet> filteredTriplets = FindUtils.filterDublicate(triplets);
 
         Assert.assertTrue(filteredTriplets.size() == 4);
         Assert.assertTrue(filteredTriplets.contains(tripletC));
@@ -112,7 +113,7 @@ public class TripleFinderTest {
         points.add(pointF);
 
         PointTripleFinder tripleFinder = new PointTripleFinder();
-        ArrayList<Point> neighbors = tripleFinder.findNeighbor(pointA, points, 2.44, 0.07, cellVectors);
+        ArrayList<Point> neighbors = FindUtils.findNeighbor(pointA, points, 2.44, 0.07, cellVectors);
         Assert.assertTrue(neighbors.contains(pointB));
         Assert.assertTrue(neighbors.contains(pointC));
         Assert.assertTrue(neighbors.contains(pointE));
@@ -120,7 +121,7 @@ public class TripleFinderTest {
         Assert.assertFalse(neighbors.contains(pointF));
         Assert.assertFalse(neighbors.contains(pointD));
 
-        neighbors = tripleFinder.findNeighbor(pointB, points, 2.44, 0.07, cellVectors);
+        neighbors = FindUtils.findNeighbor(pointB, points, 2.44, 0.07, cellVectors);
         Assert.assertTrue(neighbors.contains(pointA));
         Assert.assertTrue(neighbors.contains(pointF));
 

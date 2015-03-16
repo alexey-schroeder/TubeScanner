@@ -52,6 +52,7 @@ public class Controller {
     private double oldRadius = -1;
     private AutoScalingGroup group;
     private CanvasGraphVisualiser canvasGraphVisualiser;
+    private FrameStateVisualiser frameStateVisualiser;
     private boolean stop;
     //    private Group group;
     private LatticeBuilder latticeBuilder;
@@ -65,6 +66,7 @@ public class Controller {
         latticeBuilder = new LatticeBuilder(graph);
         canvasGraphVisualiser = new CanvasGraphVisualiser();
         canvasGraphVisualiser.setCanvas(graphPane);
+        frameStateVisualiser = new FrameStateVisualiser();
         codeTableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Node, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Node, String> param) {
@@ -139,7 +141,8 @@ public class Controller {
         Point[] cellVectors = codeFinder.calculateCellVectors(centers);
         if (cellVectors == null && oldRadius < 0) {
             if (oldNodeCoordinates != null) {
-                drawNodeCircles(oldNodeCoordinates, resized);
+                frameStateVisualiser.setFrame(resized);
+                frameStateVisualiser.drawFrameState(Collections.emptyList(), Collections.emptyList(), oldNodeCoordinates, cellVectors);
                 showFrame(resized, oldNodeCoordinates, false);
                 oldNodeCoordinates = null;
                 System.out.println("old circles drawded");
@@ -160,6 +163,8 @@ public class Controller {
         DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
         CodeCleaner codeCleaner = new CodeCleaner();
         HashMap<Point, Node> goodPoints = new HashMap<Point, Node>();
+        List<Point> notInterpretedCircles = new ArrayList<>();
+        List<Point> interpretedCircles = new ArrayList<>();
         for (Point center : centers) {
             double width = radius * 2 * resizeFactor;
             double height = radius * 2 * resizeFactor;
@@ -191,13 +196,13 @@ public class Controller {
                         try {
                             String text = dataMatrixInterpreter.decode(bufferedImage);
                             if (text != null) {
-//                                Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
+                                interpretedCircles.add(center);
                                 Node node = new Node(text);
                                 goodPoints.put(center, node);
                             } else {
-//                                Imgproc.circle(resized, center, 6, new Scalar(0, 0, 255), 2);
+                                notInterpretedCircles.add(center);
                             }
-                            Imgproc.circle(resized, center, 6, new Scalar(255, 255, 0), 2);
+
                         } catch (IOException e) {
 //                        e.printStackTrace();
                         }
@@ -221,21 +226,13 @@ public class Controller {
             }
             addTripletsInGraph(nodeTriplets);
 
-            HashMap<Node, Point> correctedNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
-            oldNodeCoordinates = correctedNodeCoordinates;
-            drawNodeCircles(correctedNodeCoordinates, resized);
+            HashMap<Node, Point> graphNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
+            oldNodeCoordinates = graphNodeCoordinates;
+            frameStateVisualiser.setFrame(resized);
+            frameStateVisualiser.drawFrameState(notInterpretedCircles, interpretedCircles, graphNodeCoordinates, cellVectors);
         }
         showFrame(resized, oldNodeCoordinates, !goodPoints.isEmpty());
     }
-
-    public void drawNodeCircles(HashMap<Node, Point> correctedNodeCoordinates, Mat resized) {
-        for (Node node : correctedNodeCoordinates.keySet()) {
-            Point point = correctedNodeCoordinates.get(node);
-            Scalar color = new Scalar(0, 255, 0);
-            Imgproc.circle(resized, point, 10, color, 2);
-        }
-    }
-
 
     private Point[] correctCellVectors(Point[] cellVectors, HashMap<Point, Node> goodPoints) {
         if (graph.isEmpty()) {
@@ -316,30 +313,6 @@ public class Controller {
 
     private void showGraph(HashMap<Node, Point> nodeCoordinates) {
         if (nodeCoordinates != null && !nodeCoordinates.isEmpty()) {
-////            System.out.println("in showGraph");
-//            group.getChildren().clear();
-//            for (Node node : nodeCoordinates.keySet()) {
-//                Point coordinate = nodeCoordinates.get(node);
-//                javafx.scene.shape.Circle circle = new Circle(coordinate.x, coordinate.y, 20);
-//                Tooltip tooltip = new Tooltip(node.getCode());
-//                circle.setOnMouseEntered(new EventHandler<MouseEvent>() {
-//                    @Override
-//                    public void handle(MouseEvent event) {
-//                        tooltip.show(circle, event.getScreenX() + 10, event.getScreenY());
-//                        circle.setFill(Color.GREEN);
-//                    }
-//                });
-//
-//                circle.setOnMouseExited(new EventHandler<MouseEvent>() {
-//                    @Override
-//                    public void handle(MouseEvent event) {
-//                        tooltip.hide();
-//                        circle.setFill(Color.BLACK);
-//                    }
-//                });
-//                group.getChildren().add(circle);
-//            }
-
             canvasGraphVisualiser.setNodeCoordinates(nodeCoordinates);
             canvasGraphVisualiser.drawGraph();
         }

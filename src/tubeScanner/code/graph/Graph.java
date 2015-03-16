@@ -60,7 +60,7 @@ public class Graph {
                 HashSet<Node> neighbors = equalsParentInGraph.getNeighbors();
                 Node equalsNodeAInNeighbors = NodeUtils.findEqualsNode(neighbors, nodeA);
                 Node equalsNodeBInNeighbors = NodeUtils.findEqualsNode(neighbors, nodeB);
-                // der equalsParent hat schon einen gleichen nachbanrn.
+                // der equalsParent hat schon einen gleichen nachbarn.
                 //der andere equalsNeighbor is in nachbarliste von parent nicht vorhanden
                 //der andere equalsNeighbor is im graph auch nicht vorhanden
                 if (equalsNodeAInNeighbors != null && equalsNodeBInNeighbors == null && equalsNodeBInGraph == null) {//der parent hat schon einen gleichen nachbarn
@@ -81,8 +81,11 @@ public class Graph {
                 if (equalsNodeBInNeighbors != null && equalsNodeAInNeighbors == null && equalsNodeAInGraph == null) {//der parent hat schon einen gleichen nachbarn
                     Graph.NodeAxe nodeB_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeBInNeighbors);
                     if (nodeB_Axe != null) {
-                        equalsParentInGraph.addNeighbor(nodeA, nodeB_Axe);
-                        return true;
+                        ArrayList<Node> neighborsInAxe = equalsParentInGraph.getNeighborsByAxe(nodeB_Axe);
+                        if (neighborsInAxe.size() < 2) {// das ist für den fall, wann die cellVectoren falsch gefunden wurden
+                            equalsParentInGraph.addNeighbor(nodeA, nodeB_Axe);
+                            return true;
+                        }
                     }
                 }
 
@@ -94,10 +97,10 @@ public class Graph {
                     Graph.NodeAxe currentAxe = null;
                     if (equalsParentNeighborsInAxeA.isEmpty() && !equalsParentNeighborsInAxeB.isEmpty()) { // eine axe muss leer sein
                         currentAxe = NodeAxe.AXE_A;
-                    } else if(!equalsParentNeighborsInAxeA.isEmpty() && equalsParentNeighborsInAxeB.isEmpty()) {
+                    } else if (!equalsParentNeighborsInAxeA.isEmpty() && equalsParentNeighborsInAxeB.isEmpty()) {
                         currentAxe = NodeAxe.AXE_B;
                     }
-                    if(currentAxe != null){
+                    if (currentAxe != null) {
                         equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(nodeB, currentAxe);
                         return true;
@@ -112,10 +115,10 @@ public class Graph {
                     Graph.NodeAxe currentAxe = null;
                     if (equalsParentNeighborsInAxeA.isEmpty() && !equalsParentNeighborsInAxeB.isEmpty()) { // eine axe muss leer sein
                         currentAxe = NodeAxe.AXE_A;
-                    } else if(!equalsParentNeighborsInAxeA.isEmpty() && equalsParentNeighborsInAxeB.isEmpty()) {
+                    } else if (!equalsParentNeighborsInAxeA.isEmpty() && equalsParentNeighborsInAxeB.isEmpty()) {
                         currentAxe = NodeAxe.AXE_B;
                     }
-                    if(currentAxe != null){
+                    if (currentAxe != null) {
                         equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
                         equalsParentInGraph.addNeighbor(nodeA, currentAxe);
                         return true;
