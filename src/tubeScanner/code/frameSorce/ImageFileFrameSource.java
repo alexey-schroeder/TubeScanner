@@ -23,13 +23,7 @@ public class ImageFileFrameSource extends FrameSource {
 
     @Override
     public Mat getFrame() {
-        if(withWaiting){
-            System.out.print("");
-        }
         System.out.println(frameCounter);
-        if(frameCounter == 74){
-            System.out.println();
-        }
         Mat result = Imgcodecs.imread(folderPath + frameCounter + ".bmp");
         frameCounter++;
         return result;

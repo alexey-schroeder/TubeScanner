@@ -6,10 +6,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import tubeScanner.code.utils.PointUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Alex on 15.03.2015.
@@ -20,8 +17,9 @@ public class FrameStateVisualiser {
     private Scalar interpretedCircleColor = new Scalar(0, 255, 0);
     private Scalar graphNodeColor = new Scalar(0, 255, 0);
     private Scalar cellVectorsColor = new Scalar(255, 0, 0);
+    private Scalar addedNodesColor = new Scalar(255, 255, 0);
 
-    public void drawFrameState(List<Point> notInterpretedCircles, List<Point> interpretedCircles, HashMap<Node, Point> graphNodes, Point[] cellVectors) {
+    public void drawFrameState(List<Point> notInterpretedCircles, List<Point> interpretedCircles, Map<Node, Point> graphNodes, Map<Node, Point> addedByNeighbors,Point[] cellVectors) {
         drawCircles(notInterpretedCircles, 6, notInterpretedCircleColor);
         drawCircles(interpretedCircles, 6, interpretedCircleColor);
         drawCircles(graphNodes.values(), 10, graphNodeColor);
@@ -29,6 +27,7 @@ public class FrameStateVisualiser {
         if (cellVectors != null) {
             drawCellVectors(cellVectors);
         }
+        drawCircles(addedByNeighbors.values(), 10, addedNodesColor);
     }
 
     private void drawCellVectors(Point[] cellVectors) {
@@ -39,7 +38,7 @@ public class FrameStateVisualiser {
         Imgproc.line(frame, startPoint, pointB, cellVectorsColor);
     }
 
-    private void drawGraphEdges(HashMap<Node, Point> graphNodes) {
+    private void drawGraphEdges(Map<Node, Point> graphNodes) {
         for (Node node : graphNodes.keySet()) {
             Point referencePoint = graphNodes.get(node);
             HashSet<Node> neighbors = node.getNeighbors();

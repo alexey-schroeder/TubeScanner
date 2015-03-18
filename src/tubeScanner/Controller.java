@@ -142,7 +142,7 @@ public class Controller {
         if (cellVectors == null && oldRadius < 0) {
             if (oldNodeCoordinates != null) {
                 frameStateVisualiser.setFrame(resized);
-                frameStateVisualiser.drawFrameState(Collections.emptyList(), Collections.emptyList(), oldNodeCoordinates, cellVectors);
+                frameStateVisualiser.drawFrameState(Collections.emptyList(), Collections.emptyList(), oldNodeCoordinates, Collections.emptyMap(), cellVectors);
                 showFrame(resized, oldNodeCoordinates, false);
                 oldNodeCoordinates = null;
                 System.out.println("old circles drawded");
@@ -227,9 +227,10 @@ public class Controller {
             addTripletsInGraph(nodeTriplets);
 
             HashMap<Node, Point> graphNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
+            HashMap<Node, Point> addedByNeighbors = latticeBuilder.getAddedNodes();
             oldNodeCoordinates = graphNodeCoordinates;
             frameStateVisualiser.setFrame(resized);
-            frameStateVisualiser.drawFrameState(notInterpretedCircles, interpretedCircles, graphNodeCoordinates, cellVectors);
+            frameStateVisualiser.drawFrameState(notInterpretedCircles, interpretedCircles, graphNodeCoordinates, addedByNeighbors, cellVectors);
         }
         showFrame(resized, oldNodeCoordinates, !goodPoints.isEmpty());
     }

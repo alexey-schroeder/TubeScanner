@@ -120,13 +120,12 @@ public class LatticeBuilderTest {
     @Test
     public void testCalculateCoordinateInStraightLine() throws Exception {
         LatticeBuilder latticeBuilder = new LatticeBuilder(graph);
-        HashMap<Node, Point> result = new HashMap<>();
         // in vertikaler richtung
         Node referencePoint = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("A"));
         Node lastNeighbor = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("D"));
         Point referencePointCoordinate = new Point(1, 1);
         Point lastNeighborPointCoordinate = new Point(0, 2);
-        latticeBuilder.calculateCoordinateInStraightLine(result, referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
+        HashMap<Node, Point> result = latticeBuilder.calculateCoordinateInStraightLine(referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
         Assert.assertEquals(3, result.size());
 
         Node nodeE = new Node("E");
@@ -141,12 +140,12 @@ public class LatticeBuilderTest {
         Assert.assertEquals(new Point(4, -2), result.get(nodeU));
 
         // in horizontaler richtung
-        result = new HashMap<>();
+
         referencePoint = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("A"));
         lastNeighbor = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("F"));
         referencePointCoordinate = new Point(1, 1);
         lastNeighborPointCoordinate = new Point(0, 0);
-        latticeBuilder.calculateCoordinateInStraightLine(result, referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
+        result = latticeBuilder.calculateCoordinateInStraightLine(referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
         Assert.assertEquals(3, result.size());
 
         Node nodeC = new Node("C");
