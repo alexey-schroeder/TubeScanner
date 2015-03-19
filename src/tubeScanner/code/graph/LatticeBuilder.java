@@ -7,7 +7,6 @@ import tubeScanner.code.dataModel.doublet.NodeDoublet;
 import tubeScanner.code.dataModel.doublet.PointDoublet;
 import tubeScanner.code.dataModel.doublet.PointDoubletFinder;
 import tubeScanner.code.dataModel.triplet.NodeTriplet;
-import tubeScanner.code.dataModel.triplet.PointTriplet;
 import tubeScanner.code.utils.NodeUtils;
 import tubeScanner.code.utils.PointUtils;
 
@@ -35,10 +34,13 @@ public class LatticeBuilder {
         HashMap<Node, Point> nodeCoordinatesByGoodPoints = getNodeCoordinatesByGoodPoints(goodPoints);
         allNodeCoordinates.putAll(nodeCoordinatesByGoodPoints);
 
-        HashMap<Node, Point> nodeCoordinatesByDoublets = getNodeCoordinatesByDoublets(goodPoints, cellVectors);
+        ArrayList<PointDoublet> pointDoublets = getPointDoublets(goodPoints, cellVectors);
+        HashMap<Node, Point> nodeCoordinatesByDoublets = getNodeCoordinatesByDoublets(goodPoints, pointDoublets);
         allNodeCoordinates.putAll(nodeCoordinatesByDoublets);
 
         HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, goodPoints);
+
+
         return correctedNodeCoordinates;
     }
 
@@ -55,12 +57,10 @@ public class LatticeBuilder {
         return allNodeCoordinates;
     }
 
-    public HashMap<Node, Point> getNodeCoordinatesByDoublets(HashMap<Point, Node> goodPoints, Point[] cellVectors){
+    public HashMap<Node, Point> getNodeCoordinatesByDoublets(HashMap<Point, Node> goodPoints, ArrayList<PointDoublet> pointDoublets){
         HashSet<Node> allNodes = graph.getAllNodes();
         int graphSize = allNodes.size();
         HashMap<Node, Point> allNodeCoordinates = new HashMap<>();
-        PointDoubletFinder doubletFinder = new PointDoubletFinder();
-        ArrayList<PointDoublet> pointDoublets = doubletFinder.findDoublets(goodPoints.keySet(), cellVectors);
         for (PointDoublet pointDoublet : pointDoublets) {
             Node nodeA = goodPoints.get(pointDoublet.getPointA());
             Node nodeB = goodPoints.get(pointDoublet.getPointB());
@@ -68,7 +68,7 @@ public class LatticeBuilder {
             Node equalsNodeB = NodeUtils.findEqualsNode(allNodes, nodeB);
             if (equalsNodeA != null && equalsNodeB != null) {
                 NodeDoublet nodeDoublet = new NodeDoublet(equalsNodeA, equalsNodeB);
-                HashMap<Node, Point> nodeCoordinates = graphToPoints(pointDoublet, nodeDoublet);
+                HashMap<Node, Point> nodeCoordinates = getCoordinateByDoublet(pointDoublet, nodeDoublet);
                 allNodeCoordinates.putAll(nodeCoordinates);
                 if (allNodeCoordinates.size() == graphSize) {
                     break;
@@ -76,6 +76,12 @@ public class LatticeBuilder {
             }
         }
         return allNodeCoordinates;
+    }
+
+    public ArrayList<PointDoublet> getPointDoublets(HashMap<Point, Node> goodPoints, Point[] cellVectors){
+        PointDoubletFinder doubletFinder = new PointDoubletFinder();
+        ArrayList<PointDoublet> pointDoublets = doubletFinder.findDoublets(goodPoints.keySet(), cellVectors);
+        return pointDoublets;
     }
 
     public void correctGraphByBaseis(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
@@ -115,17 +121,17 @@ public class LatticeBuilder {
         }
     }
 
-    public HashMap<Node, Point> graphToPoints(PointDoublet pointBasis, NodeDoublet nodeBasis) {
-        Node nodeA = nodeBasis.getNodeA();
-        Node nodeB = nodeBasis.getNodeB();
+    public HashMap<Node, Point> getCoordinateByDoublet(PointDoublet pointDoublet, NodeDoublet nodeDoublet) {
+        Node nodeA = nodeDoublet.getNodeA();
+        Node nodeB = nodeDoublet.getNodeB();
         HashSet<Node> allNodes = graph.getAllNodes();
 
         Node nodeAInGraph = NodeUtils.findEqualsNode(allNodes, nodeA);
         Node nodeBInGraph = NodeUtils.findEqualsNode(allNodes, nodeB);
 
         HashMap<Node, Point> result = new HashMap<>();
-        Point coordinateA = pointBasis.getPointA().clone();
-        Point coordinateB = pointBasis.getPointB().clone();
+        Point coordinateA = pointDoublet.getPointA().clone();
+        Point coordinateB = pointDoublet.getPointB().clone();
         result.put(nodeAInGraph, coordinateA);
         result.put(nodeBInGraph, coordinateB);
 
@@ -135,29 +141,13 @@ public class LatticeBuilder {
         result.putAll(pointsInDirection_1);
         result.putAll(pointsInDirection_2);
 
-        calculateCoordinateByNeighbors(result);
+        addCoordinateForNodeByDiagonallyNeighbors(result);
         return result;
     }
 
-    public void calculateCoordinateByNeighbors(HashMap<Node, Point> result) {
-        HashSet<Node> allNodes = graph.getAllNodes();
-        boolean wasAdded = true;
-        while (wasAdded) {
-            wasAdded = false;
-            for (Node node : allNodes) {
-                if (!result.keySet().contains(node)) {
-                    Point point = getCoordinateForNode(node, result);
-                    if (point != null) {
-                        result.put(node, point);
-                        addedNodes.put(node, point);
-                        wasAdded = true;
-                    }
-                }
-            }
-        }
-    }
 
-    public Point getCoordinateForNodeByNeighbors(Node node, Node neighborA, Node neighborB, HashMap<Node, Point> result) {
+
+    public Point getCoordinateForNodeByDiagonallyNeighbors(Node node, Node neighborA, Node neighborB, HashMap<Node, Point> result) {
         if (neighborA == null || neighborB == null || node == null) {
             return null;
         }
@@ -193,7 +183,7 @@ public class LatticeBuilder {
         return result;
     }
 
-    public Point getCoordinateForNode(Node node, HashMap<Node, Point> result) {
+    public Point getCoordinateForNodeByDiagonallyNeighbors(Node node, HashMap<Node, Point> result) {
         ArrayList<Node> neighborsInAxeA = node.getNeighborsByAxe(Graph.NodeAxe.AXE_A);
         ArrayList<Node> neighborsInAxeB = node.getNeighborsByAxe(Graph.NodeAxe.AXE_B);
         if (neighborsInAxeA.isEmpty() || neighborsInAxeB.isEmpty()) {
@@ -211,22 +201,22 @@ public class LatticeBuilder {
         if (neighborsInAxeB.size() > 1) {
             neighbor_2_B = neighborsInAxeB.get(1);
         }
-        Point point = getCoordinateForNodeByNeighbors(node, neighbor_1_A, neighbor_1_B, result);
+        Point point = getCoordinateForNodeByDiagonallyNeighbors(node, neighbor_1_A, neighbor_1_B, result);
         if (point != null) {
             return point;
         }
 
-        point = getCoordinateForNodeByNeighbors(node, neighbor_1_A, neighbor_2_B, result);
+        point = getCoordinateForNodeByDiagonallyNeighbors(node, neighbor_1_A, neighbor_2_B, result);
         if (point != null) {
             return point;
         }
 
-        point = getCoordinateForNodeByNeighbors(node, neighbor_2_A, neighbor_1_B, result);
+        point = getCoordinateForNodeByDiagonallyNeighbors(node, neighbor_2_A, neighbor_1_B, result);
         if (point != null) {
             return point;
         }
 
-        point = getCoordinateForNodeByNeighbors(node, neighbor_2_A, neighbor_2_B, result);
+        point = getCoordinateForNodeByDiagonallyNeighbors(node, neighbor_2_A, neighbor_2_B, result);
         if (point != null) {
             return point;
         }
@@ -246,27 +236,14 @@ public class LatticeBuilder {
             }
         }
 
-        correctNodeCoordinatesByNeighbors(result);
+        connectGraphNodesByNeighbors(result);
 //        addedNodes.putAll(tempAddedNodes);
 
         if (allGraphNodes.size() != result.size()) {
-            boolean wasAdded = true;
-            while (wasAdded) {
-                wasAdded = false;
-                for (Node node : allGraphNodes) {
-                    if (!result.keySet().contains(node)) {
-                        Point point = getCoordinateForNode(node, result);
-                        if (point != null) {
-                            result.put(node, point);
-                            addedNodes.put(node, point);
-                            wasAdded = true;
-                        }
-                    }
-                }
-            }
+            addCoordinateForNodeByDiagonallyNeighbors(result);
         }
 
-        correctNodeCoordinatesByNeighbors(result);
+        connectGraphNodesByNeighbors(result);
 //        addedNodes.putAll(tempAddedNodes_2);
 //        System.out.println(allGraphNodes.size() + " / " + nodeCoordinates.size() + " / " + result.size());
 
@@ -280,7 +257,25 @@ public class LatticeBuilder {
         return result;
     }
 
-    public void correctNodeCoordinatesByNeighbors(HashMap<Node, Point> result) {
+    public void addCoordinateForNodeByDiagonallyNeighbors(HashMap<Node, Point> result) {
+        HashSet<Node> allGraphNodes = graph.getAllNodes();
+        boolean wasAdded = true;
+        while (wasAdded) {
+            wasAdded = false;
+            for (Node node : allGraphNodes) {
+                if (!result.keySet().contains(node)) {
+                    Point point = getCoordinateForNodeByDiagonallyNeighbors(node, result);
+                    if (point != null) {
+                        result.put(node, point);
+                        addedNodes.put(node, point);
+                        wasAdded = true;
+                    }
+                }
+            }
+        }
+    }
+
+    public void connectGraphNodesByNeighbors(HashMap<Node, Point> result) {
         HashMap<Node, Point> addedNodes = new HashMap<>();
         boolean wasAdded = true;
         HashSet<Node> allGraphNodes = graph.getAllNodes();

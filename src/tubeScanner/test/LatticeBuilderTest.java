@@ -108,12 +108,12 @@ public class LatticeBuilderTest {
         result.put(nodeC, point3);
         result.put(nodeE, point1);
 
-        Point point = latticeBuilder.getCoordinateForNodeByNeighbors(nodeA, nodeC, nodeE, result);
+        Point point = latticeBuilder.getCoordinateForNodeByDiagonallyNeighbors(nodeA, nodeC, nodeE, result);
         Assert.assertEquals(point, point4);
 
         result.remove(nodeE);
         result.put(nodeA, point4);
-        point = latticeBuilder.getCoordinateForNodeByNeighbors(nodeE, nodeA, nodeR, result);
+        point = latticeBuilder.getCoordinateForNodeByDiagonallyNeighbors(nodeE, nodeA, nodeR, result);
         Assert.assertEquals(point, point1);
     }
 
@@ -190,7 +190,7 @@ public class LatticeBuilderTest {
         result.put(nodeM, point3);
         result.put(nodeD, point4);
         result.put(nodeA, point1);
-        latticeBuilder.calculateCoordinateByNeighbors(result);
+        latticeBuilder.addCoordinateForNodeByDiagonallyNeighbors(result);
         System.out.println(result.size());
     }
 }
