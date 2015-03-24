@@ -42,7 +42,7 @@ public class PointUtils {
         return new Point(point.x, flipCenterPoint.y + yDiff);
     }
 
-    public static Point turnOver(Point point) {
+    public static Point flip(Point point) {
         return new Point(-point.x, -point.y);
     }
 

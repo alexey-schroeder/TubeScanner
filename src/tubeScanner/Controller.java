@@ -26,6 +26,7 @@ import tubeScanner.code.graph.*;
 import tubeScanner.code.qrCode.CodeCleaner;
 import tubeScanner.code.qrCode.CodeFinder;
 import tubeScanner.code.qrCode.DataMatrixInterpreter;
+import tubeScanner.code.utils.FindUtils;
 import tubeScanner.code.utils.ImageUtils;
 import tubeScanner.code.utils.NodeUtils;
 import tubeScanner.code.utils.PointUtils;
@@ -244,12 +245,12 @@ public class Controller {
         for (Node node : allGoodNodes) {
             Node equalsNodeInGraph = NodeUtils.findEqualsNode(allNodesInGraph, node);
             if (equalsNodeInGraph != null) {
-                Point equalsNodePoint = findKeyForValueInMap(goodPoints, node);
+                Point equalsNodePoint = FindUtils.findKeyForValueInMap(goodPoints, node);
                 HashSet<Node> neighbors = equalsNodeInGraph.getNeighbors();
                 for (Node neighbor : neighbors) {
                     Node equalsNeighborNode = NodeUtils.findEqualsNode(allGoodNodes, neighbor);
                     if (equalsNeighborNode != null) {
-                        Point equalsNeighborNodePoint = findKeyForValueInMap(goodPoints, neighbor);
+                        Point equalsNeighborNodePoint = FindUtils.findKeyForValueInMap(goodPoints, neighbor);
                         Point trueVector_1 = PointUtils.minus(equalsNodePoint, equalsNeighborNodePoint);
                         Point trueVector_2 = PointUtils.getPerpendicularVector(trueVector_1);
                         return new Point[]{trueVector_1, trueVector_2};
@@ -260,14 +261,7 @@ public class Controller {
         return cellVectors;
     }
 
-    private Point findKeyForValueInMap(HashMap<Point, Node> goodPoints, Node node) {
-        for (Point point : goodPoints.keySet()) {
-            if (goodPoints.get(point).equals(node)) {
-                return point;
-            }
-        }
-        return null;
-    }
+
 
 
     public MatOfKeyPoint computeKeyPoints(Mat mat) {

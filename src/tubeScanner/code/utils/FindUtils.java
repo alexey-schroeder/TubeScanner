@@ -4,6 +4,8 @@ import org.opencv.core.Point;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Alex on 13.03.2015.
@@ -44,5 +46,22 @@ public class FindUtils {
             }
         }
         return result;
+    }
+
+    public static <K, V> K findKeyForValueInMap(Map<K, V> map, V value) {
+        for (K key : map.keySet()) {
+            if (map.get(key).equals(value)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    //map must be a bijection in order for this to work properly
+    public static <K,V> HashMap<V,K> reverse(Map<K,V> map) {
+        HashMap<V,K> rev = new HashMap<V, K>();
+        for(Map.Entry<K,V> entry : map.entrySet())
+            rev.put(entry.getValue(), entry.getKey());
+        return rev;
     }
 }

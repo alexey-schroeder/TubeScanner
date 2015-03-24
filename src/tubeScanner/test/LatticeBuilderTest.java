@@ -120,12 +120,13 @@ public class LatticeBuilderTest {
     @Test
     public void testCalculateCoordinateInStraightLine() throws Exception {
         LatticeBuilder latticeBuilder = new LatticeBuilder(graph);
+        Point[] cellVectors = new Point[2]; // todo das ist falsch! aaray ist leer
         // in vertikaler richtung
         Node referencePoint = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("A"));
         Node lastNeighbor = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("D"));
         Point referencePointCoordinate = new Point(1, 1);
         Point lastNeighborPointCoordinate = new Point(0, 2);
-        HashMap<Node, Point> result = latticeBuilder.calculateCoordinateInStraightLine(referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
+        HashMap<Node, Point> result = latticeBuilder.calculateCoordinateInStraightLine(referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate, cellVectors);
         Assert.assertEquals(3, result.size());
 
         Node nodeE = new Node("E");
@@ -145,7 +146,7 @@ public class LatticeBuilderTest {
         lastNeighbor = NodeUtils.findEqualsNode(graph.getAllNodes(), new Node("F"));
         referencePointCoordinate = new Point(1, 1);
         lastNeighborPointCoordinate = new Point(0, 0);
-        result = latticeBuilder.calculateCoordinateInStraightLine(referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate);
+        result = latticeBuilder.calculateCoordinateInStraightLine(referencePoint, lastNeighbor, referencePointCoordinate, lastNeighborPointCoordinate, cellVectors);
         Assert.assertEquals(3, result.size());
 
         Node nodeC = new Node("C");
@@ -190,7 +191,7 @@ public class LatticeBuilderTest {
         result.put(nodeM, point3);
         result.put(nodeD, point4);
         result.put(nodeA, point1);
-        latticeBuilder.addCoordinateForNodeByDiagonallyNeighbors(result);
+        latticeBuilder.getCoordinateForNodeByDiagonallyNeighbors(result);
         System.out.println(result.size());
     }
 }

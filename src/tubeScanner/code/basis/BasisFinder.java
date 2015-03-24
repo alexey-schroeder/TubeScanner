@@ -46,7 +46,7 @@ public class BasisFinder {
         if(!allNodes.contains(nodeInDirectionA_1)){
             pointInDirectionA_1 = null;
         }
-        Point pointInDirectionA_2 = getNeighborByDirection(center, currentPoints, PointUtils.turnOver(vectorA), maxError);
+        Point pointInDirectionA_2 = getNeighborByDirection(center, currentPoints, PointUtils.flip(vectorA), maxError);
         Node nodeInDirectionA_2 = currentCodes.get(pointInDirectionA_2);
         if(!allNodes.contains(nodeInDirectionA_2)){
             pointInDirectionA_2 = null;
@@ -60,7 +60,7 @@ public class BasisFinder {
         if(!allNodes.contains(nodeInDirectionB_1)){
             pointInDirectionB_1 = null;
         }
-        Point pointInDirectionB_2 = getNeighborByDirection(center, currentPoints, PointUtils.turnOver(vectorB), maxError);
+        Point pointInDirectionB_2 = getNeighborByDirection(center, currentPoints, PointUtils.flip(vectorB), maxError);
         Node nodeInDirectionB_2 = currentCodes.get(pointInDirectionB_2);
         if(!allNodes.contains(nodeInDirectionB_2)){
             pointInDirectionB_2 = null;
