@@ -58,7 +58,7 @@ public class FindUtils {
     }
 
     //map must be a bijection in order for this to work properly
-    public static <K,V> HashMap<V,K> reverse(Map<K,V> map) {
+    public static <K,V> HashMap<V,K> reverseMap(Map<K, V> map) {
         HashMap<V,K> rev = new HashMap<V, K>();
         for(Map.Entry<K,V> entry : map.entrySet())
             rev.put(entry.getValue(), entry.getKey());

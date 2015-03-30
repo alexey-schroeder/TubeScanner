@@ -26,6 +26,7 @@ import tubeScanner.code.graph.*;
 import tubeScanner.code.qrCode.CodeCleaner;
 import tubeScanner.code.qrCode.CodeFinder;
 import tubeScanner.code.qrCode.DataMatrixInterpreter;
+import tubeScanner.code.qrCode.PointInterpreter;
 import tubeScanner.code.utils.FindUtils;
 import tubeScanner.code.utils.ImageUtils;
 import tubeScanner.code.utils.NodeUtils;
@@ -153,6 +154,7 @@ public class Controller {
             return;
         }
 
+
         double radius;
         if (cellVectors != null) {
             Point vectorA = cellVectors[0];
@@ -161,59 +163,54 @@ public class Controller {
         } else {
             radius = oldRadius;
         }
-        DataMatrixInterpreter dataMatrixInterpreter = new DataMatrixInterpreter();
-        CodeCleaner codeCleaner = new CodeCleaner();
-        HashMap<Point, Node> goodPoints = new HashMap<Point, Node>();
-        List<Point> notInterpretedCircles = new ArrayList<>();
-        List<Point> interpretedCircles = new ArrayList<>();
-        for (Point center : centers) {
-            double width = radius * 2 * resizeFactor;
-            double height = radius * 2 * resizeFactor;
-            int x = (int) (center.x * resizeFactor - width / 2);
-            if (x < 0) {
-                x = 0;
-            }
-            int y = (int) (center.y * resizeFactor - height / 2);
-            if (y < 0) {
-                y = 0;
-            }
-            if (x + width > coloredFrame.cols()) {
-                width = coloredFrame.cols() - x;
-            }
-
-            if (y + height > coloredFrame.rows()) {
-                height = coloredFrame.rows() - y;
-            }
-            Mat circleImage = coloredFrame.submat(new Rect(x, y, (int) width, (int) height));
-            Core.flip(circleImage, circleImage, 0);
-            Mat code = codeFinder.extractCode(circleImage);
-            if (code != null) {
-                Mat boundedCode = codeCleaner.getBoundedCode(code);
-                if (boundedCode != null) {
-                    Mat cleanedCode = codeCleaner.cleanCode(boundedCode);
-                    if (cleanedCode != null) {
-                        Core.bitwise_not(cleanedCode, cleanedCode);
-                        BufferedImage bufferedImage = ImageUtils.matToBufferedImage(cleanedCode);
-                        try {
-                            String text = dataMatrixInterpreter.decode(bufferedImage);
-                            if (text != null) {
-                                interpretedCircles.add(center);
-                                Node node = new Node(text);
-                                goodPoints.put(center, node);
-                            } else {
-                                notInterpretedCircles.add(center);
-                            }
-
-                        } catch (IOException e) {
-//                        e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }
+        PointInterpreter pointInterpreter = new PointInterpreter();
+        pointInterpreter.interpretPoints(coloredFrame, resizeFactor, radius, centers);
+        HashMap<Point, Node> goodPoints = pointInterpreter.getGoodPoints();
+        List<Point> notInterpretedCircles = pointInterpreter.getNotInterpretedCircles();
+        List<Point> interpretedCircles = pointInterpreter.getInterpretedCircles();
 
         cellVectors = correctCellVectors(cellVectors, goodPoints);
 
+
+
+        if (cellVectors != null) {
+            List<Point> notFoundedLatticePoints = foundLatticePoints(goodPoints, cellVectors, coloredFrame.width(), coloredFrame.height());
+
+            pointInterpreter.interpretPoints(coloredFrame, resizeFactor, radius, notFoundedLatticePoints);
+            HashMap<Point, Node> goodPoints_2 = pointInterpreter.getGoodPoints();
+            List<Point> notInterpretedCircles_2 = pointInterpreter.getNotInterpretedCircles();
+            List<Point> interpretedCircles_2 = pointInterpreter.getInterpretedCircles();
+
+            goodPoints.putAll(goodPoints_2);
+            notInterpretedCircles.addAll(notInterpretedCircles_2);
+            interpretedCircles.addAll(interpretedCircles_2);
+
+            boolean graphChanged = findAndAddTripletsInGraph(goodPoints, cellVectors);
+            HashMap<Node, Point> tempResult = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
+            HashMap<Point, Node> flippedTempResult = FindUtils.reverseMap(tempResult);
+            flippedTempResult.putAll(goodPoints);
+            findAndAddTripletsInGraph(flippedTempResult, cellVectors);
+
+            HashMap<Node, Point> graphNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
+            HashMap<Node, Point> addedByNeighbors = latticeBuilder.getAddedNodes();
+            oldNodeCoordinates = graphNodeCoordinates;
+            frameStateVisualiser.setFrame(resized);
+            frameStateVisualiser.drawFrameState(notInterpretedCircles, interpretedCircles, graphNodeCoordinates, addedByNeighbors, cellVectors);
+        }
+        showFrame(resized, oldNodeCoordinates, !goodPoints.isEmpty());
+    }
+
+    private void interpretePoints(List<Point> centers, HashMap<Point, Node> goodPoints, List<Point> notInterpretedCircles, List<Point> interpretedCircles) {
+
+    }
+
+    private List<Point> foundLatticePoints(HashMap<Point, Node> goodPoints, Point[] cellVectors, int width, int height) {
+        LatticePointsCalculator latticePointsCalculator = new LatticePointsCalculator(width, height, oldRadius);
+        List<Point> latticePoints = latticePointsCalculator.calculateLatticePoints(goodPoints, cellVectors);
+        return latticePoints;
+    }
+
+    public boolean findAndAddTripletsInGraph(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
         PointTripleFinder pointTripleFinder = new PointTripleFinder();
         ArrayList<PointTriplet> pointTriplets = pointTripleFinder.findTriplets(goodPoints.keySet(), cellVectors);
         if (!pointTriplets.isEmpty()) {
@@ -225,15 +222,9 @@ public class Controller {
                 NodeTriplet nodeTriplet = new NodeTriplet(nodeA, nodeB, nodeCenter);
                 nodeTriplets.add(nodeTriplet);
             }
-            addTripletsInGraph(nodeTriplets);
-
-            HashMap<Node, Point> graphNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
-            HashMap<Node, Point> addedByNeighbors = latticeBuilder.getAddedNodes();
-            oldNodeCoordinates = graphNodeCoordinates;
-            frameStateVisualiser.setFrame(resized);
-            frameStateVisualiser.drawFrameState(notInterpretedCircles, interpretedCircles, graphNodeCoordinates, addedByNeighbors, cellVectors);
+            return addTripletsInGraph(nodeTriplets);
         }
-        showFrame(resized, oldNodeCoordinates, !goodPoints.isEmpty());
+        return false;
     }
 
     private Point[] correctCellVectors(Point[] cellVectors, HashMap<Point, Node> goodPoints) {
@@ -260,8 +251,6 @@ public class Controller {
         }
         return cellVectors;
     }
-
-
 
 
     public MatOfKeyPoint computeKeyPoints(Mat mat) {
@@ -313,7 +302,7 @@ public class Controller {
         }
     }
 
-    public void addTripletsInGraph(List<NodeTriplet> triplets) {
+    public boolean addTripletsInGraph(List<NodeTriplet> triplets) {
         List<NodeTriplet> tripletsForAdd = new ArrayList<>();
         List<NodeTriplet> notAddedTriplets = new ArrayList<>(triplets);
         while (notAddedTriplets.size() != tripletsForAdd.size()) {
@@ -329,6 +318,7 @@ public class Controller {
                 }
             }
         }
+        return notAddedTriplets.size() != triplets.size();
     }
 
     public FrameSource getFrameSource() {

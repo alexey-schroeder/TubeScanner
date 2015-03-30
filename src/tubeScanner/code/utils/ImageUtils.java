@@ -159,4 +159,11 @@ public class ImageUtils {
     }
 
 
+    public static boolean isInBounds(Mat mat, Point point) {
+        return isInBounds(mat.width(), mat.height(), point);
+    }
+
+    public static boolean isInBounds(int width, int height, Point point) {
+        return point.x < width && point.x >= 0 && point.y >= 0 && point.y < height;
+    }
 }

@@ -30,45 +30,6 @@ public class LatticeBuilder {
     }
 
     public HashMap<Node, Point> calculateNodeCoordinates(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
-        HashMap<Node, Point> tempResult = calculateNodeCoordinatesIntern(goodPoints, cellVectors);
-        HashMap<Point, Node> flippedTempResult = FindUtils.reverse(tempResult);
-        flippedTempResult.putAll(goodPoints);
-        PointTripleFinder pointTripleFinder = new PointTripleFinder();
-        ArrayList<PointTriplet> pointTriplets = pointTripleFinder.findTriplets(flippedTempResult.keySet(), cellVectors);
-        if (!pointTriplets.isEmpty()) {
-            List<NodeTriplet> nodeTriplets = new ArrayList<>(pointTriplets.size());
-            for (PointTriplet pointTriplet : pointTriplets) {
-                Node nodeA = flippedTempResult.get(pointTriplet.getPointA());
-                Node nodeB = flippedTempResult.get(pointTriplet.getPointB());
-                Node nodeCenter = flippedTempResult.get(pointTriplet.getCenter());
-                NodeTriplet nodeTriplet = new NodeTriplet(nodeA, nodeB, nodeCenter);
-                nodeTriplets.add(nodeTriplet);
-            }
-            addTripletsInGraph(nodeTriplets);
-        }
-        HashMap<Node, Point> result = calculateNodeCoordinatesIntern(goodPoints, cellVectors);
-        return result;
-    }
-
-    public void addTripletsInGraph(List<NodeTriplet> triplets) {
-        List<NodeTriplet> tripletsForAdd = new ArrayList<>();
-        List<NodeTriplet> notAddedTriplets = new ArrayList<>(triplets);
-        while (notAddedTriplets.size() != tripletsForAdd.size()) {
-            tripletsForAdd = notAddedTriplets;
-            notAddedTriplets = new ArrayList<>();
-            for (NodeTriplet nodeTriplet : tripletsForAdd) {
-                Node nodeA = nodeTriplet.getNodeA();
-                Node nodeB = nodeTriplet.getNodeB();
-                Node center = nodeTriplet.getCenter();
-                boolean isAdded = graph.addNodes(nodeA, nodeB, center);
-                if (!isAdded) {
-                    notAddedTriplets.add(nodeTriplet);
-                }
-            }
-        }
-    }
-
-    public HashMap<Node, Point> calculateNodeCoordinatesIntern(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
         addedNodes = new HashMap<>();
         connectGraphByBaseis(goodPoints, cellVectors);
 
@@ -80,16 +41,14 @@ public class LatticeBuilder {
         HashMap<Node, Point> goodPointsNeighborsCoordinates = getGoodPointsNeighborsCoordinate(goodPoints);
         allNodeCoordinates.putAll(goodPointsNeighborsCoordinates);
 
-        ArrayList<PointDoublet> pointDoublets = getPointDoublets(FindUtils.reverse(goodPointsNeighborsCoordinates), cellVectors);
-        HashMap<Node, Point> nodeCoordinatesByDoublets = getNodeCoordinatesByDoublets(FindUtils.reverse(goodPointsNeighborsCoordinates), pointDoublets, cellVectors);
+        ArrayList<PointDoublet> pointDoublets = getPointDoublets(FindUtils.reverseMap(goodPointsNeighborsCoordinates), cellVectors);
+        HashMap<Node, Point> nodeCoordinatesByDoublets = getNodeCoordinatesByDoublets(FindUtils.reverseMap(goodPointsNeighborsCoordinates), pointDoublets, cellVectors);
         allNodeCoordinates.putAll(nodeCoordinatesByDoublets);
 
-        HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, FindUtils.reverse(goodPointsNeighborsCoordinates));
+        HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, FindUtils.reverseMap(goodPointsNeighborsCoordinates));
 
         return correctedNodeCoordinates;
     }
-
-
 
     public HashMap<Node, Point> getGoodPointsNeighborsCoordinate(HashMap<Point, Node> goodPoints) {
         HashMap<Node, Point> result = new HashMap<>();
@@ -97,12 +56,12 @@ public class LatticeBuilder {
         for (Node node : allNodes) {
             if (!goodPoints.containsValue(node)) {
                 ArrayList<Node> neighborsInAxeA = node.getNeighborsByAxe(Graph.NodeAxe.AXE_A);
-                Point point = getAveragePoint(goodPoints, neighborsInAxeA, node);
+                Point point = getAveragePoint(goodPoints, neighborsInAxeA);
                 if (point != null) {
                     result.put(node, point);
                 } else {
                     ArrayList<Node> neighborsInAxeB = node.getNeighborsByAxe(Graph.NodeAxe.AXE_B);
-                    point = getAveragePoint(goodPoints, neighborsInAxeB, node);
+                    point = getAveragePoint(goodPoints, neighborsInAxeB);
                     if (point != null) {
                         result.put(node, point);
                     }
@@ -112,7 +71,7 @@ public class LatticeBuilder {
         return result;
     }
 
-    public Point getAveragePoint(HashMap<Point, Node> goodPoints, ArrayList<Node> neighborsInAxeA, Node node) {
+    public Point getAveragePoint(HashMap<Point, Node> goodPoints, ArrayList<Node> neighborsInAxeA) {
         if (neighborsInAxeA.size() == 2) {
             Node neighbor_1 = neighborsInAxeA.get(0);
             Node neighbor_2 = neighborsInAxeA.get(1);
@@ -235,7 +194,6 @@ public class LatticeBuilder {
         return result;
     }
 
-
     public Point getCoordinateForNodeByDiagonallyNeighbors(Node node, Node neighborA, Node neighborB, HashMap<Node, Point> result) {
         if (neighborA == null || neighborB == null || node == null) {
             return null;
@@ -256,7 +214,6 @@ public class LatticeBuilder {
         return null;
     }
 
-
     public HashMap<Node, Point> calculateCoordinateInStraightLine(Node referencePoint, Node lastNeighbor, Point referencePointCoordinate, Point lastNeighborCoordinate, Point[] cellVectors) {
         HashMap<Node, Point> result = new HashMap<>();
         Point calculatedVector = PointUtils.minus(referencePointCoordinate, lastNeighborCoordinate);
@@ -264,10 +221,11 @@ public class LatticeBuilder {
         Node oppositeNeighbor = referencePoint.getOppositeNeighbor(lastNeighbor);
         Point lastPoint = referencePointCoordinate;
         while (oppositeNeighbor != null) {
-            Point calculatedLastPoint = PointUtils.plus(lastPoint, calculatedVector);
+//            Point calculatedLastPoint = PointUtils.plus(lastPoint, calculatedVector);
             Point lastPointFromCell = PointUtils.plus(lastPoint, cellVector);
-            Point summePoint = PointUtils.plus(calculatedLastPoint, lastPointFromCell);
-            lastPoint = new Point(summePoint.x / 2, summePoint.y / 2);
+//            Point summePoint = PointUtils.plus(calculatedLastPoint, lastPointFromCell);
+//            lastPoint = new Point(summePoint.x / 2, summePoint.y / 2);
+            lastPoint = lastPointFromCell;
             result.put(oppositeNeighbor, lastPoint);
             lastNeighbor = referencePoint;
             referencePoint = oppositeNeighbor;

@@ -135,7 +135,7 @@ public class CodeFinder {
 
         LinkedList<RotatedRect> result = new LinkedList<>();
         for (RotatedRect rotatedRect : tempResult) {
-            if (isInBounds(image, rotatedRect.center)) {
+            if (ImageUtils.isInBounds(image, rotatedRect.center)) {
                 result.add(rotatedRect);
             }
         }
@@ -192,9 +192,6 @@ public class CodeFinder {
         return null;
     }
 
-    public boolean isInBounds(Mat mat, Point point) {
-        return point.x < mat.cols() && point.x >= 0 && point.y >= 0 && point.y < mat.rows();
-    }
 
     public Point[] calculateCellVectors(List<Point> points) {
         Point[] result = new Point[2];
