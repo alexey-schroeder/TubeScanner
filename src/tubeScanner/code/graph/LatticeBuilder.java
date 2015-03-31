@@ -41,11 +41,15 @@ public class LatticeBuilder {
         HashMap<Node, Point> goodPointsNeighborsCoordinates = getGoodPointsNeighborsCoordinate(goodPoints);
         allNodeCoordinates.putAll(goodPointsNeighborsCoordinates);
 
-        ArrayList<PointDoublet> pointDoublets = getPointDoublets(FindUtils.reverseMap(goodPointsNeighborsCoordinates), cellVectors);
-        HashMap<Node, Point> nodeCoordinatesByDoublets = getNodeCoordinatesByDoublets(FindUtils.reverseMap(goodPointsNeighborsCoordinates), pointDoublets, cellVectors);
+        ArrayList<PointDoublet> pointDoublets = getPointDoublets(FindUtils.reverseMap(allNodeCoordinates), cellVectors);
+        HashMap<Node, Point> nodeCoordinatesByDoublets = getNodeCoordinatesByDoublets(FindUtils.reverseMap(allNodeCoordinates), pointDoublets, cellVectors);
         allNodeCoordinates.putAll(nodeCoordinatesByDoublets);
 
-        HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, FindUtils.reverseMap(goodPointsNeighborsCoordinates));
+        HashMap<Node, Point> coordinateFromFrame = new HashMap<>();
+        coordinateFromFrame.putAll(nodeCoordinatesByGoodPoints);
+        coordinateFromFrame.putAll(goodPointsNeighborsCoordinates);
+
+        HashMap<Node, Point> correctedNodeCoordinates = correctNodeCoordinates(allNodeCoordinates, FindUtils.reverseMap(coordinateFromFrame));
 
         return correctedNodeCoordinates;
     }

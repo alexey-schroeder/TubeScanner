@@ -200,10 +200,6 @@ public class Controller {
         showFrame(resized, oldNodeCoordinates, !goodPoints.isEmpty());
     }
 
-    private void interpretePoints(List<Point> centers, HashMap<Point, Node> goodPoints, List<Point> notInterpretedCircles, List<Point> interpretedCircles) {
-
-    }
-
     private List<Point> foundLatticePoints(HashMap<Point, Node> goodPoints, Point[] cellVectors, int width, int height) {
         LatticePointsCalculator latticePointsCalculator = new LatticePointsCalculator(width, height, oldRadius);
         List<Point> latticePoints = latticePointsCalculator.calculateLatticePoints(goodPoints, cellVectors);
