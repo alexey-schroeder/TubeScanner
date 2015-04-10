@@ -62,8 +62,7 @@ public class Graph {
                 Node equalsNodeBInNeighbors = NodeUtils.findEqualsNode(neighbors, nodeB);
                 // der equalsParent hat schon einen gleichen nachbarn.
                 //der andere equalsNeighbor is in nachbarliste von parent nicht vorhanden
-                //der andere equalsNeighbor is im graph auch nicht vorhanden
-                if (equalsNodeAInNeighbors != null && equalsNodeBInNeighbors == null && equalsNodeBInGraph == null) {//der parent hat schon einen gleichen nachbarn
+                if (equalsNodeAInNeighbors != null && equalsNodeBInNeighbors == null) {//der parent hat schon einen gleichen nachbarn
                     Graph.NodeAxe nodeA_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeAInNeighbors);
 
                     if (nodeA_Axe != null) {
@@ -77,8 +76,7 @@ public class Graph {
 
                 // der equalsParent hat schon einen gleichen nachbanrn.
                 //der andere equalsNeighbor is in nachbarliste von parent nicht vorhanden
-                //der andere equalsNeighbor is im graph auch nicht vorhanden
-                if (equalsNodeBInNeighbors != null && equalsNodeAInNeighbors == null && equalsNodeAInGraph == null) {//der parent hat schon einen gleichen nachbarn
+                if (equalsNodeBInNeighbors != null && equalsNodeAInNeighbors == null) {//der parent hat schon einen gleichen nachbarn
                     Graph.NodeAxe nodeB_Axe = equalsParentInGraph.getNeighborsAxe(equalsNodeBInNeighbors);
                     if (nodeB_Axe != null) {
                         ArrayList<Node> neighborsInAxe = equalsParentInGraph.getNeighborsByAxe(nodeB_Axe);
@@ -167,13 +165,13 @@ public class Graph {
                                 if (neighborsOfNodeAInAxe.size() < 2 && neighborsOfNodeBInAxe.size() < 2) {
                                     equalsParentInGraph.addNeighbor(equalsNodeAInGraph, currentAxe);
                                     equalsParentInGraph.addNeighbor(equalsNodeBInGraph, currentAxe);
+                                    return true;
                                 }
                             }
                         } catch (RuntimeException e) {
                             System.out.println(equalsParentInGraph + ", " + equalsNodeAInGraph + ", " + equalsNodeBInGraph);
                             throw e;
                         }
-                        return true;
                     }
                 }
 

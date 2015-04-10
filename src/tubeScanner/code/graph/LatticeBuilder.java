@@ -1,14 +1,9 @@
 package tubeScanner.code.graph;
 
 import org.opencv.core.Point;
-import tubeScanner.code.basis.Basis;
-import tubeScanner.code.basis.BasisFinder;
 import tubeScanner.code.dataModel.doublet.NodeDoublet;
 import tubeScanner.code.dataModel.doublet.PointDoublet;
 import tubeScanner.code.dataModel.doublet.PointDoubletFinder;
-import tubeScanner.code.dataModel.triplet.NodeTriplet;
-import tubeScanner.code.dataModel.triplet.PointTripleFinder;
-import tubeScanner.code.dataModel.triplet.PointTriplet;
 import tubeScanner.code.utils.FindUtils;
 import tubeScanner.code.utils.NodeUtils;
 import tubeScanner.code.utils.PointUtils;
@@ -16,7 +11,6 @@ import tubeScanner.code.utils.PointUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 /**
  * Created by Alex on 28.01.2015.
@@ -31,7 +25,6 @@ public class LatticeBuilder {
 
     public HashMap<Node, Point> calculateNodeCoordinates(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
         addedNodes = new HashMap<>();
-        connectGraphByBaseis(goodPoints, cellVectors);
 
         HashMap<Node, Point> allNodeCoordinates = new HashMap<>();
 
@@ -54,6 +47,8 @@ public class LatticeBuilder {
         return correctedNodeCoordinates;
     }
 
+    //berechnet coordinate für poitn, der zwischen zwei in frame erkannte points leigt
+    // die coordinate wird als mittelwert zwischen erkannten points berechnet
     public HashMap<Node, Point> getGoodPointsNeighborsCoordinate(HashMap<Point, Node> goodPoints) {
         HashMap<Node, Point> result = new HashMap<>();
         HashSet<Node> allNodes = graph.getAllNodes();
@@ -130,43 +125,6 @@ public class LatticeBuilder {
         return pointDoublets;
     }
 
-    public void connectGraphByBaseis(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
-        HashSet<Node> allNodes = graph.getAllNodes();
-        BasisFinder basisFinder = new BasisFinder();
-        ArrayList<Basis> bases = basisFinder.findBases(allNodes, goodPoints, cellVectors);
-        for (Basis basis : bases) {
-            connectGraphNodesByBasis(basis.getNodeBasis(), allNodes);
-        }
-    }
-
-    public void connectGraphNodesByBasis(NodeTriplet nodeTriplet, HashSet<Node> allNodes) {
-        Node nodeA = nodeTriplet.getNodeA();
-        Node nodeB = nodeTriplet.getNodeB();
-        Node centerNode = nodeTriplet.getCenter();
-
-        Node equalsNodeCenter = NodeUtils.findEqualsNode(allNodes, centerNode);
-        HashSet<Node> centerNeighbors = equalsNodeCenter.getNeighbors();
-        if (centerNeighbors.size() < 4) {
-            Node equalsNodeA = NodeUtils.findEqualsNode(allNodes, nodeA);
-            Node equalsNodeB = NodeUtils.findEqualsNode(allNodes, nodeB);
-            boolean isNodeAContains = centerNeighbors.contains(equalsNodeA);
-            boolean isNodeBContains = centerNeighbors.contains(equalsNodeB);
-            if (isNodeAContains && isNodeBContains || !isNodeAContains && !isNodeBContains) {//beide nodes aus triplet sind entweder nachbarn odern nicht nachbarn
-                return; // wir können nichts machen
-            } else {
-                if (isNodeAContains) {// nodeA ist als nachbar bekannt
-                    Graph.NodeAxe axe = equalsNodeCenter.getNeighborsAxe(equalsNodeA);
-                    Graph.NodeAxe otherAxe = Graph.getOtherNodeAxe(axe);
-                    equalsNodeCenter.addNeighbor(equalsNodeB, otherAxe);
-                } else {// nodeB ist als nachbar bekannt
-                    Graph.NodeAxe axe = equalsNodeCenter.getNeighborsAxe(equalsNodeB);
-                    Graph.NodeAxe otherAxe = Graph.getOtherNodeAxe(axe);
-                    equalsNodeCenter.addNeighbor(equalsNodeA, otherAxe);
-                }
-            }
-        }
-    }
-
     public HashMap<Node, Point> getCoordinateByDoublet(PointDoublet pointDoublet, NodeDoublet nodeDoublet, Point[] cellVectors) {
         Node nodeA = nodeDoublet.getNodeA();
         Node nodeB = nodeDoublet.getNodeB();
@@ -225,10 +183,7 @@ public class LatticeBuilder {
         Node oppositeNeighbor = referencePoint.getOppositeNeighbor(lastNeighbor);
         Point lastPoint = referencePointCoordinate;
         while (oppositeNeighbor != null) {
-//            Point calculatedLastPoint = PointUtils.plus(lastPoint, calculatedVector);
             Point lastPointFromCell = PointUtils.plus(lastPoint, cellVector);
-//            Point summePoint = PointUtils.plus(calculatedLastPoint, lastPointFromCell);
-//            lastPoint = new Point(summePoint.x / 2, summePoint.y / 2);
             lastPoint = lastPointFromCell;
             result.put(oppositeNeighbor, lastPoint);
             lastNeighbor = referencePoint;
@@ -310,31 +265,6 @@ public class LatticeBuilder {
             }
         }
 
-        connectGraphNodesByNeighbors(result);
-//        addedNodes.putAll(tempAddedNodes);
-
-        if (allGraphNodes.size() != result.size()) {
-            HashMap<Node, Point> nodesByDiagonallyNeighbors = getCoordinateForNodeByDiagonallyNeighbors(result);
-            for (Node node : nodesByDiagonallyNeighbors.keySet()) {
-                if (!result.containsKey(node)) {
-                    Point point = nodesByDiagonallyNeighbors.get(node);
-                    result.put(node, point);
-                }
-            }
-        }
-
-        connectGraphNodesByNeighbors(result);
-//        addedNodes.putAll(tempAddedNodes_2);
-//        System.out.println(allGraphNodes.size() + " / " + nodeCoordinates.size() + " / " + result.size());
-
-        //todo das ist 100% copy-past aus der zeile 230
-        for (Point goodPointCoordinate : goodPoints.keySet()) {
-            Node goodNode = goodPoints.get(goodPointCoordinate);
-            Node equalsGoodNodeInGraph = NodeUtils.findEqualsNode(allGraphNodes, goodNode);
-            if (result.containsKey(equalsGoodNodeInGraph)) {
-                result.put(equalsGoodNodeInGraph, goodPointCoordinate);
-            }
-        }
         return result;
     }
 
@@ -358,79 +288,6 @@ public class LatticeBuilder {
             }
         }
         return result;
-    }
-
-    public void connectGraphNodesByNeighbors(HashMap<Node, Point> result) {
-        HashMap<Node, Point> addedNodes = new HashMap<>();
-        boolean wasAdded = true;
-        HashSet<Node> allGraphNodes = graph.getAllNodes();
-        while (wasAdded) {
-            wasAdded = false;
-            if (allGraphNodes.size() == result.size()) {
-//                System.out.println("alls");
-//                return result;
-            } else {
-                HashMap<Node, Point> resultCopy = new HashMap<>(result);
-                for (Node nodeInResult : resultCopy.keySet()) {
-//                    if(nodeInResult.getCode().equalsIgnoreCase("0122708290")){
-//                        System.out.println();
-//                    }
-                    ArrayList<Node> neighborsInAxeA = nodeInResult.getNeighborsByAxe(Graph.NodeAxe.AXE_A);
-                    if (neighborsInAxeA.size() == 2) {
-                        Node neighborInAxeA_1 = neighborsInAxeA.get(0);
-                        Node neighborInAxeA_2 = neighborsInAxeA.get(1);
-                        if (!result.containsKey(neighborInAxeA_1) && result.containsKey(neighborInAxeA_2)) {// nachbarn 1 ist nicht in resultat, aber nachbarn 2 schon
-                            Point coordinateNeighbor_1 = new Point();
-                            Point coordinateNeighbor_2 = result.get(neighborInAxeA_2);
-                            Point parentCoordinate = result.get(nodeInResult);
-                            coordinateNeighbor_1.x = 2 * parentCoordinate.x - coordinateNeighbor_2.x;
-                            coordinateNeighbor_1.y = 2 * parentCoordinate.y - coordinateNeighbor_2.y;
-                            result.put(neighborInAxeA_1, coordinateNeighbor_1);
-                            addedNodes.put(neighborInAxeA_1, coordinateNeighbor_1);
-                            wasAdded = true;
-//                            System.out.println("added");
-                        } else if (result.containsKey(neighborInAxeA_1) && !result.containsKey(neighborInAxeA_2)) {// nachbarn 2 ist nicht in resultat, aber nachbarn 1 schon
-                            Point coordinateNeighbor_2 = new Point();
-                            Point coordinateNeighbor_1 = result.get(neighborInAxeA_1);
-                            Point parentCoordinate = result.get(nodeInResult);
-                            coordinateNeighbor_2.x = 2 * parentCoordinate.x - coordinateNeighbor_1.x;
-                            coordinateNeighbor_2.y = 2 * parentCoordinate.y - coordinateNeighbor_1.y;
-                            result.put(neighborInAxeA_2, coordinateNeighbor_2);
-                            addedNodes.put(neighborInAxeA_2, coordinateNeighbor_2);
-                            wasAdded = true;
-//                            System.out.println("added");
-                        }
-                    }
-                    ArrayList<Node> neighborsInAxeB = nodeInResult.getNeighborsByAxe(Graph.NodeAxe.AXE_B);
-                    if (neighborsInAxeB.size() == 2) {
-                        Node neighborInAxeB_1 = neighborsInAxeB.get(0);
-                        Node neighborInAxeB_2 = neighborsInAxeB.get(1);
-                        if (!result.containsKey(neighborInAxeB_1) && result.containsKey(neighborInAxeB_2)) {// nachbarn 1 ist nicht inresultat, aber nachbarn 2 schon
-                            Point coordinateNeighbor_1 = new Point();
-                            Point coordinateNeighbor_2 = result.get(neighborInAxeB_2);
-                            Point parentCoordinate = result.get(nodeInResult);
-                            coordinateNeighbor_1.x = 2 * parentCoordinate.x - coordinateNeighbor_2.x;
-                            coordinateNeighbor_1.y = 2 * parentCoordinate.y - coordinateNeighbor_2.y;
-                            result.put(neighborInAxeB_1, coordinateNeighbor_1);
-                            addedNodes.put(neighborInAxeB_1, coordinateNeighbor_1);
-                            wasAdded = true;
-//                            System.out.println("added");
-                        } else if (result.containsKey(neighborInAxeB_1) && !result.containsKey(neighborInAxeB_2)) {// nachbarn 2 ist nicht in resultat, aber nachbarn 1 schon
-                            Point coordinateNeighbor_2 = new Point();
-                            Point coordinateNeighbor_1 = result.get(neighborInAxeB_1);
-                            Point parentCoordinate = result.get(nodeInResult);
-                            coordinateNeighbor_2.x = 2 * parentCoordinate.x - coordinateNeighbor_1.x;
-                            coordinateNeighbor_2.y = 2 * parentCoordinate.y - coordinateNeighbor_1.y;
-                            result.put(neighborInAxeB_2, coordinateNeighbor_2);
-                            addedNodes.put(neighborInAxeB_2, coordinateNeighbor_2);
-                            wasAdded = true;
-//                            System.out.println("added");
-                        }
-                    }
-                }
-            }
-        }
-//        return addedNodes;
     }
 
     public HashMap<Node, Point> getAddedNodes() {

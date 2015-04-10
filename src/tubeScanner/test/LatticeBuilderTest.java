@@ -191,7 +191,7 @@ public class LatticeBuilderTest {
         result.put(nodeM, point3);
         result.put(nodeD, point4);
         result.put(nodeA, point1);
-        latticeBuilder.getCoordinateForNodeByDiagonallyNeighbors(result);
+//        latticeBuilder.getCoordinateForNodeByDiagonallyNeighbors(result);
         System.out.println(result.size());
     }
 }

@@ -23,9 +23,7 @@ import tubeScanner.code.dataModel.triplet.PointTripleFinder;
 import tubeScanner.code.dataModel.triplet.PointTriplet;
 import tubeScanner.code.frameSorce.FrameSource;
 import tubeScanner.code.graph.*;
-import tubeScanner.code.qrCode.CodeCleaner;
 import tubeScanner.code.qrCode.CodeFinder;
-import tubeScanner.code.qrCode.DataMatrixInterpreter;
 import tubeScanner.code.qrCode.PointInterpreter;
 import tubeScanner.code.utils.FindUtils;
 import tubeScanner.code.utils.ImageUtils;
@@ -33,7 +31,6 @@ import tubeScanner.code.utils.NodeUtils;
 import tubeScanner.code.utils.PointUtils;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.*;
 
 public class Controller {
@@ -58,6 +55,7 @@ public class Controller {
     private boolean stop;
     //    private Group group;
     private LatticeBuilder latticeBuilder;
+    private GraphNodesConnector graphNodesConnector;
     int oldGraphSize;
 
     public void initialize() {
@@ -69,6 +67,8 @@ public class Controller {
         canvasGraphVisualiser = new CanvasGraphVisualiser();
         canvasGraphVisualiser.setCanvas(graphPane);
         frameStateVisualiser = new FrameStateVisualiser();
+        graphNodesConnector = new GraphNodesConnector();
+        graphNodesConnector.setGraph(graph);
         codeTableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Node, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Node, String> param) {
@@ -172,7 +172,6 @@ public class Controller {
         cellVectors = correctCellVectors(cellVectors, goodPoints);
 
 
-
         if (cellVectors != null) {
             List<Point> notFoundedLatticePoints = foundLatticePoints(goodPoints, cellVectors, coloredFrame.width(), coloredFrame.height());
 
@@ -185,13 +184,21 @@ public class Controller {
             notInterpretedCircles.addAll(notInterpretedCircles_2);
             interpretedCircles.addAll(interpretedCircles_2);
 
-            boolean graphChanged = findAndAddTripletsInGraph(goodPoints, cellVectors);
-            HashMap<Node, Point> tempResult = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
-            HashMap<Point, Node> flippedTempResult = FindUtils.reverseMap(tempResult);
-            flippedTempResult.putAll(goodPoints);
-            findAndAddTripletsInGraph(flippedTempResult, cellVectors);
 
-            HashMap<Node, Point> graphNodeCoordinates = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
+            boolean graphChanged = true;
+            HashMap<Node, Point> graphNodeCoordinates = new HashMap<>();
+            while (graphChanged) {
+                findAndAddTripletsInGraph(goodPoints, cellVectors);
+                graphNodesConnector.connectGraphByBaseis(goodPoints, cellVectors);
+                HashMap<Node, Point> tempResult = latticeBuilder.calculateNodeCoordinates(goodPoints, cellVectors);
+                HashMap<Point, Node> flippedTempResult = FindUtils.reverseMap(tempResult);
+                flippedTempResult.putAll(goodPoints);
+                graphNodesConnector.connectGraphNodesByNeighbors(tempResult);
+
+                graphChanged = findAndAddTripletsInGraph(flippedTempResult, cellVectors);
+                graphNodeCoordinates = tempResult;
+            }
+
             HashMap<Node, Point> addedByNeighbors = latticeBuilder.getAddedNodes();
             oldNodeCoordinates = graphNodeCoordinates;
             frameStateVisualiser.setFrame(resized);
