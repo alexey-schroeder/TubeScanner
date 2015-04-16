@@ -12,6 +12,7 @@ public class CodeCleaner {
 
     ;
     static int counter = 0;
+    private Point boundedCodeCenter;
 
     public Mat cleanCode(Mat code) {
 
@@ -160,6 +161,9 @@ public class CodeCleaner {
             return null;
         }
         Mat boundedCode = code.submat(new Rect(leftBound, topBound, rightBound - leftBound, bottomBound - topBound)).clone();
+        double boundedCodeCenterX= leftBound + boundedCode.width() / 2;
+        double boundedCodeCenterY= topBound + boundedCode.height() / 2;
+        boundedCodeCenter = new Point(boundedCodeCenterX, boundedCodeCenterY);
         return boundedCode;
     }
 
@@ -478,5 +482,9 @@ public class CodeCleaner {
             }
         }
         return 0;
+    }
+
+    public Point getBoundedCodeCenter() {
+        return boundedCodeCenter;
     }
 }

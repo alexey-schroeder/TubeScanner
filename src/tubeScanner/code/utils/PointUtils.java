@@ -1,6 +1,13 @@
 package tubeScanner.code.utils;
 
 import org.opencv.core.Point;
+import tubeScanner.code.clustering.Cluster;
+import tubeScanner.code.clustering.DBSCANClusterer;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by Alex on 11.02.2015.
@@ -67,5 +74,91 @@ public class PointUtils {
         double x4 = point1.x + point3.x - point2.x;
         double y4 = point1.y + point3.y - point2.y;
         return new Point(x4, y4);
+    }
+
+
+    public static Point[] calculateCellVectors(List<Point> points) {
+        Point[] result = new Point[2];
+        ArrayList<Point> differenceVectoren = calculateDifferenceVectoren(points);
+        double maxDistanceInCluster = 5;
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxDistanceInCluster, 3);
+        List<Cluster<Point>> clusters = dbscanClusterer.cluster(differenceVectoren);
+//        System.out.println("clusters size: " + clusters.size());
+        if (clusters.size() < 3) {
+            return null;
+        }
+        Collections.sort(clusters, new Comparator<Cluster<Point>>() {
+            @Override
+            public int compare(Cluster<Point> o1, Cluster<Point> o2) {
+                return o2.getPoints().size() - o1.getPoints().size();
+            }
+        });
+
+        Point point_0 = calculateClusterCenter(clusters.get(0));
+//        Point point_1 = calculateClusterCenter(clusters.get(1));
+//        double angleDiff = Math.abs(90 - getAngleBetweenVectors(point_0, point_1));
+//        double vectorLength = getVectorLength(point_1);
+        ArrayList<Point> candidates = new ArrayList<>();
+        double maxAngleDiff = 10;
+        for (int i = 1; i < clusters.size(); i++) {
+            Cluster<Point> tempCluster = clusters.get(i);
+            Point tempPoint = calculateClusterCenter(tempCluster);
+//            double tempVectorLength = getVectorLength(tempPoint);
+            double tempAngleDiff = Math.abs(90 - PointUtils.getAngleBetweenVectors(point_0, tempPoint));
+
+            if (tempAngleDiff < maxAngleDiff) {
+                candidates.add(tempPoint);
+            }
+        }
+
+        Collections.sort(candidates, new Comparator<Point>() {
+            @Override
+            public int compare(Point o1, Point o2) {
+                return (int) (PointUtils.getVectorLength(o1) - PointUtils.getVectorLength(o2));
+            }
+        });
+
+        if (candidates.size() < 1) {
+            return null;
+        }
+        Point point_1 = candidates.get(0);
+        double maxProcentDiff = 15;
+        double length_0 = PointUtils.getVectorLength(point_0);
+        double length_1 = PointUtils.getVectorLength(point_1);
+        double min = Math.min(length_0, length_1);
+        double max = Math.max(length_0, length_1);
+        double procentDiff = (max - min) / max  * 100;
+        if(procentDiff > maxProcentDiff){
+            return  null;
+        }
+        result[0] = point_0;
+        result[1] = candidates.get(0);
+        return result;
+    }
+
+    public static Point calculateClusterCenter(Cluster<Point> cluster) {
+        List<Point> points = cluster.getPoints();
+        double x = 0;
+        double y = 0;
+        for (Point point : points) {
+            x = x + point.x;
+            y = y + point.y;
+        }
+        return new Point(x / points.size(), y / points.size());
+    }
+
+    public static ArrayList<Point> calculateDifferenceVectoren(List<Point> points) {
+        ArrayList<Point> result = new ArrayList<>();
+        for (int i = 0; i < points.size() - 1; i++) {
+            Point referencePoint = points.get(i);
+            for (int j = i + 1; j < points.size(); j++) {
+                Point point = points.get(j);
+                Point vector = PointUtils.minus(referencePoint, point);
+                result.add(vector);
+                Point negativVector = new Point(-vector.x, -vector.y);
+                result.add(negativVector);
+            }
+        }
+        return result;
     }
 }

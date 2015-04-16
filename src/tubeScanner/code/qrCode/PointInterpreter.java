@@ -1,9 +1,6 @@
 package tubeScanner.code.qrCode;
 
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
+import org.opencv.core.*;
 import tubeScanner.code.graph.Node;
 import tubeScanner.code.utils.ImageUtils;
 
@@ -18,8 +15,11 @@ import java.util.List;
  */
 public class PointInterpreter {
     private HashMap<Point, Node> goodPoints;
+    private HashMap<Point, Node> correctedGoodPoints;
+
     private List<Point> notInterpretedCircles;
     private List<Point> interpretedCircles;
+    private List<RotatedRect> rotatedRects;
     private CodeFinder codeFinder;
     private CodeCleaner codeCleaner;
     private DataMatrixInterpreter dataMatrixInterpreter;
@@ -29,8 +29,10 @@ public class PointInterpreter {
         codeCleaner = new CodeCleaner();
         codeFinder = new CodeFinder();
         goodPoints = new HashMap<>();
+        correctedGoodPoints = new HashMap<>();
         interpretedCircles = new ArrayList<>();
         notInterpretedCircles = new ArrayList<>();
+        rotatedRects = new ArrayList<>();
     }
 
     public void interpretPoints(Mat coloredFrame, double resizeFactor, double radius, List<Point> centers) {
@@ -72,6 +74,11 @@ public class PointInterpreter {
                                     if (!goodPoints.values().contains(node)) {
                                         interpretedCircles.add(center);
                                         goodPoints.put(center, node);
+                                        Point codeCenter = codeFinder.getCodeCenter();
+                                        double correctedX = (x + codeCenter.x) / resizeFactor;
+                                        double correctedY = (y + codeCenter.y) / resizeFactor;
+                                        Point correctedPoint = new Point(correctedX, correctedY);
+                                        correctedGoodPoints.put(correctedPoint, node);
                                     }
                                 } else {
                                     notInterpretedCircles.add(center);
@@ -83,7 +90,7 @@ public class PointInterpreter {
                         }
                     }
                 }
-            }else {
+            } else {
                 notInterpretedCircles.add(center);
             }
         }
@@ -91,6 +98,7 @@ public class PointInterpreter {
 
     private void clear() {
         goodPoints.clear();
+        correctedGoodPoints.clear();
         interpretedCircles.clear();
         notInterpretedCircles.clear();
     }
@@ -99,11 +107,19 @@ public class PointInterpreter {
         return new HashMap<>(goodPoints);
     }
 
+    public HashMap<Point, Node> getCorrectedGoodPoints() {
+        return new HashMap<>(correctedGoodPoints);
+    }
+
     public List<Point> getNotInterpretedCircles() {
         return new ArrayList<>(notInterpretedCircles);
     }
 
     public List<Point> getInterpretedCircles() {
         return new ArrayList<>(interpretedCircles);
+    }
+
+    public List<RotatedRect> getRotatedRects() {
+        return new ArrayList<>(rotatedRects);
     }
 }

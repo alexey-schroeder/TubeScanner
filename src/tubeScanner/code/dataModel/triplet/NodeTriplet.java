@@ -29,6 +29,14 @@ public class NodeTriplet {
         this.center = center;
     }
 
+    public NodeTriplet copy(){
+        String nodeACode = nodeA.getCode();
+        String nodeBCode = nodeB.getCode();
+        String centerCode =center.getCode();
+        NodeTriplet copyTriplet = new NodeTriplet(new Node(nodeACode), new Node(nodeBCode), new Node(centerCode));
+        return copyTriplet;
+    }
+
     public Node getNodeA() {
         return nodeA;
     }

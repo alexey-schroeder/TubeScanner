@@ -82,6 +82,8 @@ public class DBSCANClusterer {
         PART_OF_CLUSTER
     }
 
+    private ArrayList<Point> noise;
+
     /**
      * Creates a new instance of a DBSCANClusterer.
      *
@@ -92,6 +94,7 @@ public class DBSCANClusterer {
 
         this.eps = eps;
         this.minPts = minPts;
+        noise = new ArrayList<>();
     }
 
     /**
@@ -123,7 +126,7 @@ public class DBSCANClusterer {
      * @return the list of clusters
      */
     public ArrayList<Cluster<Point>> cluster(final Collection<Point> points) {
-
+        noise.clear();
 
         final ArrayList<Cluster<Point>> clusters = new ArrayList<Cluster<Point>>();
         final Map<Point, PointStatus> visited = new HashMap<Point, PointStatus>();
@@ -139,6 +142,7 @@ public class DBSCANClusterer {
                 clusters.add(expandCluster(cluster, point, neighbors, points, visited));
             } else {
                 visited.put(point, PointStatus.NOISE);
+                noise.add(point);
             }
         }
 
@@ -196,7 +200,7 @@ public class DBSCANClusterer {
     private List<Point> getNeighbors(final Point point, final Collection<Point> points) {
         final List<Point> neighbors = new ArrayList<Point>();
         for (final Point neighbor : points) {
-            if (point != neighbor && getDistance(neighbor, point) <= eps){
+            if (point != neighbor && getDistance(neighbor, point) <= eps) {
                 neighbors.add(neighbor);
             }
         }
@@ -224,6 +228,10 @@ public class DBSCANClusterer {
             }
         }
         return one;
+    }
+
+    public ArrayList<Point> getNoise() {
+        return noise;
     }
 }
 

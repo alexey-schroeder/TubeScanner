@@ -2,6 +2,7 @@ package tubeScanner.code.graph;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import tubeScanner.code.utils.PointUtils;
@@ -18,6 +19,7 @@ public class FrameStateVisualiser {
     private Scalar graphNodeColor = new Scalar(0, 255, 0);
     private Scalar cellVectorsColor = new Scalar(255, 0, 0);
     private Scalar addedNodesColor = new Scalar(255, 255, 0);
+    private Scalar rotatedRectsColor = new Scalar(0, 255, 255);
 
     public void drawFrameState(List<Point> notInterpretedCircles, List<Point> interpretedCircles, Map<Node, Point> graphNodes, Map<Node, Point> addedByNeighbors,Point[] cellVectors) {
         drawCircles(notInterpretedCircles, 6, notInterpretedCircleColor);
@@ -28,6 +30,7 @@ public class FrameStateVisualiser {
             drawCellVectors(cellVectors);
         }
         drawCircles(addedByNeighbors.values(), 10, addedNodesColor);
+//        drawRotatedRect(rects);
     }
 
     private void drawCellVectors(Point[] cellVectors) {
@@ -87,5 +90,15 @@ public class FrameStateVisualiser {
 
     public void setGraphNodeColor(Scalar graphNodeColor) {
         this.graphNodeColor = graphNodeColor;
+    }
+
+    public void drawRotatedRect(List<RotatedRect> rects){
+        for (RotatedRect rotatedRect : rects) {
+            Point[] rect_points = new Point[4];
+            rotatedRect.points(rect_points);
+            for (int j = 0; j < 4; j++) {
+                Imgproc.line(frame, rect_points[j], rect_points[(j + 1) % 4], rotatedRectsColor, 1);
+            }
+        }
     }
 }

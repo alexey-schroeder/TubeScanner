@@ -140,7 +140,7 @@ public class Controller {
 //            Imgproc.circle(resized, center, 10, new Scalar(0, 255, 0), 2);
         }
         CodeFinder codeFinder = new CodeFinder();
-        Point[] cellVectors = codeFinder.calculateCellVectors(centers);
+        Point[] cellVectors = PointUtils.calculateCellVectors(centers);
         if (cellVectors == null && oldRadius < 0) {
             if (oldNodeCoordinates != null) {
                 frameStateVisualiser.setFrame(resized);
@@ -170,7 +170,6 @@ public class Controller {
         List<Point> interpretedCircles = pointInterpreter.getInterpretedCircles();
 
         cellVectors = correctCellVectors(cellVectors, goodPoints);
-
 
         if (cellVectors != null) {
             List<Point> notFoundedLatticePoints = foundLatticePoints(goodPoints, cellVectors, coloredFrame.width(), coloredFrame.height());
@@ -225,7 +224,14 @@ public class Controller {
                 NodeTriplet nodeTriplet = new NodeTriplet(nodeA, nodeB, nodeCenter);
                 nodeTriplets.add(nodeTriplet);
             }
-            return addTripletsInGraph(nodeTriplets);
+            if (graph.isEmpty()) {
+                graph = findBestGraph(nodeTriplets);
+                latticeBuilder.setGraph(graph);
+                graphNodesConnector.setGraph(graph);
+                return !graph.isEmpty();
+            } else {
+                return addTripletsInGraph(nodeTriplets);
+            }
         }
         return false;
     }
@@ -305,7 +311,11 @@ public class Controller {
         }
     }
 
-    public boolean addTripletsInGraph(List<NodeTriplet> triplets) {
+    public boolean addTripletsInGraph(List<NodeTriplet> triplets){
+        return addTripletsInGraph(triplets, graph);
+    }
+
+    public boolean addTripletsInGraph(List<NodeTriplet> triplets, Graph graph) {
         List<NodeTriplet> tripletsForAdd = new ArrayList<>();
         List<NodeTriplet> notAddedTriplets = new ArrayList<>(triplets);
         while (notAddedTriplets.size() != tripletsForAdd.size()) {
@@ -322,6 +332,36 @@ public class Controller {
             }
         }
         return notAddedTriplets.size() != triplets.size();
+    }
+
+    private Graph findBestGraph(List<NodeTriplet> triplets) {
+        Graph bestGraph = null;
+        int maxSize = 0;
+        for (NodeTriplet nodeTriplet : triplets) {
+            Graph tempGraph = new Graph();
+            ArrayList<NodeTriplet> tripletsCopy = new ArrayList<>(triplets);
+            tripletsCopy.remove(nodeTriplet);
+            String nodeA = nodeTriplet.getNodeA().getCode();
+            String nodeB = nodeTriplet.getNodeB().getCode();
+            String center = nodeTriplet.getCenter().getCode();
+            tempGraph.addNodes(new Node(nodeA), new Node(nodeB), new Node(center));
+            ArrayList<NodeTriplet> newTripletsCopy = getTripletsCopy(tripletsCopy);
+            addTripletsInGraph(newTripletsCopy, tempGraph);
+            int tempSize = tempGraph.getAllNodes().size();
+            if (maxSize < tempSize) {
+                maxSize = tempSize;
+                bestGraph = tempGraph;
+            }
+        }
+        return bestGraph;
+    }
+
+    public ArrayList<NodeTriplet> getTripletsCopy(ArrayList<NodeTriplet> triplets){
+        ArrayList<NodeTriplet> copy = new ArrayList<>(triplets.size());
+        for(NodeTriplet nodeTriplet : triplets){
+            copy.add(nodeTriplet.copy());
+        }
+        return copy;
     }
 
     public FrameSource getFrameSource() {

@@ -293,4 +293,12 @@ public class LatticeBuilder {
     public HashMap<Node, Point> getAddedNodes() {
         return addedNodes;
     }
+
+    public Graph getGraph() {
+        return graph;
+    }
+
+    public void setGraph(Graph graph) {
+        this.graph = graph;
+    }
 }
