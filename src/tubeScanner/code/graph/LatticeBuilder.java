@@ -19,9 +19,13 @@ public class LatticeBuilder {
     private Graph graph;
     private HashMap<Node, Point> addedNodes;
 
+    public LatticeBuilder() {
+    }
+
     public LatticeBuilder(Graph graph) {
         this.graph = graph;
     }
+
 
     public HashMap<Node, Point> calculateNodeCoordinates(HashMap<Point, Node> goodPoints, Point[] cellVectors) {
         addedNodes = new HashMap<>();

@@ -1,5 +1,6 @@
 package tubeScanner.code.graph;
 
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -7,6 +8,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import org.opencv.core.Point;
+import tubeScanner.code.events.SearchCodeEvent;
 import tubeScanner.code.utils.PointUtils;
 
 import java.util.HashMap;
@@ -30,6 +32,7 @@ public class CanvasGraphVisualiser {
     private Tooltip tooltip;
     private Point lastPointWithTooltip;
     private boolean stopShowByException = false;
+    private EventHandler<SearchCodeEvent> searchCodeEventEventHandler;
 
     public Canvas getCanvas() {
         return canvas;
@@ -52,7 +55,17 @@ public class CanvasGraphVisualiser {
         return new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                System.out.println("click");
+                Point point = getNodePointByCoordinaten(event.getX(), event.getY());
+                if (point != null) {
+                    lastPointWithTooltip = point;
+                    unMarkNode(point);
+                    Node node = graphNodeInCanvasMap.get(point);
+                    markNode(point);
+                    if(searchCodeEventEventHandler != null){
+                        SearchCodeEvent codeEvent = new SearchCodeEvent(node.getCode());
+                        searchCodeEventEventHandler.handle(codeEvent);
+                    }
+                }
             }
         };
     }
@@ -208,5 +221,9 @@ public class CanvasGraphVisualiser {
 
         scaleFactor = Math.min(scaleX, scaleY);
 //        System.out.println(scaleX + " / " + scaleY + " / " + scaleFactor);
+    }
+
+    public void setSearchCodeEventEventHandler(EventHandler<SearchCodeEvent> searchCodeEventEventHandler) {
+        this.searchCodeEventEventHandler = searchCodeEventEventHandler;
     }
 }

@@ -1,6 +1,9 @@
 package tubeScanner.code.utils;
 
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
+import org.opencv.features2d.FeatureDetector;
 import tubeScanner.code.clustering.Cluster;
 import tubeScanner.code.clustering.DBSCANClusterer;
 
@@ -160,5 +163,16 @@ public class PointUtils {
             }
         }
         return result;
+    }
+
+    public static MatOfKeyPoint computeKeyPoints(Mat mat) {
+        FeatureDetector featureDetector = FeatureDetector.create(FeatureDetector.GRID_SIMPLEBLOB);
+        MatOfKeyPoint keypoints = new MatOfKeyPoint();
+        try {
+            featureDetector.detect(mat, keypoints);
+        } catch (Exception e) {
+            System.out.println("error in computeKeyPoints" + e.getMessage());
+        }
+        return keypoints;
     }
 }

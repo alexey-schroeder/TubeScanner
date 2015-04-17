@@ -98,7 +98,8 @@ public class LatticeBuilderTest {
         Node nodeC = NodeUtils.findEqualsNode(allNodes, new Node("C"));
         Node nodeR = NodeUtils.findEqualsNode(allNodes, new Node("R"));
 
-        LatticeBuilder latticeBuilder = new LatticeBuilder(graph);
+        LatticeBuilder latticeBuilder = new LatticeBuilder();
+        latticeBuilder.setGraph(graph);
         HashMap<Node, Point> result = new HashMap<>();
         Point point1 = new Point(1, 1);
         Point point2 = new Point(2, 1);
@@ -179,7 +180,8 @@ public class LatticeBuilderTest {
     @Test
     public void testCalculateCoordinateByNeighbors() throws Exception {
         HashSet<Node> allNodes = graph.getAllNodes();
-        LatticeBuilder latticeBuilder = new LatticeBuilder(graph);
+        LatticeBuilder latticeBuilder = new LatticeBuilder();
+        latticeBuilder.setGraph(graph);
         Node nodeM = NodeUtils.findEqualsNode(allNodes, new Node("M"));
         Node nodeA = NodeUtils.findEqualsNode(allNodes, new Node("A"));
         Node nodeD = NodeUtils.findEqualsNode(allNodes, new Node("D"));
