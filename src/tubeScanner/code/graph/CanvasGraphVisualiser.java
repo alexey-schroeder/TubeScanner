@@ -1,5 +1,6 @@
 package tubeScanner.code.graph;
 
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
@@ -61,7 +62,7 @@ public class CanvasGraphVisualiser {
                     unMarkNode(point);
                     Node node = graphNodeInCanvasMap.get(point);
                     markNode(point);
-                    if(searchCodeEventEventHandler != null){
+                    if (searchCodeEventEventHandler != null) {
                         SearchCodeEvent codeEvent = new SearchCodeEvent(node.getCode());
                         searchCodeEventEventHandler.handle(codeEvent);
                     }
@@ -106,11 +107,23 @@ public class CanvasGraphVisualiser {
 
     private void markNode(Point point) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setStroke(Color.RED);
+        gc.setStroke(Color.YELLOW);
         gc.strokeOval(point.x - currentRadius, point.y - currentRadius, currentRadius * 2, currentRadius * 2);
     }
 
-    private void unMarkNode(Point point) {
+    private void markNode(Point point, Color color) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                GraphicsContext gc = canvas.getGraphicsContext2D();
+                gc.setStroke(color);
+                gc.strokeOval(point.x - currentRadius, point.y - currentRadius, currentRadius * 2, currentRadius * 2);
+            }
+        });
+
+    }
+
+    public void unMarkNode(Point point) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.clearRect(point.x - currentRadius, point.y - currentRadius, currentRadius * 2, currentRadius * 2);
         gc.setStroke(Color.GREEN);
@@ -126,12 +139,30 @@ public class CanvasGraphVisualiser {
         return null;
     }
 
-    public void markNodeByCode(String code) {
+    public void setMarkedNodeByCode(String code) {
         setDefaultColorToAllNodes();
         for (Point point : graphNodeInCanvasMap.keySet()) {
             Node node = graphNodeInCanvasMap.get(point);
             if (node.getCode().equalsIgnoreCase(code)) {
                 markNode(point);
+            }
+        }
+    }
+
+    public void markNodeByCode(String code) {
+        for (Point point : graphNodeInCanvasMap.keySet()) {
+            Node node = graphNodeInCanvasMap.get(point);
+            if (node.getCode().equalsIgnoreCase(code)) {
+                markNode(point, Color.RED);
+            }
+        }
+    }
+
+    public void unmarkNodeByCode(String code) {
+        for (Point point : graphNodeInCanvasMap.keySet()) {
+            Node node = graphNodeInCanvasMap.get(point);
+            if (node.getCode().equalsIgnoreCase(code)) {
+                markNode(point, Color.GREEN);
             }
         }
     }

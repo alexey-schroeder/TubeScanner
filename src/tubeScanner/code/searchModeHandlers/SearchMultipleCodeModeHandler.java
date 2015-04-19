@@ -42,8 +42,6 @@ public class SearchMultipleCodeModeHandler {
         graphNodesConnector = new GraphNodesConnector();
         latticeBuilder = new LatticeBuilder();
         frameStateVisualiser = new FrameStateVisualiser();
-        canvasGraphVisualiser = new CanvasGraphVisualiser();
-
     }
 
     public void threadCode() {
@@ -295,6 +293,7 @@ public class SearchMultipleCodeModeHandler {
         Graph graph = controller.getGraph();
         graphNodesConnector.setGraph(graph);
         latticeBuilder.setGraph(graph);
+        canvasGraphVisualiser = controller.getCanvasGraphVisualiser();
         Canvas graphPane = controller.getGraphPane();
         canvasGraphVisualiser.setCanvas(graphPane);
     }

@@ -13,7 +13,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
-import org.opencv.core.Point;
 import tubeScanner.code.events.SearchCodeEvent;
 import tubeScanner.code.frameSorce.FrameSource;
 import tubeScanner.code.graph.*;
@@ -40,6 +39,8 @@ public class Controller {
     private SearchSingleCodeModeHandler searchSingleCodeModeHandler;
     private SearchMultipleCodeModeHandler searchMultipleCodeModeHandler;
     int oldGraphSize;
+    private String searchedCode;
+    private String lastFoundedCode;
 
     public enum SearchMode {
         SINGLE, MULTIPLE
@@ -74,7 +75,7 @@ public class Controller {
             @Override
             public void handle(MouseEvent event) {
                 Node selectedNode = table.getSelectionModel().getSelectedItem();
-                canvasGraphVisualiser.markNodeByCode(selectedNode.getCode());
+                canvasGraphVisualiser.setMarkedNodeByCode(selectedNode.getCode());
             }
         });
     }
@@ -83,9 +84,8 @@ public class Controller {
         EventHandler<SearchCodeEvent> searchCodeEventEventHandler = new EventHandler<SearchCodeEvent>() {
             @Override
             public void handle(SearchCodeEvent event) {
-                String code = event.getCode();
-                System.out.println(code);
-                searchSingleCodeModeHandler.setCode(code);
+                searchedCode = event.getCode();
+                searchSingleCodeModeHandler.setCode(searchedCode);
                 searchMode = SearchMode.SINGLE;
             }
         };
@@ -119,7 +119,19 @@ public class Controller {
         } else {
             double radius = searchMultipleCodeModeHandler.getRadius();
             searchSingleCodeModeHandler.setRadius(radius);
-            searchSingleCodeModeHandler.threadCode();
+            String foundedCode = searchSingleCodeModeHandler.threadCode();
+            if(foundedCode != null){
+                if(lastFoundedCode == null){
+                    lastFoundedCode = searchedCode;
+                }
+                if(!foundedCode.equalsIgnoreCase(lastFoundedCode)){
+                    canvasGraphVisualiser.unmarkNodeByCode(lastFoundedCode);
+                    lastFoundedCode = foundedCode;
+                }
+               if(!foundedCode.equalsIgnoreCase(searchedCode)){
+                    showFoundedCodeInGraph(foundedCode);
+                }
+            }
         }
         Platform.runLater(new Runnable() {
             @Override
@@ -127,6 +139,10 @@ public class Controller {
                 refresh();
             }
         });
+    }
+
+    private void showFoundedCodeInGraph(String foundedCode) {
+        canvasGraphVisualiser.markNodeByCode(foundedCode);
     }
 
     private void refreshNumberOfCodes(int size) {
@@ -169,5 +185,9 @@ public class Controller {
 
     public Canvas getGraphPane() {
         return graphPane;
+    }
+
+    public CanvasGraphVisualiser getCanvasGraphVisualiser() {
+        return canvasGraphVisualiser;
     }
 }

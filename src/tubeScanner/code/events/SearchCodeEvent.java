@@ -13,7 +13,7 @@ public class SearchCodeEvent extends Event {
     }
 
     public SearchCodeEvent(String code){
-        this(new EventType("SearchCodeEvent"));
+        this(EventType.ROOT);//todo root muss man auf SearchCodeEvent ersetzen
         this.code = code;
     }
 
