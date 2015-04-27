@@ -20,6 +20,7 @@
         </VBox>
         <VBox spacing="10">
             <children>
+                <Button fx:id="resetButton" onAction="#reset" text="Reset"/>
                 <HBox>
                     <children>
                         <Label text="Number of Codes: "/>

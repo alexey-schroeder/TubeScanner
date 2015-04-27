@@ -51,7 +51,7 @@ public class LatticeBuilder {
         return correctedNodeCoordinates;
     }
 
-    //berechnet coordinate für poitn, der zwischen zwei in frame erkannte points leigt
+    //berechnet coordinate für point, der zwischen zwei in frame erkannte points liegt
     // die coordinate wird als mittelwert zwischen erkannten points berechnet
     public HashMap<Node, Point> getGoodPointsNeighborsCoordinate(HashMap<Point, Node> goodPoints) {
         HashMap<Node, Point> result = new HashMap<>();

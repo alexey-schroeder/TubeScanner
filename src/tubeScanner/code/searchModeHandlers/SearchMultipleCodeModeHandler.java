@@ -7,6 +7,8 @@ import javafx.scene.image.WritableImage;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import tubeScanner.Controller;
+import tubeScanner.code.clustering.Cluster;
+import tubeScanner.code.clustering.DBSCANClusterer;
 import tubeScanner.code.dataModel.triplet.NodeTriplet;
 import tubeScanner.code.dataModel.triplet.PointTripleFinder;
 import tubeScanner.code.dataModel.triplet.PointTriplet;
@@ -31,7 +33,6 @@ public class SearchMultipleCodeModeHandler {
     private HashMap<Node, Point> oldNodeCoordinates;
     private double oldRadius = -1;
     private FrameStateVisualiser frameStateVisualiser;
-//    private Graph graph;
     private GraphNodesConnector graphNodesConnector;
     private CanvasGraphVisualiser canvasGraphVisualiser;
     private LatticeBuilder latticeBuilder;
@@ -42,6 +43,7 @@ public class SearchMultipleCodeModeHandler {
         graphNodesConnector = new GraphNodesConnector();
         latticeBuilder = new LatticeBuilder();
         frameStateVisualiser = new FrameStateVisualiser();
+        oldNodeCoordinates = null;
     }
 
     public void threadCode() {
@@ -75,14 +77,12 @@ public class SearchMultipleCodeModeHandler {
         for (KeyPoint keyPoint : keyPointsList) {
             Point center = keyPoint.pt;
             centers.add(center);
-//            Imgproc.circle(resized, center, 10, new Scalar(0, 255, 0), 2);
         }
-        CodeFinder codeFinder = new CodeFinder();
         Point[] cellVectors = PointUtils.calculateCellVectors(centers);
-        if (cellVectors == null && oldRadius < 0) {
+        if (cellVectors == null) {
             if (oldNodeCoordinates != null) {
                 frameStateVisualiser.setFrame(resized);
-                frameStateVisualiser.drawFrameState(Collections.emptyList(), Collections.emptyList(), oldNodeCoordinates, Collections.emptyMap(), cellVectors);
+                frameStateVisualiser.drawFrameState(centers, Collections.emptyList(), oldNodeCoordinates, Collections.emptyMap(), cellVectors);
                 showFrame(resized, oldNodeCoordinates, false);
                 oldNodeCoordinates = null;
                 System.out.println("old circles drawded");
@@ -181,6 +181,7 @@ public class SearchMultipleCodeModeHandler {
         if (graph.isEmpty()) {
             return cellVectors;
         }
+        ArrayList<Point[]> foundedVectors = new ArrayList<>();
         HashSet<Node> allNodesInGraph = graph.getAllNodes();
         Collection<Node> allGoodNodes = goodPoints.values();
         for (Node node : allGoodNodes) {
@@ -194,12 +195,51 @@ public class SearchMultipleCodeModeHandler {
                         Point equalsNeighborNodePoint = FindUtils.findKeyForValueInMap(goodPoints, neighbor);
                         Point trueVector_1 = PointUtils.minus(equalsNodePoint, equalsNeighborNodePoint);
                         Point trueVector_2 = PointUtils.getPerpendicularVector(trueVector_1);
-                        return new Point[]{trueVector_1, trueVector_2};
+                        Point[] tempVectors = new Point[]{trueVector_1, trueVector_2};
+                        foundedVectors.add(tempVectors);
                     }
                 }
             }
         }
-        return cellVectors;
+        Point[] result = calculateBestCellVectors(cellVectors, foundedVectors);
+        return result;
+    }
+
+    private Point[] calculateBestCellVectors(Point[] cellVectors, ArrayList<Point[]> foundedVectors) {
+        if (foundedVectors.size() < 2) {// macht keinen sinn irgendwas zu machen, da zu wenig vectoren gefunden wurde
+            return cellVectors;
+        }
+        double maxSize =PointUtils.getVectorLength(cellVectors[0]) / 20.0;
+        ArrayList<Point> flippedArrays = flipVectors(foundedVectors);
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(maxSize, 5);
+        List<Cluster<Point>> clusters = dbscanClusterer.cluster(flippedArrays);
+        if(clusters.size() < 2){
+            return cellVectors;
+        }
+
+        Collections.sort(clusters, new Comparator<Cluster<Point>>() {
+            @Override
+            public int compare(Cluster<Point> o1, Cluster<Point> o2) {
+                return o2.getPoints().size() - o1.getPoints().size();
+            }
+        });
+
+        Point clusterCenter = PointUtils.calculateClusterCenter(clusters.get(0));
+        Point perpendicular = PointUtils.getPerpendicularVector(clusterCenter);
+        System.out.println("tut " +  maxSize +  ", founded vectors " + foundedVectors.size());
+        return new Point[]{clusterCenter, perpendicular};
+    }
+
+
+    private ArrayList<Point> flipVectors(ArrayList<Point[]> vectors) {
+        ArrayList<Point> result = new ArrayList<>(vectors.size() * 4);
+        for (Point[] vector : vectors) {
+            Point flipped_0 = PointUtils.flip(vector[0]);
+            Point flipped_1 = PointUtils.flip(vector[1]);
+            result.add(flipped_0);
+            result.add(flipped_1);
+        }
+        return result;
     }
 
     private void showGraph(HashMap<Node, Point> nodeCoordinates) {

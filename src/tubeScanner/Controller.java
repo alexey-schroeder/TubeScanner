@@ -5,9 +5,11 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -42,6 +44,16 @@ public class Controller {
     private String searchedCode;
     private String lastFoundedCode;
 
+    public void reset(ActionEvent actionEvent) {
+        graph.clear();
+        searchMode = SearchMode.MULTIPLE;
+        GraphicsContext gc = graphPane.getGraphicsContext2D();
+        gc.clearRect(0, 0, graphPane.getWidth(), graphPane.getHeight());
+        table.getItems().clear();
+        numberOfCodes.setText("0");
+        oldGraphSize = 0;
+    }
+
     public enum SearchMode {
         SINGLE, MULTIPLE
     }
@@ -54,6 +66,7 @@ public class Controller {
         graph = new Graph();
         canvasGraphVisualiser = new CanvasGraphVisualiser();
         canvasGraphVisualiser.setCanvas(graphPane);
+        canvasGraphVisualiser.setController(this);
 
         searchSingleCodeModeHandler = new SearchSingleCodeModeHandler();
         searchSingleCodeModeHandler.setCanvas(canvas);
@@ -84,9 +97,14 @@ public class Controller {
         EventHandler<SearchCodeEvent> searchCodeEventEventHandler = new EventHandler<SearchCodeEvent>() {
             @Override
             public void handle(SearchCodeEvent event) {
-                searchedCode = event.getCode();
-                searchSingleCodeModeHandler.setCode(searchedCode);
-                searchMode = SearchMode.SINGLE;
+                String code = event.getCode();
+                if (code != null) {
+                    searchedCode = event.getCode();
+                    searchSingleCodeModeHandler.setCode(searchedCode);
+                    searchMode = SearchMode.SINGLE;
+                } else {
+                    searchMode = SearchMode.MULTIPLE;
+                }
             }
         };
         return searchCodeEventEventHandler;
@@ -120,15 +138,15 @@ public class Controller {
             double radius = searchMultipleCodeModeHandler.getRadius();
             searchSingleCodeModeHandler.setRadius(radius);
             String foundedCode = searchSingleCodeModeHandler.threadCode();
-            if(foundedCode != null){
-                if(lastFoundedCode == null){
+            if (foundedCode != null) {
+                if (lastFoundedCode == null) {
                     lastFoundedCode = searchedCode;
                 }
-                if(!foundedCode.equalsIgnoreCase(lastFoundedCode)){
+                if (!foundedCode.equalsIgnoreCase(lastFoundedCode)) {
                     canvasGraphVisualiser.unmarkNodeByCode(lastFoundedCode);
                     lastFoundedCode = foundedCode;
                 }
-               if(!foundedCode.equalsIgnoreCase(searchedCode)){
+                if (!foundedCode.equalsIgnoreCase(searchedCode)) {
                     showFoundedCodeInGraph(foundedCode);
                 }
             }

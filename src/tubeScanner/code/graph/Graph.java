@@ -341,4 +341,7 @@ public class Graph {
         return root == null;
     }
 
+    public void clear(){
+        root = null;
+    }
 }
